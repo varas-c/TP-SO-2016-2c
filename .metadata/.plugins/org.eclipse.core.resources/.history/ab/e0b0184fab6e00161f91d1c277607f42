@@ -1,0 +1,20 @@
+/*
+ * mapa.c
+ *
+ *  Created on: 30/8/2016
+ *      Author: utnso
+ */
+
+#include <stdio.h>
+
+typedef struct
+{
+
+
+}ParametrosConsola;
+
+int main(int argc, char** argv)
+{
+
+
+}

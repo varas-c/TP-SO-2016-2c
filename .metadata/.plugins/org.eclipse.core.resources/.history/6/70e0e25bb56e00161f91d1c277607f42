@@ -1,0 +1,30 @@
+/*
+ * structs.h
+ *
+ *  Created on: 30/8/2016
+ *      Author: utnso
+ */
+
+#ifndef HEADERS_STRUCTS_H_
+#define HEADERS_STRUCTS_H_
+
+typedef struct
+{
+	int tiempoChequeoDeadlock;
+	int modoBatalla;
+	char* algoritmo;
+	int quantum;
+	int retardo;
+	char* ip;
+	char* puerto;
+}MetadataMapa;
+
+typedef struct
+{
+	char* nombreMapa;
+	char* dirPokedex;
+
+}ParametrosMapa;
+
+
+#endif /* HEADERS_STRUCTS_H_ */

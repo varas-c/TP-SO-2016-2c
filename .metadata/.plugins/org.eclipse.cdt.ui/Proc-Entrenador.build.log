@@ -1,6 +1,6 @@
-20:56:55 **** Incremental Build of configuration Debug for project Proc-Entrenador ****
+10:32:21 **** Incremental Build of configuration Debug for project Proc-Entrenador ****
 make all 
 make: No se hace nada para «all».
 
-20:56:56 Build Finished (took 81ms)
+10:32:21 Build Finished (took 94ms)
 

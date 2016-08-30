@@ -7,24 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <commons/config.h>
-
-typedef struct
-{
-	char* nombre;
-	char simbolo;
-	char** hojaDeViaje;
-	char** objetivos;
-	int vidas;
-	int reintentos;
-
-}metadata;
-
-
-typedef struct
-{
-	char* nombreEntrenador;
-	char* dirPokedex;
-}ParametrosConsola;
+#include "headers/struct.h"
 
 ParametrosConsola leerParametrosConsola(char** parametros)
 {
@@ -162,7 +145,16 @@ metadata leerMetadata()
 	return mdata;
 }
 
+ConexionEntrenador leerConexionMapa()
+{
+	ConexionEntrenador connect;
+	t_config* config; //Estructura
+	config = config_create("/home/utnso/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+	connect.ip = config_get_string_value(config,"IP");
+	connect.puerto = config_get_string_value(config,"Puerto");
+	return connect;
 
+}
 
 int main(int argc, char** argv)
 {
@@ -182,11 +174,19 @@ int main(int argc, char** argv)
 	metadata mdata;
 	mdata = leerMetadata();
 
-
 	//-------------
 	//Leida la hoja de viaje, se debe buscar el socket y puerto del primer mapa
+	ConexionEntrenador connect;
+	connect = leerConexionMapa();
+	printf("IP %s \nPuerto: %s", connect.ip,connect.puerto);
 
+	//Ahora debemos conectarnos al mapa
+	//FALTA HACERLO
 
+	//--------------------------------------------
+	//----------------------------------------------
+
+	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
 
 	return 0;

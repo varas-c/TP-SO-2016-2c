@@ -1,0 +1,43 @@
+/*
+ * mapa.c
+ *
+ *  Created on: 30/8/2016
+ *      Author: utnso
+ */
+
+#include <stdio.h>
+
+typedef struct
+{
+	char* nombreMapa;
+	char* dirPokedex;
+
+}ParametrosMapa;
+
+void verificarParametros(int argc)
+{
+	if(argc!=3)
+	{
+		printf("Error - Faltan parametros");
+		exit(1);
+	}
+}
+
+ParametrosMapa leerParametrosConsola(char** argv)
+{
+	ParametrosMapa parametros;
+	parametros.nombreMapa = argv[1];
+	parametros.dirPokedex = argv[2];
+
+	return parametros;
+
+}
+
+int main(int argc, char** argv)
+{
+	ParametrosMapa parametros;
+	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+
+
+}
