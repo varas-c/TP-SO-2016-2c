@@ -1,0 +1,1 @@
+cliente.d: ../cliente.c
