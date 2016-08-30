@@ -1,6 +1,24 @@
-10:32:20 **** Incremental Build of configuration Debug for project Proc-Entrenador ****
+15:26:03 **** Incremental Build of configuration Debug for project Proc-Mapa ****
 make all 
-make: No se hace nada para «all».
-10:32:21 **** Incremental Build of configuration Debug for project Proc-Entrenador ****
+Building file: ../mapa.c
+Invoking: GCC C Compiler
+gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"mapa.d" -MT"mapa.d" -o "mapa.o" "../mapa.c"
+../mapa.c: In function ‘verificarParametros’:
+../mapa.c:27:3: warning: implicit declaration of function ‘exit’ [-Wimplicit-function-declaration]
+   exit(1);
+   ^
+../mapa.c:27:3: warning: incompatible implicit declaration of built-in function ‘exit’ [enabled by default]
+../mapa.c: In function ‘main’:
+../mapa.c:105:1: warning: control reaches end of non-void function [-Wreturn-type]
+ }
+ ^
+Finished building: ../mapa.c
+ 
+Building target: Proc-Mapa
+Invoking: GCC C Linker
+gcc  -o "Proc-Mapa"  ./mapa.o   -lcommons
+Finished building target: Proc-Mapa
+ 
+15:26:04 **** Incremental Build of configuration Debug for project Proc-Mapa ****
 make all 
 make: No se hace nada para «all».
