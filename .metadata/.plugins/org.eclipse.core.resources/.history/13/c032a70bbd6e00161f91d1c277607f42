@@ -56,8 +56,7 @@ typedef struct
 
 typedef struct
 {
-	int nivel;
-	char* grafico;
+
 };
 
 #endif /* HEADERS_STRUCTS_H_ */

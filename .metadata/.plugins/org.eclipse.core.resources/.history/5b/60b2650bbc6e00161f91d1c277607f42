@@ -37,27 +37,4 @@ typedef struct
 
 }ParametrosMapa;
 
-/* -----------------------------------------------
- * METADATAPOKENEST
- * Almacena la información de las PokeNest
- ------------------------------------------------- */
-
-typedef struct
-{
-	char* tipoPokemon;
-	int posicion;
-	char* identificador;
-}MetadataPokenest;
-
-/* -----------------------------------------------
- * METADATAPOKEMON
- * Almacena la información de los Pokemon
- ------------------------------------------------- */
-
-typedef struct
-{
-	int nivel;
-	char* grafico;
-};
-
 #endif /* HEADERS_STRUCTS_H_ */

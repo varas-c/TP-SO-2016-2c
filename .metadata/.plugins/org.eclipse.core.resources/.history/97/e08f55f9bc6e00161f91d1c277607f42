@@ -49,15 +49,4 @@ typedef struct
 	char* identificador;
 }MetadataPokenest;
 
-/* -----------------------------------------------
- * METADATAPOKEMON
- * Almacena la información de los Pokemon
- ------------------------------------------------- */
-
-typedef struct
-{
-	int nivel;
-	char* grafico;
-};
-
 #endif /* HEADERS_STRUCTS_H_ */

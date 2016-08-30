@@ -62,9 +62,6 @@ int main(int argc, char** argv)
 	MetadataMapa mdata;
 	mdata = leerMetadata();
 
-	//**********************************
-	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
-
 	printf("Batalla: %i",mdata.modoBatalla);
 
 
