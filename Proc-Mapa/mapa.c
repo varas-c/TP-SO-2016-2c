@@ -29,7 +29,7 @@ void verificarParametros(int argc)
 }
 
 
-MetadataMapa leerMetadata()
+MetadataMapa leerMetadataMapa()
 {
 	MetadataMapa mdata;
 	t_config* config; //Estructura
@@ -48,6 +48,34 @@ MetadataMapa leerMetadata()
 }
 
 
+MetadataPokenest leerMetadataPokenest()
+{
+	MetadataPokenest mdata;
+	t_config* config; //Estructura
+
+	config = config_create("config/pokenest.config");
+
+	mdata.tipoPokemon = config_get_string_value(config, "Tipo");
+	mdata.posicion = config_get_int_value(config, "Posicion");
+	mdata.identificador = config_get_string_value(config,"Identificador");
+
+	return mdata;
+}
+
+MetadataPokemon leerMetadataPokemon()
+{
+	MetadataPokemon mdata;
+	t_config* config; //Estructura
+
+	config = config_create("config/pokemon.config");
+
+	mdata.nivel = config_get_int_value(config, "Nivel");
+
+	return mdata;
+}
+
+
+
 int main(int argc, char** argv)
 {
 	/*
@@ -59,13 +87,18 @@ int main(int argc, char** argv)
 
 	 */
 	//----------------
-	MetadataMapa mdata;
-	mdata = leerMetadata();
-
+	MetadataPokenest mdataPokenest;
+	MetadataMapa mdataMapa;
+	MetadataPokemon mdataPokemon;
+	mdataMapa = leerMetadataMapa();
+	mdataPokenest = leerMetadataPokenest();
+	mdataPokemon = leerMetadataPokemon();
 	//**********************************
 	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
 
-	printf("Batalla: %i",mdata.modoBatalla);
+	printf("Batalla: %i\n",mdataMapa.modoBatalla);
+	printf("Identificador Pokenest: %s\n",mdataPokenest.identificador);
+	printf("Nivel Pokemon: %d\n",mdataPokemon.nivel);
 
 
 

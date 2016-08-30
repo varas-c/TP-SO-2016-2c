@@ -57,7 +57,6 @@ typedef struct
 typedef struct
 {
 	int nivel;
-	char* grafico;
-};
+}MetadataPokemon;
 
 #endif /* HEADERS_STRUCTS_H_ */
