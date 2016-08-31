@@ -16,6 +16,7 @@
 #include <nivel.h>
 #include <commons/collections/list.h>
 #include "headers/socket.h"
+#include <commons/log.h>
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -43,8 +44,8 @@ MetadataMapa leerMetadataMapa()
 	t_config* config; //Estructura
 	char* auxiliar;
 
-	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
-
+//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+	config = config_create("../config/mapa.config");
 	mdata.tiempoChequeoDeadlock = config_get_int_value(config, "TiempoChequeoDeadlock");
 	mdata.modoBatalla = config_get_int_value(config, "Batalla");
 	mdata.quantum = config_get_int_value(config,"quantum");
@@ -76,8 +77,8 @@ MetadataPokenest leerMetadataPokenest()
 	t_config* config; //Estructura
 	char* auxiliar;
 
-	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
-
+//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
+	config = config_create("../config/pokenest.config");
 	mdata.posicion = config_get_int_value(config, "Posicion");
 
 	auxiliar = config_get_string_value(config, "Tipo");
@@ -98,8 +99,8 @@ MetadataPokemon leerMetadataPokemon()
 	MetadataPokemon mdata;
 	t_config* config; //Estructura
 
-	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
-
+	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
+	config = config_create("../config/pokemon.config");
 	mdata.nivel = config_get_int_value(config, "Nivel");
 
 	config_destroy(config);
@@ -131,19 +132,26 @@ int main(int argc, char** argv)
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
 
-/*	//**********************************
+	//**********************************
 	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
 
 	nivel_gui_inicializar();
+	t_list* lista=list_create();
 	ITEM_NIVEL cosa;
 	cosa.id='Z';
 	cosa.item_type='P';
-	cosa.posx=12;
+	cosa.posx=45;
 	cosa.posy=12;
 	cosa.quantity=1;
-	//nivel_gui_dibujar(&cosa, "Nivel");
+//	lista.head=malloc(8);
+//	lista.head->data=&cosa;
+//	lista.head->next=NULL;
+	list_add(lista, &cosa);
+	int j=0;
+	for(j=0;j<32766;j++)
+		nivel_gui_dibujar(lista, "Prueba");
 	nivel_gui_terminar();
-*/
+
 	printf("\nDatos Mapa ---------\n");
 	printf("Tiempo chequeo deadlock %d\n", mdataMapa.tiempoChequeoDeadlock);
 	printf("Batalla %d\n", mdataMapa.modoBatalla);
@@ -165,6 +173,7 @@ int main(int argc, char** argv)
 	free(mdataMapa.puerto);
 
 	socket_startServer();
+	printf("\n\n");
 
 	return 0;
 
