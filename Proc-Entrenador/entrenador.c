@@ -117,8 +117,9 @@ metadata leerMetadata()
 	int cantViajes;
 	char* auxiliar;
 
-	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Entrenador/config/metadata.config");
+//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Entrenador/config/metadata.config");
 	//Se lee el archivo con config_create y se almacena lo leido en config
+	config = config_create("../config/metadata.config");
 
 	if (config==NULL) exit(20);
 
@@ -173,8 +174,8 @@ ConexionEntrenador leerConexionMapa()
 	t_config* config; //Estructura
 	char* auxiliar;
 
-	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
-
+//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+	config = config_create("../../Proc-Mapa/config/mapa.config");
 	auxiliar = config_get_string_value(config,"Puerto");
 	connect.puerto = malloc(strlen(auxiliar)+1);
 	strcpy(connect.puerto, auxiliar);
@@ -211,9 +212,7 @@ int main(int argc, char** argv)
 	ConexionEntrenador connect;
 	connect = leerConexionMapa();
 
-	printf("\nIP %s \nPuerto: %s \n", connect.ip,connect.puerto);
-	printf("\n \n");
-
+	printf("\nIP %s \nPuerto: %s \n\n", connect.ip,connect.puerto);
 
 	//Ahora debemos conectarnos al mapa
 

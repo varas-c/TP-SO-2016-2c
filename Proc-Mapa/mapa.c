@@ -16,6 +16,7 @@
 #include <nivel.h>
 #include <commons/collections/list.h>
 #include "headers/socket.h"
+#include <commons/log.h>
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -43,8 +44,8 @@ MetadataMapa leerMetadataMapa()
 	t_config* config; //Estructura
 	char* auxiliar;
 
-	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
-
+//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+	config = config_create("../config/mapa.config");
 	mdata.tiempoChequeoDeadlock = config_get_int_value(config, "TiempoChequeoDeadlock");
 	mdata.modoBatalla = config_get_int_value(config, "Batalla");
 	mdata.quantum = config_get_int_value(config,"quantum");
@@ -76,8 +77,8 @@ MetadataPokenest leerMetadataPokenest()
 	t_config* config; //Estructura
 	char* auxiliar;
 
-	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
-
+//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
+	config = config_create("../config/pokenest.config");
 	mdata.posicion = config_get_int_value(config, "Posicion");
 
 	auxiliar = config_get_string_value(config, "Tipo");
@@ -98,8 +99,8 @@ MetadataPokemon leerMetadataPokemon()
 	MetadataPokemon mdata;
 	t_config* config; //Estructura
 
-	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
-
+	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
+	config = config_create("../config/pokemon.config");
 	mdata.nivel = config_get_int_value(config, "Nivel");
 
 	config_destroy(config);
