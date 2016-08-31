@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename resource &apos;Proc-Pokedex-Cliente/Pokedex-Cliente.c&apos; to &apos;pokedex-cliente.c&apos;" description="Rename resource &apos;Pokedex-Cliente.c&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="Pokedex-Cliente.c" name="pokedex-cliente.c" stamp="1472581538967" updateReferences="true"/>
-</session>
