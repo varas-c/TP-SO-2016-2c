@@ -144,6 +144,7 @@ void socket_startServer()
 
 	listener = socket_startListener();
 
+
 	// añadir listener al conjunto maestro
 	FD_SET(listener, &fds_entrenadores);
 

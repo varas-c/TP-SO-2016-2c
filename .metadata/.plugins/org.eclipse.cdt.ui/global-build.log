@@ -1,29 +1,3 @@
-21:25:53 **** Incremental Build of configuration Debug for project Proc-Entrenador ****
+11:51:35 **** Incremental Build of configuration Debug for project Proc-Entrenador ****
 make all 
-Building file: ../entrenador.c
-Invoking: GCC C Compiler
-gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"entrenador.d" -MT"entrenador.d" -o "entrenador.o" "../entrenador.c"
-../entrenador.c: In function ‘leerMetadata’:
-../entrenador.c:122:16: warning: assignment makes integer from pointer without a cast [enabled by default]
-  mdata.simbolo = config_get_string_value(config, "simbolo");
-                ^
-../entrenador.c:146:22: warning: assignment from incompatible pointer type [enabled by default]
-   mdata.objetivos[i] = config_get_array_value(config,leer);
-                      ^
-../entrenador.c:147:3: warning: passing argument 1 of ‘mostrarObjetivos’ from incompatible pointer type [enabled by default]
-   mostrarObjetivos(mdata.objetivos[i]);
-   ^
-../entrenador.c:66:6: note: expected ‘char **’ but argument is of type ‘char *’
- void mostrarObjetivos (char **a)
-      ^
-../entrenador.c: In function ‘main’:
-../entrenador.c:204:6: warning: unused variable ‘fd_server’ [-Wunused-variable]
-  int fd_server = get_fdServer(numero_IP,numero_Puerto);
-      ^
-Finished building: ../entrenador.c
- 
-Building target: Proc-Entrenador
-Invoking: GCC C Linker
-gcc  -o "Proc-Entrenador"  ./entrenador.o   -lcommons
-Finished building target: Proc-Entrenador
- 
+make: No se hace nada para «all».

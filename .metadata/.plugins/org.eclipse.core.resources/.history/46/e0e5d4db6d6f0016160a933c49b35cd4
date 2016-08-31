@@ -109,26 +109,6 @@ void socket_closeConection(int socket, fd_set *master)
 	FD_CLR(socket, master); // eliminar del conjunto maestro
 }
 
-
-int socket_startListener()
-{
-	int listener;
-	// obtener socket a la escucha
-	listener = socket_listener();
-
-	//setearSocket
-	socket_setsockopt(listener);
-
-	// enlazar
-	socket_bind(listener);
-
-	// escuchar
-	socket_listen(listener);
-
-	return listener;
-}
-
-
 void socket_startServer()
 {
 	fd_set fds_entrenadores;   // conjunto maestro de descriptores de fichero
@@ -142,7 +122,17 @@ void socket_startServer()
 	FD_ZERO(&fds_entrenadores);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);
 
-	listener = socket_startListener();
+	// obtener socket a la escucha
+	listener = socket_listener();
+
+	//setearSocket
+	socket_setsockopt(listener);
+
+	// enlazar
+	socket_bind(listener);
+
+	// escuchar
+	socket_listen(listener);
 
 	// añadir listener al conjunto maestro
 	FD_SET(listener, &fds_entrenadores);
@@ -173,7 +163,7 @@ void socket_startServer()
 					buf = malloc(200);
 					// gestionar datos de un cliente
 					if ((nbytes = recv(i, buf,200, 0)) <= 0) { // error o conexión cerrada por el cliente
-						if (nbytes == 0) { //EL ENTRENADOR SE DESCONECTO
+						if (nbytes == 0) {
 							socket_closeConection(i,&fds_entrenadores);
 							}
 

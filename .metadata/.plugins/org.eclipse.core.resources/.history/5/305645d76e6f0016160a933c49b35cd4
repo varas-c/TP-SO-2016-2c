@@ -77,8 +77,6 @@ MetadataPokemon leerMetadataPokemon()
 
 
 
-
-
 int main(int argc, char** argv)
 {
 	/*

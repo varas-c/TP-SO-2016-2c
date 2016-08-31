@@ -1,6 +1,30 @@
-20:30:08 **** Incremental Build of configuration Debug for project Proc-Mapa ****
+08:12:36 **** Incremental Build of configuration Debug for project Proc-Mapa ****
 make all 
-make: No se hace nada para «all».
+Building file: ../mapa.c
+Invoking: GCC C Compiler
+gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"mapa.d" -MT"mapa.d" -o "mapa.o" "../mapa.c"
+In file included from ../mapa.c:11:0:
+../headers/socket.h: In function ‘socket_addNewConection’:
+../headers/socket.h:89:39: warning: pointer targets in passing argument 3 of ‘accept’ differ in signedness [-Wpointer-sign]
+  if ((newfd = accept(listener,(struct sockaddr *) &remoteaddr, &addrlen)) == -1) {
+                                       ^
+In file included from ../headers/socket.h:17:0,
+                 from ../mapa.c:11:
+/usr/include/i386-linux-gnu/sys/socket.h:243:12: note: expected ‘socklen_t * __restrict__’ but argument is of type ‘int *’
+ extern int accept (int __fd, __SOCKADDR_ARG __addr,
+            ^
+In file included from ../mapa.c:11:0:
+../headers/socket.h: In function ‘socket_startServer’:
+../headers/socket.h:121:9: warning: unused variable ‘j’ [-Wunused-variable]
+  int i, j;
+         ^
+Finished building: ../mapa.c
+ 
+Building target: Proc-Mapa
+Invoking: GCC C Linker
+gcc  -o "Proc-Mapa"  ./mapa.o   -lcommons
+Finished building target: Proc-Mapa
+ 
 
-20:30:08 Build Finished (took 64ms)
+08:12:36 Build Finished (took 117ms)
 
