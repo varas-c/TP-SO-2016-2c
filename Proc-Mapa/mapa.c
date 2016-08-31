@@ -15,7 +15,7 @@
 #include "headers/struct.h"
 #include <nivel.h>
 #include <commons/collections/list.h>
-
+#include "headers/socket.h"
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -109,6 +109,8 @@ MetadataPokemon leerMetadataPokemon()
 
 
 
+
+
 int main(int argc, char** argv)
 {
 
@@ -118,9 +120,8 @@ int main(int argc, char** argv)
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
 	printf("Nombre Mapa: %s --- Dir Pokedex: %s \n",parametros.nombreMapa, parametros.dirPokedex);
+*/
 
-	 */
-	//----------------
 	MetadataPokenest mdataPokenest;
 	MetadataMapa mdataMapa;
 	MetadataPokemon mdataPokemon;
@@ -129,6 +130,7 @@ int main(int argc, char** argv)
 	mdataMapa = leerMetadataMapa();
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
+
 /*	//**********************************
 	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
 
@@ -161,5 +163,9 @@ int main(int argc, char** argv)
 	free(mdataMapa.algoritmo);
 	free(mdataMapa.ip);
 	free(mdataMapa.puerto);
+
+	socket_startServer();
+
+	return 0;
 
 }
