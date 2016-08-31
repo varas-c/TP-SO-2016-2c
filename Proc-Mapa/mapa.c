@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <commons/config.h>
 #include "headers/struct.h"
+#include "headers/socket.h"
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -87,19 +88,21 @@ int main(int argc, char** argv)
 
 	 */
 	//----------------
+/*
 	MetadataPokenest mdataPokenest;
 	MetadataMapa mdataMapa;
 	MetadataPokemon mdataPokemon;
 	mdataMapa = leerMetadataMapa();
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
-	//**********************************
-	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
 
 	printf("Batalla: %i\n",mdataMapa.modoBatalla);
 	printf("Identificador Pokenest: %s\n",mdataPokenest.identificador);
 	printf("Nivel Pokemon: %d\n",mdataPokemon.nivel);
+*/
 
+	socket_startServer();
 
+	return 0;
 
 }

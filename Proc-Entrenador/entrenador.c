@@ -8,6 +8,17 @@
 #include <string.h>
 #include <commons/config.h>
 #include "headers/struct.h"
+#include "headers/socket.h"
+#include <stdbool.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 
 ParametrosConsola leerParametrosConsola(char** parametros)
 {
@@ -140,7 +151,7 @@ metadata leerMetadata()
 	//---------------------------------------------------------
 
 	mdata.vidas = config_get_int_value(config,"vidas");
-	mdata.reintentos = config_get_int_value(config,"vidas");
+	mdata.reintentos = config_get_int_value(config,"reintentos");
 
 	return mdata;
 }
@@ -171,17 +182,26 @@ int main(int argc, char** argv)
 
 	//--------------------------------
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
+
+	/*
 	metadata mdata;
 	mdata = leerMetadata();
+	*/
 
 	//-------------
 	//Leida la hoja de viaje, se debe buscar el socket y puerto del primer mapa
+
+	/*
 	ConexionEntrenador connect;
 	connect = leerConexionMapa();
 	printf("IP %s \nPuerto: %s", connect.ip,connect.puerto);
+	*/
 
 	//Ahora debemos conectarnos al mapa
-	//FALTA HACERLO
+
+	char* numero_IP = "127.0.0.1";
+	char* numero_Puerto="9034";
+	int fd_server = get_fdServer(numero_IP,numero_Puerto);
 
 	//--------------------------------------------
 	//----------------------------------------------

@@ -7,24 +7,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <commons/config.h>
+#include "headers/struct.h"
 
-typedef struct
-{
-	char* nombre;
-	char simbolo;
-	char** hojaDeViaje;
-	char** objetivos;
-	int vidas;
-	int reintentos;
+#include <stdbool.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
-}metadata;
-
-
-typedef struct
-{
-	char* nombreEntrenador;
-	char* dirPokedex;
-}ParametrosConsola;
 
 ParametrosConsola leerParametrosConsola(char** parametros)
 {
@@ -57,9 +51,9 @@ void verificarParametros(int argc)
 
 
 //El calculo es 4 de "obj[" + largociudad + "]" + /n
-char* concatObjetivo(char* ciudad)
+char* concatObjetivo(char* ciudad, char* obj)
 {
-	char* obj = malloc(4*sizeof(char)+strlen(ciudad)*sizeof(char)+2);
+	obj = malloc(4*sizeof(char)+strlen(ciudad)*sizeof(char)+2);
 
 	strcat(obj,"obj[");
 	strcat(obj,ciudad);
@@ -82,8 +76,6 @@ void mostrarObjetivos (char **a)
 	}
 	printf("\n");
 
-
-
 }
 
 
@@ -98,7 +90,7 @@ int cantidadDeViajes(char** hojaDeViaje)
 
 	return cantViajes;
 }
-
+/*
 void leerObjetivos(char* objetivos, t_config* config, int cantViajes,char** hojaDeViaje)
 {
 	char* ciudad;
@@ -115,6 +107,7 @@ void leerObjetivos(char* objetivos, t_config* config, int cantViajes,char** hoja
 		free(leer);
 	}
 }
+*/
 
 
 metadata leerMetadata()
@@ -129,44 +122,62 @@ metadata leerMetadata()
 	mdata.simbolo = config_get_string_value(config, "simbolo");
 	mdata.hojaDeViaje = config_get_array_value(config, "hojaDeViaje");
 
+
+	//---------------ACA SE LEEN LOS OBJETIVOS -------------
 	cantViajes = cantidadDeViajes(mdata.hojaDeViaje);
 	mdata.objetivos = malloc(cantViajes*sizeof(char*));
-
-
 
 	//Esto deberia ir en una funcion aparte pero no se como pasar por parametro mdata.objetivos porque es un char**
 	//Hay una funcion leerObjetivos que habría que arreglar
 	////leerObjetivos(mdata.objetivos, config,cantViajes,mdata.hojaDeViaje);
 
 	char* ciudad;
-	char* leer;
+	char* leer = NULL;
 
 	int i;
 	for(i=0;i<cantViajes;i++)
 	{
+		//4*sizeof(char)+strlen(ciudad)*sizeof(char)+2
 		ciudad = mdata.hojaDeViaje[i];
-		leer = concatObjetivo(ciudad);
+		leer = malloc(4*sizeof(char)+strlen(ciudad)*sizeof(char)+2);
+		strcpy(leer,"obj[");
+		strcat(leer,ciudad);
+		strcat(leer,"]");
 		mdata.objetivos[i] = config_get_array_value(config,leer);
 		mostrarObjetivos(mdata.objetivos[i]);
 		free(leer);
 	}
 
+	//---------------------------------------------------------
 
+	mdata.vidas = config_get_int_value(config,"vidas");
+	mdata.reintentos = config_get_int_value(config,"reintentos");
 
 	return mdata;
 }
 
+ConexionEntrenador leerConexionMapa()
+{
+	ConexionEntrenador connect;
+	t_config* config; //Estructura
+	config = config_create("/home/utnso/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+	connect.ip = config_get_string_value(config,"IP");
+	connect.puerto = config_get_string_value(config,"Puerto");
+	return connect;
 
+}
 
 int main(int argc, char** argv)
 {
 	/*
 	//Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
+	 *
 	ParametrosConsola parametros;
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 	printf("%s --- %s", parametros.dirPokedex, parametros.nombreEntrenador);
 	destruct_ParametrosConsola(&parametros);//Liberamos los parametros
+
 	*/
 
 	//--------------------------------
@@ -174,11 +185,19 @@ int main(int argc, char** argv)
 	metadata mdata;
 	mdata = leerMetadata();
 
-
 	//-------------
 	//Leida la hoja de viaje, se debe buscar el socket y puerto del primer mapa
+	ConexionEntrenador connect;
+	connect = leerConexionMapa();
+	printf("IP %s \nPuerto: %s", connect.ip,connect.puerto);
 
+	//Ahora debemos conectarnos al mapa
+	//FALTA HACERLO
 
+	//--------------------------------------------
+	//----------------------------------------------
+
+	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
 
 	return 0;

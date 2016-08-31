@@ -1,6 +1,6 @@
-15:26:04 **** Incremental Build of configuration Debug for project Proc-Mapa ****
+20:30:08 **** Incremental Build of configuration Debug for project Proc-Mapa ****
 make all 
 make: No se hace nada para «all».
 
-15:26:04 Build Finished (took 97ms)
+20:30:08 Build Finished (took 64ms)
 
