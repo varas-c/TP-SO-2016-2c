@@ -32,7 +32,7 @@ void verificarParametros(int argc)
 {
 	if(argc!=3)
 	{
-		printf("Error - Faltan parametros");
+		printf("\n\n Error - Faltan parametros\n\n");
 		exit(1);
 	}
 }
@@ -104,11 +104,21 @@ metadata leerMetadata()
 	metadata mdata;
 	t_config* config; //Estructura
 	int cantViajes;
+	char* auxiliar;
 
-	config = config_create("config/metadata.config"); //Se lee el archivo con config_create y se almacena lo leido en config
+	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Entrenador/config/metadata.config");
+	//Se lee el archivo con config_create y se almacena lo leido en config
 
-	mdata.nombre = config_get_string_value(config, "nombre");
-	mdata.simbolo = config_get_string_value(config, "simbolo");
+	if (config==NULL) exit(20);
+
+	auxiliar = config_get_string_value(config,"nombre");
+	mdata.nombre = malloc(strlen(auxiliar)+1);
+	strcpy(mdata.nombre, auxiliar);
+
+	//auxiliar = config_get_string_value(config,"simbolo");
+	mdata.simbolo = *config_get_string_value(config,"simbolo");
+	//strcpy(mdata.simbolo, auxiliar);
+
 	mdata.hojaDeViaje = config_get_array_value(config, "hojaDeViaje");
 
 
@@ -140,8 +150,9 @@ metadata leerMetadata()
 	//---------------------------------------------------------
 
 	mdata.vidas = config_get_int_value(config,"vidas");
-	mdata.reintentos = config_get_int_value(config,"vidas");
+	mdata.reintentos = config_get_int_value(config,"reintentos");
 
+	config_destroy(config);
 	return mdata;
 }
 
@@ -149,9 +160,10 @@ ConexionEntrenador leerConexionMapa()
 {
 	ConexionEntrenador connect;
 	t_config* config; //Estructura
-	config = config_create("/home/utnso/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
-	connect.ip = config_get_string_value(config,"IP");
+	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
 	connect.puerto = config_get_string_value(config,"Puerto");
+	connect.ip = config_get_string_value(config,"IP");
+
 	return connect;
 
 }
@@ -171,6 +183,7 @@ int main(int argc, char** argv)
 
 	//--------------------------------
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
+
 	metadata mdata;
 	mdata = leerMetadata();
 
@@ -178,7 +191,8 @@ int main(int argc, char** argv)
 	//Leida la hoja de viaje, se debe buscar el socket y puerto del primer mapa
 	ConexionEntrenador connect;
 	connect = leerConexionMapa();
-	printf("IP %s \nPuerto: %s", connect.ip,connect.puerto);
+	printf("\nIP %s \nPuerto: %s \n", connect.ip,connect.puerto);
+	printf("\n \n");
 
 	//Ahora debemos conectarnos al mapa
 	//FALTA HACERLO

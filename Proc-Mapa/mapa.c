@@ -6,8 +6,16 @@
  */
 
 #include <stdio.h>
+#include <tad_items.h>
+#include <string.h>
+#include <stdlib.h>
 #include <commons/config.h>
+#include <sys/ioctl.h>
+#include <curses.h>
 #include "headers/struct.h"
+#include <nivel.h>
+#include <commons/collections/list.h>
+
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -33,16 +41,30 @@ MetadataMapa leerMetadataMapa()
 {
 	MetadataMapa mdata;
 	t_config* config; //Estructura
+	char* auxiliar;
 
-	config = config_create("config/mapa.config");
+	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
 
 	mdata.tiempoChequeoDeadlock = config_get_int_value(config, "TiempoChequeoDeadlock");
 	mdata.modoBatalla = config_get_int_value(config, "Batalla");
-	mdata.algoritmo = config_get_string_value(config,"algoritmo");
 	mdata.quantum = config_get_int_value(config,"quantum");
 	mdata.retardo = config_get_int_value(config,"retardo");
-	mdata.ip = config_get_string_value(config,"IP");
-	mdata.puerto = config_get_string_value(config, "Puerto");
+
+	//Esta parte es para no perder la referencia de los punteros al hacer config_destroy
+
+	auxiliar = config_get_string_value(config,"algoritmo");
+	mdata.algoritmo = malloc(strlen(auxiliar)+1);
+	strcpy(mdata.algoritmo, auxiliar);
+
+	auxiliar = config_get_string_value(config,"IP");
+	mdata.ip = malloc(strlen(auxiliar)+1);
+	strcpy(mdata.ip, auxiliar);
+
+	auxiliar = config_get_string_value(config,"Puerto");
+	mdata.puerto = malloc(strlen(auxiliar)+1);
+	strcpy(mdata.puerto, auxiliar);
+
+	config_destroy(config);
 
 	return mdata;
 }
@@ -52,12 +74,21 @@ MetadataPokenest leerMetadataPokenest()
 {
 	MetadataPokenest mdata;
 	t_config* config; //Estructura
+	char* auxiliar;
 
-	config = config_create("config/pokenest.config");
+	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
 
-	mdata.tipoPokemon = config_get_string_value(config, "Tipo");
 	mdata.posicion = config_get_int_value(config, "Posicion");
-	mdata.identificador = config_get_string_value(config,"Identificador");
+
+	auxiliar = config_get_string_value(config, "Tipo");
+	mdata.tipoPokemon = malloc(strlen(auxiliar)+1);
+	strcpy(mdata.tipoPokemon, auxiliar);
+
+	auxiliar = config_get_string_value(config,"Identificador");
+	mdata.identificador = malloc(strlen(auxiliar)+1);
+	strcpy(mdata.identificador, auxiliar);
+
+	config_destroy(config);
 
 	return mdata;
 }
@@ -67,9 +98,11 @@ MetadataPokemon leerMetadataPokemon()
 	MetadataPokemon mdata;
 	t_config* config; //Estructura
 
-	config = config_create("config/pokemon.config");
+	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
 
 	mdata.nivel = config_get_int_value(config, "Nivel");
+
+	config_destroy(config);
 
 	return mdata;
 }
@@ -78,6 +111,7 @@ MetadataPokemon leerMetadataPokemon()
 
 int main(int argc, char** argv)
 {
+
 	/*
 	ParametrosMapa parametros;
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
@@ -90,16 +124,42 @@ int main(int argc, char** argv)
 	MetadataPokenest mdataPokenest;
 	MetadataMapa mdataMapa;
 	MetadataPokemon mdataPokemon;
+
+
 	mdataMapa = leerMetadataMapa();
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
-	//**********************************
+/*	//**********************************
 	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
 
-	printf("Batalla: %i\n",mdataMapa.modoBatalla);
-	printf("Identificador Pokenest: %s\n",mdataPokenest.identificador);
-	printf("Nivel Pokemon: %d\n",mdataPokemon.nivel);
+	nivel_gui_inicializar();
+	ITEM_NIVEL cosa;
+	cosa.id='Z';
+	cosa.item_type='P';
+	cosa.posx=12;
+	cosa.posy=12;
+	cosa.quantity=1;
+	//nivel_gui_dibujar(&cosa, "Nivel");
+	nivel_gui_terminar();
+*/
+	printf("\nDatos Mapa ---------\n");
+	printf("Tiempo chequeo deadlock %d\n", mdataMapa.tiempoChequeoDeadlock);
+	printf("Batalla %d\n", mdataMapa.modoBatalla);
+	printf("Quantum %d\n", mdataMapa.quantum);
+	printf("Retardo %d\n", mdataMapa.retardo);
+	printf("IP %s\n", mdataMapa.ip);
+	printf("Puerto %s\n", mdataMapa.puerto);
+	printf("\nDatos Pokenest ----------\n");
+	printf("Identificador: %s\n",mdataPokenest.identificador);
+	printf("Tipo: %s\n",mdataPokenest.tipoPokemon);
+	printf("Posicion: %d\n",mdataPokenest.posicion);
+	printf("\nDatos Pokemon ----------\n");
+	printf("Nivel: %d\n",mdataPokemon.nivel);
 
-
+	free(mdataPokenest.identificador);
+	free(mdataPokenest.tipoPokemon);
+	free(mdataMapa.algoritmo);
+	free(mdataMapa.ip);
+	free(mdataMapa.puerto);
 
 }
