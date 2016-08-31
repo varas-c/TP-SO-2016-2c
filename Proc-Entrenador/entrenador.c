@@ -171,10 +171,19 @@ ConexionEntrenador leerConexionMapa()
 {
 	ConexionEntrenador connect;
 	t_config* config; //Estructura
-	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
-	connect.puerto = config_get_string_value(config,"Puerto");
-	connect.ip = config_get_string_value(config,"IP");
+	char* auxiliar;
 
+	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+
+	auxiliar = config_get_string_value(config,"Puerto");
+	connect.puerto = malloc(strlen(auxiliar)+1);
+	strcpy(connect.puerto, auxiliar);
+
+	auxiliar = config_get_string_value(config,"IP");
+	connect.ip = malloc(strlen(auxiliar)+1);
+	strcpy(connect.ip, auxiliar);
+
+	config_destroy(config);
 	return connect;
 
 }
@@ -216,12 +225,13 @@ int main(int argc, char** argv)
 	//----------------------------------------------
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
+	/*
 	int a;
 	while(1)
 	{
 		a=1;
 	}
-
+*/
 
 	return 0;
 }

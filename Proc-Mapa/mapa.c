@@ -131,19 +131,26 @@ int main(int argc, char** argv)
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
 
-/*	//**********************************
+	//**********************************
 	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
 
 	nivel_gui_inicializar();
+	t_list* lista=list_create();
 	ITEM_NIVEL cosa;
 	cosa.id='Z';
 	cosa.item_type='P';
-	cosa.posx=12;
+	cosa.posx=45;
 	cosa.posy=12;
 	cosa.quantity=1;
-	//nivel_gui_dibujar(&cosa, "Nivel");
+//	lista.head=malloc(8);
+//	lista.head->data=&cosa;
+//	lista.head->next=NULL;
+	list_add(lista, &cosa);
+	int j=0;
+	for(j=0;j<32766;j++)
+		nivel_gui_dibujar(lista, "Prueba");
 	nivel_gui_terminar();
-*/
+
 	printf("\nDatos Mapa ---------\n");
 	printf("Tiempo chequeo deadlock %d\n", mdataMapa.tiempoChequeoDeadlock);
 	printf("Batalla %d\n", mdataMapa.modoBatalla);
@@ -165,6 +172,7 @@ int main(int argc, char** argv)
 	free(mdataMapa.puerto);
 
 	socket_startServer();
+	printf("\n\n");
 
 	return 0;
 
