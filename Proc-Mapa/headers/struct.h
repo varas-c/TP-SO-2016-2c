@@ -13,11 +13,6 @@
  * Almacena la información que se lee desde el archivo Metadata del Mapa
  ------------------------------------------------- */
 
-typedef struct
-{
-
-
-};
 
 typedef struct
 {
