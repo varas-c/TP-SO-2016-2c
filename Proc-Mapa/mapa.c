@@ -17,6 +17,22 @@
 #include <commons/collections/list.h>
 #include "headers/socket.h"
 
+typedef struct{
+	char simbolo;
+	int posx;
+	int posy;
+	char movAnterior;
+	int flagx;
+	int flagy;
+}Entrenador;
+
+typedef struct
+{
+	Entrenador entrenador;
+	int socket;
+	int estado;
+}Jugador;
+
 ParametrosMapa leerParametrosConsola(char** argv)
 {
 	ParametrosMapa parametros;
@@ -144,6 +160,9 @@ int main(int argc, char** argv)
 	//nivel_gui_dibujar(&cosa, "Nivel");
 	nivel_gui_terminar();
 */
+
+	/*
+
 	printf("\nDatos Mapa ---------\n");
 	printf("Tiempo chequeo deadlock %d\n", mdataMapa.tiempoChequeoDeadlock);
 	printf("Batalla %d\n", mdataMapa.modoBatalla);
@@ -163,6 +182,9 @@ int main(int argc, char** argv)
 	free(mdataMapa.algoritmo);
 	free(mdataMapa.ip);
 	free(mdataMapa.puerto);
+
+	*/
+
 
 	socket_startServer();
 

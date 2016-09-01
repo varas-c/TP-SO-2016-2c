@@ -15,6 +15,12 @@
 
 typedef struct
 {
+
+
+};
+
+typedef struct
+{
 	int tiempoChequeoDeadlock;
 	int modoBatalla;
 	char* algoritmo;
