@@ -17,6 +17,9 @@
 #include "headers/socket.h"
 #include <commons/log.h>
 #include <commons/collections/queue.h>
+#include <math.h>
+#include <ctype.h>
+
 
 typedef struct{
 	char simbolo;
@@ -115,7 +118,31 @@ MetadataPokenest leerMetadataPokenest()
 		exit(20);
 	}
 
-	mdata.posicion = config_get_int_value(config, "Posicion");
+	auxiliar = config_get_string_value(config, "Posicion");
+
+	//Procesamiento de posicion de string a dos ints
+	int i = strlen(auxiliar)-1;
+	int pos_es_y = 1;
+	int potencia = 0;
+	mdata.posicionX = 0;
+	mdata.posicionY = 0;
+
+	for (;i>=0;i--)
+	{
+		if (isdigit(auxiliar[i]))
+		{
+			if (pos_es_y)
+				mdata.posicionY += (auxiliar[i]-'0') * (int)powf(10,potencia);
+			else
+				mdata.posicionX += (auxiliar[i]-'0') * (int)powf(10,potencia);
+			potencia++;
+		}
+		else
+		{
+			pos_es_y = 0;
+			potencia = 0;
+		}
+	}
 
 	auxiliar = config_get_string_value(config, "Tipo");
 	mdata.tipoPokemon = malloc(strlen(auxiliar)+1);
@@ -309,24 +336,7 @@ int main(int argc, char** argv)
 
 	//**********************************
 	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
-/*
-	nivel_gui_inicializar();
-	t_list* lista=list_create();
-	ITEM_NIVEL cosa;
-	cosa.id='Z';
-	cosa.item_type='P';
-	cosa.posx=45;
-	cosa.posy=12;
-	cosa.quantity=1;
-//	lista.head=malloc(8);
-//	lista.head->data=&cosa;
-//	lista.head->next=NULL;
-	list_add(lista, &cosa);
-	int j=0;
-	for(j=0;j<32765;j++)
-		nivel_gui_dibujar(lista, "Prueba");
-	nivel_gui_terminar();
-*/
+
 
 	//**********************************
 
@@ -340,7 +350,8 @@ int main(int argc, char** argv)
 	printf("\nDatos Pokenest ----------\n");
 	printf("Identificador: %s\n",mdataPokenest.identificador);
 	printf("Tipo: %s\n",mdataPokenest.tipoPokemon);
-	printf("Posicion: %d\n",mdataPokenest.posicion);
+	printf("Posicion X: %d\n",mdataPokenest.posicionX);
+	printf("Posicion Y: %d\n",mdataPokenest.posicionY);
 	printf("\nDatos Pokemon ----------\n");
 	printf("Nivel: %d\n",mdataPokemon.nivel);
 

@@ -46,7 +46,8 @@ typedef struct
 typedef struct
 {
 	char* tipoPokemon;
-	int posicion;
+	int posicionX;
+	int posicionY;
 	char* identificador;
 }MetadataPokenest;
 

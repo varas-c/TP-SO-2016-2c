@@ -186,6 +186,13 @@ ConexionEntrenador leerConexionMapa()
 //	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
 	//RUTA RELATIVA
 	config = config_create("../../Proc-Mapa/config/mapa.config");
+
+	if(config==NULL)
+	{
+		printf("Archivo mapa.config no encontrado");
+		exit(20);
+	}
+
 	auxiliar = config_get_string_value(config,"Puerto");
 	connect.puerto = malloc(strlen(auxiliar)+1);
 	strcpy(connect.puerto, auxiliar);
@@ -227,8 +234,8 @@ int main(int argc, char** argv)
 
 	//Ahora debemos conectarnos al mapa
 
-	char* numero_IP = "127.0.0.1";
-	char* numero_Puerto="9034";
+	char* numero_IP = connect.ip;
+	char* numero_Puerto = connect.puerto;
 	int fd_server = get_fdServer(numero_IP,numero_Puerto);
 
 	//--------------------------------------------
