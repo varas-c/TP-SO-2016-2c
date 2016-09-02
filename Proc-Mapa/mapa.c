@@ -4,7 +4,6 @@
  *  Created on: 30/8/2016
  *      Author: utnso
  */
-
 #include <stdio.h>
 #include <tad_items.h>
 #include <string.h>
@@ -17,6 +16,23 @@
 #include <commons/collections/list.h>
 #include "headers/socket.h"
 #include <commons/log.h>
+#include <commons/collections/queue.h>
+
+typedef struct{
+	char simbolo;
+	int posx;
+	int posy;
+	char movAnterior;
+	int flagx;
+	int flagy;
+}Entrenador;
+
+typedef struct
+{
+	Entrenador entrenador;
+	int estado;
+	int socket;
+}Jugador;
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -26,6 +42,7 @@ ParametrosMapa leerParametrosConsola(char** argv)
 
 	return parametros;
 }
+
 
 
 void verificarParametros(int argc)
@@ -44,6 +61,7 @@ MetadataMapa leerMetadataMapa()
 	t_config* config; //Estructura
 	char* auxiliar;
 
+
 	//RUTA ABSOLUTA
 	//config = config_create("//home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
 	//RUTA RELATIVA
@@ -54,6 +72,7 @@ MetadataMapa leerMetadataMapa()
 		printf("Archivo mapa.config no encontrado");
 		exit(20);
 	}
+
 	mdata.tiempoChequeoDeadlock = config_get_int_value(config, "TiempoChequeoDeadlock");
 	mdata.modoBatalla = config_get_int_value(config, "Batalla");
 	mdata.quantum = config_get_int_value(config,"quantum");
@@ -95,6 +114,7 @@ MetadataPokenest leerMetadataPokenest()
 		printf("Archivo pokenest.config no encontrado");
 		exit(20);
 	}
+
 	mdata.posicion = config_get_int_value(config, "Posicion");
 
 	auxiliar = config_get_string_value(config, "Tipo");
@@ -125,6 +145,7 @@ MetadataPokemon leerMetadataPokemon()
 		printf("Archivo pokemon.config no encontrado");
 		exit(20);
 	}
+
 	mdata.nivel = config_get_int_value(config, "Nivel");
 
 	config_destroy(config);
@@ -133,6 +154,130 @@ MetadataPokemon leerMetadataPokemon()
 }
 
 
+void init_nivel()
+{
+	nivel_gui_inicializar();
+}
+
+void inicializar_entrenador(Entrenador* entrenador)
+{
+    entrenador->posx = 1;
+    entrenador->posy = 1;
+    entrenador->simbolo = '@';
+    entrenador->movAnterior = 'y';
+    entrenador -> flagx = FALSE;
+    entrenador -> flagy = FALSE;
+}
+
+void inicializar_jugador(Jugador* unJugador, int unSocket){
+	inicializar_entrenador(&(unJugador->entrenador));
+	unJugador->socket = unSocket;
+	unJugador->estado = 0;
+}
+
+
+void socket_startServer()
+{
+	fd_set fds_entrenadores;   // conjunto maestro de descriptores de fichero
+	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
+
+	int fdmax;        // número máximo de descriptores de fichero
+	int listener;     // descriptor de socket a la escucha
+	void* buf;
+	int nbytes;
+	int i, j;
+	FD_ZERO(&fds_entrenadores);    // borra los conjuntos maestro y temporal
+	FD_ZERO(&read_fds);
+
+	listener = socket_startListener();
+
+	// añadir listener al conjunto maestro
+	FD_SET(listener, &fds_entrenadores);
+
+	// seguir la pista del descriptor de fichero mayor
+	fdmax = listener; // por ahora es éste
+
+		// bucle principal
+
+	t_queue* colaListos;
+	colaListos = queue_create();
+
+	t_list* listaDibujo;
+	listaDibujo = list_create();
+	init_nivel();
+
+	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
+
+	nivel_gui_dibujar(listaDibujo, "");
+
+	Jugador nuevoJugador;
+	int newfd;
+
+	for (;;) {
+		getch();
+		read_fds = fds_entrenadores; // cópialo
+
+		//Buscamos los sockets que quieren realizar algo con Select
+		socket_select(fdmax, &read_fds);
+
+		// explorar conexiones existentes en busca de datos que leer
+		for(i = 0; i <= fdmax; i++) {
+
+			if (FD_ISSET(i, &read_fds)) { // ¡¡tenemos datos!!
+
+				if (i == listener) {
+					//SE ACEPTA UN NUEVO ENTRENADOR
+					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
+					inicializar_jugador(&nuevoJugador, newfd);
+					CrearPersonaje(listaDibujo, nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
+					queue_push(colaListos, &nuevoJugador);
+					//Aca se debe crear un nuevo struct entrenador y crear la interfaz gráfica.
+				}
+
+				//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
+				else {
+					buf = malloc(200);
+					// gestionar datos de un cliente
+					if ((nbytes = recv(i, buf,200, 0)) <= 0) { // error o conexión cerrada por el cliente
+						if (nbytes == 0) { //EL ENTRENADOR SE DESCONECTO
+							socket_closeConection(i,&fds_entrenadores);
+							}
+
+							else {
+								perror("recv");
+							}
+
+						}
+
+					/*
+					else {
+
+						// tenemos datos de algún cliente
+						for (j = 0; j <= fdmax; j++) {
+							// ¡enviar a todo el mundo!
+							if (FD_ISSET(j, &master)) {
+								// excepto al listener y a nosotros mismos
+								if (j != listener && j != i) {
+									if (send(j, buf, 100, 0) == -1) {
+										perror("send");
+										}
+									}
+								}
+							}
+
+						}
+
+					*/
+
+					} // Esto es ¡TAN FEO!
+				}
+			}
+		int tamanio = queue_size(colaListos);
+		char v[2];
+		sprintf(v, "%i", tamanio);
+		nivel_gui_dibujar(listaDibujo, v);
+		}
+}
 
 int main(int argc, char** argv)
 {
@@ -144,6 +289,7 @@ int main(int argc, char** argv)
 
 	printf("Nombre Mapa: %s --- Dir Pokedex: %s \n",parametros.nombreMapa, parametros.dirPokedex);
 */
+
 
 	t_log* traceLogger;
 	t_log* infoLogger;
@@ -181,6 +327,9 @@ int main(int argc, char** argv)
 		nivel_gui_dibujar(lista, "Prueba");
 	nivel_gui_terminar();
 */
+
+	//**********************************
+
 	printf("\nDatos Mapa ---------\n");
 	printf("Tiempo chequeo deadlock %d\n", mdataMapa.tiempoChequeoDeadlock);
 	printf("Batalla %d\n", mdataMapa.modoBatalla);
@@ -201,17 +350,14 @@ int main(int argc, char** argv)
 	free(mdataMapa.ip);
 	free(mdataMapa.puerto);
 
+
 	//Para crear una entrada en un archivo LOG:
 	//log_tipoDeLog (logger, "mensaje"). tipoDeLog = trace, info, error, etc
-
-
 
 	log_info(infoLogger, "Se cierra Mapa.");
 	log_destroy(traceLogger);
 	log_destroy(infoLogger);
 
-	//INFORMATIVO, borrar despues
-	printf("Escuchando sockets\n");
 	socket_startServer();
 
 

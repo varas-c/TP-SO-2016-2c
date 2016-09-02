@@ -41,8 +41,6 @@ typedef struct{
 //Si flagx=false then mover en X otherwise mover en Y
 void mover_entrenador(Entrenador *entrenador, int destinox, int destinoy)
 {
-	//Comenzamos de 1,1
-
 	int movimiento = FALSE; //Es para saber si en esta llamada a la funcion, realicé un movimiento
 
 	if(entrenador->movAnterior == 'y' && movimiento == FALSE) //Si el movimiento anterior fue en Y y todavía no me movi, me teno que mover en X
@@ -133,6 +131,7 @@ int main(void) {
     t_list* items = list_create(); //Lista donde se almacenan los items
 
     Pokenest pokenest;
+    Pokenest pokenest2;
     Entrenador entrenador;
 
 	int rows, cols; //tamaño de la pantalla
@@ -141,38 +140,68 @@ int main(void) {
 	//Inicializamos espacio de dibujo
 	nivel_gui_inicializar();
 
-	//Obtenemos el area de la consola
-    nivel_gui_get_area_nivel(&rows, &cols);
 
     inicializar_entrenador(&entrenador);
 
     pokenest.posx = 5;
-    pokenest.posy = 19;
+    pokenest.posy = 5;
     pokenest.cant = 5;
     pokenest.simbolo = 'Z';
 
+    pokenest2.posx=39;
+    pokenest2.posy=10;
+    pokenest2.cant = 3;
+    pokenest2.simbolo = 'K';
 
 	CrearPersonaje(items, '@',entrenador.posx, entrenador.posy);
 
 
 	CrearCaja(items, pokenest.simbolo, pokenest.posx, pokenest.posy, pokenest.cant);
+	CrearCaja(items, pokenest2.simbolo, pokenest2.posx, pokenest2.posy, pokenest2.cant);
 
 	char mostrar[20];
 	sprintf(mostrar,"X:%i -- Y:%i",entrenador.posx,entrenador.posy);
 	nivel_gui_dibujar(items, mostrar);
 
+	int flag = 0;
 
 	while ( 1 ) {
 		int key = getch();
 
+
+		if(flag==0){
+
 		mover_entrenador(&entrenador, pokenest.posx,pokenest.posy);
 		MoverPersonaje(items, entrenador.simbolo, entrenador.posx, entrenador.posy);
 
-
 		if (entrenador.posx == pokenest.posx && entrenador.posy ==pokenest.posy) {
 			restarRecurso(items, pokenest.simbolo);
+
+			if(pokenest.cant > 0)
+			pokenest.cant-=1;
 		}
 
+		if(pokenest.cant == 0) {
+			flag = 1;
+			entrenador.movAnterior = 'y';
+			entrenador.flagx = FALSE;
+			entrenador.flagy = FALSE;
+		}
+
+		}
+
+
+
+		if (flag==1) {
+
+		mover_entrenador(&entrenador, pokenest2.posx,pokenest2.posy);
+		MoverPersonaje(items, entrenador.simbolo, entrenador.posx, entrenador.posy);
+
+		if (entrenador.posx == pokenest2.posx && entrenador.posy ==pokenest2.posy) {
+			restarRecurso(items, pokenest2.simbolo);
+		}
+
+		}
 
 		char buffer[20];
 		sprintf(buffer,"X:%i -- Y:%i",entrenador.posx,entrenador.posy);

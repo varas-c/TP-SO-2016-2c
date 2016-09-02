@@ -235,13 +235,13 @@ int main(int argc, char** argv)
 	//----------------------------------------------
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
-	/*
+
 	int a;
 	while(1)
 	{
 		a=1;
 	}
-*/
+
 
 	return 0;
 }
