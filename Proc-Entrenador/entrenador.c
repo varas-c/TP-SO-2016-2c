@@ -18,6 +18,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <commons/log.h>
 
 
 ParametrosConsola leerParametrosConsola(char** parametros)
@@ -117,11 +118,18 @@ metadata leerMetadata()
 	int cantViajes;
 	char* auxiliar;
 
-//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Entrenador/config/metadata.config");
 	//Se lee el archivo con config_create y se almacena lo leido en config
+
+	//RUTA ABSOLUTA
+//	  config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Entrenador/config/metadata.config");
+	//RUTA RELATIVA
 	config = config_create("../config/metadata.config");
 
-	if (config==NULL) exit(20);
+	if (config==NULL)
+	{
+		printf("Archivo metadata.config no encontrado.\n");
+		exit(20);
+	}
 
 	auxiliar = config_get_string_value(config,"nombre");
 	mdata.nombre = malloc(strlen(auxiliar)+1);
@@ -174,7 +182,9 @@ ConexionEntrenador leerConexionMapa()
 	t_config* config; //Estructura
 	char* auxiliar;
 
+	//RUTA ABSOLUTA
 //	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+	//RUTA RELATIVA
 	config = config_create("../../Proc-Mapa/config/mapa.config");
 	auxiliar = config_get_string_value(config,"Puerto");
 	connect.puerto = malloc(strlen(auxiliar)+1);
@@ -191,6 +201,7 @@ ConexionEntrenador leerConexionMapa()
 
 int main(int argc, char** argv)
 {
+
 	/*
 	//Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
 	 *

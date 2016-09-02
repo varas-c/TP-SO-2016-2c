@@ -20,7 +20,7 @@
 #include "struct.h"
 
 
-#define PORT 9034   // puerto en el que escuchamos
+#define PORT 9034 // puerto en el que escuchamos
 
 
 //Obtiene un listener, si hay error, exit(1).

@@ -44,8 +44,16 @@ MetadataMapa leerMetadataMapa()
 	t_config* config; //Estructura
 	char* auxiliar;
 
-//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+	//RUTA ABSOLUTA
+	//config = config_create("//home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+	//RUTA RELATIVA
 	config = config_create("../config/mapa.config");
+
+	if(config==NULL)
+	{
+		printf("Archivo mapa.config no encontrado");
+		exit(20);
+	}
 	mdata.tiempoChequeoDeadlock = config_get_int_value(config, "TiempoChequeoDeadlock");
 	mdata.modoBatalla = config_get_int_value(config, "Batalla");
 	mdata.quantum = config_get_int_value(config,"quantum");
@@ -77,8 +85,16 @@ MetadataPokenest leerMetadataPokenest()
 	t_config* config; //Estructura
 	char* auxiliar;
 
-//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
+	//RUTA ABSOLUTA
+	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
+	//RUTA RELATIVA
 	config = config_create("../config/pokenest.config");
+
+	if(config==NULL)
+	{
+		printf("Archivo pokenest.config no encontrado");
+		exit(20);
+	}
 	mdata.posicion = config_get_int_value(config, "Posicion");
 
 	auxiliar = config_get_string_value(config, "Tipo");
@@ -99,16 +115,22 @@ MetadataPokemon leerMetadataPokemon()
 	MetadataPokemon mdata;
 	t_config* config; //Estructura
 
+	//RUTA ABSOLUTA
 	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
+	//RUTA RELATIVA
 	config = config_create("../config/pokemon.config");
+
+	if(config==NULL)
+	{
+		printf("Archivo pokemon.config no encontrado");
+		exit(20);
+	}
 	mdata.nivel = config_get_int_value(config, "Nivel");
 
 	config_destroy(config);
 
 	return mdata;
 }
-
-
 
 
 
@@ -123,6 +145,13 @@ int main(int argc, char** argv)
 	printf("Nombre Mapa: %s --- Dir Pokedex: %s \n",parametros.nombreMapa, parametros.dirPokedex);
 */
 
+	t_log* traceLogger;
+	t_log* infoLogger;
+
+	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
+	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
+	log_info(infoLogger, "Se inicia Mapa.");
+
 	MetadataPokenest mdataPokenest;
 	MetadataMapa mdataMapa;
 	MetadataPokemon mdataPokemon;
@@ -134,7 +163,7 @@ int main(int argc, char** argv)
 
 	//**********************************
 	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
-
+/*
 	nivel_gui_inicializar();
 	t_list* lista=list_create();
 	ITEM_NIVEL cosa;
@@ -148,10 +177,10 @@ int main(int argc, char** argv)
 //	lista.head->next=NULL;
 	list_add(lista, &cosa);
 	int j=0;
-	for(j=0;j<32766;j++)
+	for(j=0;j<32765;j++)
 		nivel_gui_dibujar(lista, "Prueba");
 	nivel_gui_terminar();
-
+*/
 	printf("\nDatos Mapa ---------\n");
 	printf("Tiempo chequeo deadlock %d\n", mdataMapa.tiempoChequeoDeadlock);
 	printf("Batalla %d\n", mdataMapa.modoBatalla);
@@ -172,8 +201,19 @@ int main(int argc, char** argv)
 	free(mdataMapa.ip);
 	free(mdataMapa.puerto);
 
+	//Para crear una entrada en un archivo LOG:
+	//log_tipoDeLog (logger, "mensaje"). tipoDeLog = trace, info, error, etc
+
+
+
+	log_info(infoLogger, "Se cierra Mapa.");
+	log_destroy(traceLogger);
+	log_destroy(infoLogger);
+
+	//INFORMATIVO, borrar despues
+	printf("Escuchando sockets\n");
 	socket_startServer();
-	printf("\n\n");
+
 
 	return 0;
 
