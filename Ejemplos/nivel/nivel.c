@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -35,86 +34,93 @@ typedef struct{
 	char movAnterior;
 	int flagx;
 	int flagy;
+	int destinox;
+	int destinoy;
 }Entrenador;
 
 
 //Si flagx=false then mover en X otherwise mover en Y
-void mover_entrenador(Entrenador *entrenador, int destinox, int destinoy)
+void mover_entrenador(Entrenador *entrenador)
 {
-	int movimiento = FALSE; //Es para saber si en esta llamada a la funcion, realicé un movimiento
+	int move = 0;
 
-	if(entrenador->movAnterior == 'y' && movimiento == FALSE) //Si el movimiento anterior fue en Y y todavía no me movi, me teno que mover en X
+	if(entrenador->destinox != 0 && entrenador->movAnterior == 'y' && move == 0)
 	{
-		if(entrenador->flagx == FALSE) //Si no llegué al maximo de X
+		if(entrenador->destinox < 0 ) //Me muevo hacia atras en X
 		{
-			if(entrenador->posx != destinox) //Si no llegué al DestinoX
-			{
-				entrenador->posx +=1; //Me muevo 1 en X
-				entrenador -> movAnterior = 'x'; //Me movi en X, asigno asi se que el siguient movimiento tiene que ser en Y
-				movimiento = TRUE; //Ya me moví en este turno, asi que no debería moverme
-			}
-
-			else
-			{
-				entrenador->flagx = TRUE; //Si llegué al destino de X, pongo una bandera asi ya no me muevo mas en X
-			}
+			entrenador->posx -=1;
+			entrenador->destinox += 1;
 		}
-	}
 
-
-	if(entrenador->movAnterior == 'x' && movimiento == FALSE) //Si el movimiento anterior fue en X y todavía no me movi
-	{
-		if(entrenador->flagy == FALSE) //Si todavia no llegué al maximo de Y
+		if(entrenador->destinox > 0)
 		{
-			if(entrenador->posy != destinoy) //Si todavia no llegue a DestinoY
-			{
-				entrenador->posy +=1;//me muevo 1
-				entrenador -> movAnterior = 'y';//indico que me movi en Y, asi el proximo movimiento es en X
-				movimiento = TRUE; //Este turno ya me moví, asi que no debería moverme
-			}
-
-			else
-			{
-				entrenador->flagy = TRUE; //Si llegué al destino de Y, pongo una bandera asi ya no me muevo mas en Y
-			}
+			entrenador->posx += 1;
+			entrenador->destinox -= 1;
 		}
+
+		entrenador->movAnterior = 'x';
+		move = 1;
 	}
 
-	//Si ya llegué al X,Y maximo pero todavia no llegué a destino
-
-	//llegue en X pero todavia no en Y
-	if(entrenador->posx == destinox && entrenador->posy != destinoy && movimiento != TRUE)
+	if(entrenador->destinoy != 0 && entrenador->movAnterior == 'x' && move == 0)
 	{
-		entrenador->posy +=1;
-		movimiento = TRUE;
+		if(entrenador->destinoy < 0 ) //Me muevo hacia atras en X
+		{
+			entrenador->posy -=1;
+			entrenador->destinoy += 1;
+		}
+
+		if(entrenador->destinoy > 0)
+		{
+			entrenador->posy += 1;
+			entrenador->destinoy -= 1;
+		}
+
+		entrenador->movAnterior = 'y';
+		move = 1;
 	}
 
-	//Llegue al destinoY pero todavía no en X
-	if(entrenador->posy == destinoy && entrenador->posx != destinox && movimiento != TRUE)
+	if(entrenador->destinox != 0 && move == 0) //Si todavia me queda mvimiento en X
 	{
-			entrenador->posx +=1;
+		if(entrenador->destinox < 0 ) //Me muevo hacia atras en X
+				{
+					entrenador->posx -=1;
+					entrenador->destinox += 1;
+				}
+
+				if(entrenador->destinox > 0)
+				{
+					entrenador->posx += 1;
+					entrenador->destinox -= 1;
+				}
+
+				entrenador->movAnterior = 'x';
+				move = 1;
 	}
 
-
-
-
-	/*
-	if(entrenador->flagx==FALSE)
+	if(entrenador->destinoy != 0 && move == 0)
 	{
-		entrenador->posx +=1;
-		entrenador->flagx = TRUE;
+		if(entrenador->destinoy < 0 ) //Me muevo hacia atras en X
+		{
+			entrenador->posy -=1;
+			entrenador->destinoy += 1;
+		}
 
+		if(entrenador->destinoy > 0)
+		{
+			entrenador->posy += 1;
+			entrenador->destinoy -= 1;
+		}
+
+		entrenador->movAnterior = 'y';
+		move = 1;
 	}
-
-	else
-	{
-		entrenador->posy += 1;
-		entrenador->flagx = FALSE;
-	}
-	*/
-
 
 }
+
+
+
+
 
 void inicializar_entrenador(Entrenador* entrenador)
 {
@@ -127,6 +133,45 @@ void inicializar_entrenador(Entrenador* entrenador)
 }
 
 
+void calcular_coordenadas(Entrenador* entrenador, int x, int y)
+{
+	//Pregunto por X
+
+	if(x > entrenador->posx)
+	{
+		entrenador ->destinox = x - entrenador->posx;
+	}
+
+	if(entrenador->posx == x)
+	{
+		entrenador ->destinox = 0;
+	}
+
+	if(x < entrenador->posx)
+	{
+		entrenador->destinox = x - entrenador->posx;
+	}
+
+	//Pregunto por y
+
+	if(y > entrenador->posy)
+	{
+		entrenador ->destinoy = y - entrenador->posy;
+	}
+
+	if(entrenador->posy == y)
+	{
+		entrenador ->destinoy = 0;
+	}
+
+	if(y < entrenador->posy)
+	{
+		entrenador->destinoy = y - entrenador->posy;
+	}
+
+}
+
+
 int main(void) {
     t_list* items = list_create(); //Lista donde se almacenan los items
 
@@ -134,22 +179,19 @@ int main(void) {
     Pokenest pokenest2;
     Entrenador entrenador;
 
-	int rows, cols; //tamaño de la pantalla
-
-
 	//Inicializamos espacio de dibujo
 	nivel_gui_inicializar();
 
 
     inicializar_entrenador(&entrenador);
 
-    pokenest.posx = 5;
+    pokenest.posx = 40;
     pokenest.posy = 5;
     pokenest.cant = 5;
     pokenest.simbolo = 'Z';
 
-    pokenest2.posx=39;
-    pokenest2.posy=10;
+    pokenest2.posx=5;
+    pokenest2.posy=11;
     pokenest2.cant = 3;
     pokenest2.simbolo = 'K';
 
@@ -165,13 +207,14 @@ int main(void) {
 
 	int flag = 0;
 
+	calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
+
 	while ( 1 ) {
 		int key = getch();
 
-
 		if(flag==0){
 
-		mover_entrenador(&entrenador, pokenest.posx,pokenest.posy);
+		mover_entrenador(&entrenador);
 		MoverPersonaje(items, entrenador.simbolo, entrenador.posx, entrenador.posy);
 
 		if (entrenador.posx == pokenest.posx && entrenador.posy ==pokenest.posy) {
@@ -181,11 +224,11 @@ int main(void) {
 			pokenest.cant-=1;
 		}
 
-		if(pokenest.cant == 0) {
+		if(pokenest.cant == 0)
+		{
 			flag = 1;
 			entrenador.movAnterior = 'y';
-			entrenador.flagx = FALSE;
-			entrenador.flagy = FALSE;
+			calcular_coordenadas(&entrenador,pokenest2.posx,pokenest2.posy);
 		}
 
 		}
@@ -194,17 +237,18 @@ int main(void) {
 
 		if (flag==1) {
 
-		mover_entrenador(&entrenador, pokenest2.posx,pokenest2.posy);
+		mover_entrenador(&entrenador);
 		MoverPersonaje(items, entrenador.simbolo, entrenador.posx, entrenador.posy);
 
 		if (entrenador.posx == pokenest2.posx && entrenador.posy ==pokenest2.posy) {
-			restarRecurso(items, pokenest2.simbolo);
+			//restarRecurso(items, pokenest2.simbolo);
+			BorrarItem(items, pokenest2.simbolo);
 		}
 
 		}
 
 		char buffer[20];
-		sprintf(buffer,"X:%i -- Y:%i",entrenador.posx,entrenador.posy);
+		sprintf(buffer,"Y:%i",entrenador.posx,entrenador.posy);
 		nivel_gui_dibujar(items, buffer);
 
 

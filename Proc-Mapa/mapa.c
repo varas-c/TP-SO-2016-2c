@@ -258,7 +258,6 @@ void socket_startServer()
 					inicializar_jugador(&nuevoJugador, newfd);
 					CrearPersonaje(listaDibujo, nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
 					queue_push(colaListos, &nuevoJugador);
-					//Aca se debe crear un nuevo struct entrenador y crear la interfaz gráfica.
 				}
 
 				//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
