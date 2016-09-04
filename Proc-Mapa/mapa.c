@@ -68,7 +68,7 @@ MetadataMapa leerMetadataMapa()
 	//RUTA ABSOLUTA
 	//config = config_create("//home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
 	//RUTA RELATIVA
-	config = config_create("../config/mapa.config");
+	config = config_create("config/mapa.config");
 
 	if(config==NULL)
 	{
@@ -110,7 +110,7 @@ MetadataPokenest leerMetadataPokenest()
 	//RUTA ABSOLUTA
 	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
 	//RUTA RELATIVA
-	config = config_create("../config/pokenest.config");
+	config = config_create("config/pokenest.config");
 
 	if(config==NULL)
 	{
@@ -120,6 +120,8 @@ MetadataPokenest leerMetadataPokenest()
 
 	auxiliar = config_get_string_value(config, "Posicion");
 
+
+	/*
 	//Procesamiento de posicion de string a dos ints
 	int i = strlen(auxiliar)-1;
 	int pos_es_y = 1;
@@ -152,6 +154,8 @@ MetadataPokenest leerMetadataPokenest()
 	mdata.identificador = malloc(strlen(auxiliar)+1);
 	strcpy(mdata.identificador, auxiliar);
 
+	*/
+
 	config_destroy(config);
 
 	return mdata;
@@ -165,7 +169,7 @@ MetadataPokemon leerMetadataPokemon()
 	//RUTA ABSOLUTA
 	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
 	//RUTA RELATIVA
-	config = config_create("../config/pokemon.config");
+	config = config_create("config/pokemon.config");
 
 	if(config==NULL)
 	{
@@ -339,6 +343,7 @@ int main(int argc, char** argv)
 
 	//**********************************
 
+	/*
 	printf("\nDatos Mapa ---------\n");
 	printf("Tiempo chequeo deadlock %d\n", mdataMapa.tiempoChequeoDeadlock);
 	printf("Batalla %d\n", mdataMapa.modoBatalla);
@@ -354,11 +359,15 @@ int main(int argc, char** argv)
 	printf("\nDatos Pokemon ----------\n");
 	printf("Nivel: %d\n",mdataPokemon.nivel);
 
+
+
 	free(mdataPokenest.identificador);
 	free(mdataPokenest.tipoPokemon);
 	free(mdataMapa.algoritmo);
 	free(mdataMapa.ip);
 	free(mdataMapa.puerto);
+
+	*/
 
 
 	//Para crear una entrada en un archivo LOG:

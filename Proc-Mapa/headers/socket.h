@@ -19,7 +19,7 @@
 #include <arpa/inet.h>
 #include "struct.h"
 
-#define PORT 9034 // puerto en el que escuchamos
+#define PORT 9034
 
 //Obtiene un listener, si hay error, exit(1).
 int socket_listener() {
