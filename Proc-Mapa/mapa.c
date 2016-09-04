@@ -68,11 +68,11 @@ MetadataMapa leerMetadataMapa()
 	//RUTA ABSOLUTA
 	//config = config_create("//home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
 	//RUTA RELATIVA
-	config = config_create("config/mapa.config");
+	config = config_create("../config/mapa.config");
 
 	if(config==NULL)
 	{
-		printf("Archivo mapa.config no encontrado");
+		printf("Archivo mapa.config no encontrado\n");
 		exit(20);
 	}
 
@@ -110,18 +110,17 @@ MetadataPokenest leerMetadataPokenest()
 	//RUTA ABSOLUTA
 	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
 	//RUTA RELATIVA
-	config = config_create("config/pokenest.config");
+	config = config_create("../config/pokenest.config");
 
 	if(config==NULL)
 	{
-		printf("Archivo pokenest.config no encontrado");
+		printf("Archivo pokenest.config no encontrado\n");
 		exit(20);
 	}
 
 	auxiliar = config_get_string_value(config, "Posicion");
 
 
-	/*
 	//Procesamiento de posicion de string a dos ints
 	int i = strlen(auxiliar)-1;
 	int pos_es_y = 1;
@@ -154,7 +153,6 @@ MetadataPokenest leerMetadataPokenest()
 	mdata.identificador = malloc(strlen(auxiliar)+1);
 	strcpy(mdata.identificador, auxiliar);
 
-	*/
 
 	config_destroy(config);
 
@@ -169,11 +167,11 @@ MetadataPokemon leerMetadataPokemon()
 	//RUTA ABSOLUTA
 	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
 	//RUTA RELATIVA
-	config = config_create("config/pokemon.config");
+	config = config_create("../config/pokemon.config");
 
 	if(config==NULL)
 	{
-		printf("Archivo pokemon.config no encontrado");
+		printf("Archivo pokemon.config no encontrado\n");
 		exit(20);
 	}
 
@@ -239,6 +237,7 @@ void socket_startServer()
 
 	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
 
+
 	nivel_gui_dibujar(listaDibujo, "");
 
 	Jugador nuevoJugador;
@@ -298,7 +297,7 @@ void socket_startServer()
 						}
 
 					*/
-
+					else printf("%s\n",buf);
 					} // Esto es ¡TAN FEO!
 				}
 			}

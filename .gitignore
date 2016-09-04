@@ -35,3 +35,6 @@
 #Eclipse Files
 .metadata/
 RemoteSystemsTempFiles/
+
+#Log Files
+*.log

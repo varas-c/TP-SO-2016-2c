@@ -6,11 +6,12 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <commons/config.h>
 #include "headers/struct.h"
 #include "headers/socket.h"
+#include <sys/ioctl.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <netdb.h>
@@ -246,9 +247,8 @@ int main(int argc, char** argv)
 	int a;
 	while(1)
 	{
-		a=1;
-	}
 
+	}
 
 	return 0;
 }
