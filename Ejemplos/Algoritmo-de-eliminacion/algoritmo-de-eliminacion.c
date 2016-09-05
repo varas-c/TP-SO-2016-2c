@@ -66,22 +66,24 @@ void eliminar_elemento(t_queue* cola, Jugador *element){
 
 int main(int argc, char** argv){
 	t_queue* cola = queue_create();
-	Jugador a,b,c;
+	Jugador a,b,c,d;
 	Jugador *res1, *res2;
 	int simbolo1, simbolo2;
 	a.entrenador.simbolo = '@';
 	b.entrenador.simbolo = '$';
 	c.entrenador.simbolo = '%';
+	d.entrenador.simbolo = '!';
 	queue_push(cola, &a);
 	queue_push(cola, &b);
 	queue_push(cola, &c);
+	queue_push(cola, &d);
 	eliminar_elemento(cola,&a);
 	eliminar_elemento(cola,&c);
 	res1 = queue_pop(cola);
 	simbolo1 = res1->entrenador.simbolo;
-	//res2 = queue_pop(cola);
-	//simbolo2 = res2->entrenador.simbolo;
+	res2 = queue_pop(cola);
+	simbolo2 = res2->entrenador.simbolo;
 	printf("%c\n", simbolo1);
-	//printf("%c\n", simbolo2);
+	printf("%c\n", simbolo2);
 	return 0;
 }
