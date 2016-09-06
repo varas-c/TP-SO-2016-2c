@@ -207,105 +207,18 @@ void inicializar_jugador(Jugador* unJugador, int unSocket){
 
 void socket_startServer()
 {
-	fd_set fds_entrenadores;   // conjunto maestro de descriptores de fichero
-	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
 
-	int fdmax;        // número máximo de descriptores de fichero
-	int listener;     // descriptor de socket a la escucha
-	void* buf;
-	int nbytes;
-	int i, j;
-	FD_ZERO(&fds_entrenadores);    // borra los conjuntos maestro y temporal
-	FD_ZERO(&read_fds);
+}
 
-	listener = socket_startListener();
 
-	// añadir listener al conjunto maestro
-	FD_SET(listener, &fds_entrenadores);
 
-	// seguir la pista del descriptor de fichero mayor
-	fdmax = listener; // por ahora es éste
-
-		// bucle principal
-
-	t_queue* colaListos;
-	colaListos = queue_create();
-
+void* thread_interfazGrafica()
+{
 	t_list* listaDibujo;
 	listaDibujo = list_create();
 	init_nivel();
-
-	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
-
-
 	nivel_gui_dibujar(listaDibujo, "");
 
-	Jugador nuevoJugador;
-	int newfd;
-
-	for (;;) {
-		getch();
-		read_fds = fds_entrenadores; // cópialo
-
-		//Buscamos los sockets que quieren realizar algo con Select
-		socket_select(fdmax, &read_fds);
-
-		// explorar conexiones existentes en busca de datos que leer
-		for(i = 0; i <= fdmax; i++) {
-
-			if (FD_ISSET(i, &read_fds)) { // ¡¡tenemos datos!!
-
-				if (i == listener) {
-					//SE ACEPTA UN NUEVO ENTRENADOR
-					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
-					inicializar_jugador(&nuevoJugador, newfd);
-					CrearPersonaje(listaDibujo, nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
-					queue_push(colaListos, &nuevoJugador);
-				}
-
-				//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
-				else {
-					buf = malloc(200);
-					// gestionar datos de un cliente
-					if ((nbytes = recv(i, buf,200, 0)) <= 0) { // error o conexión cerrada por el cliente
-						if (nbytes == 0) { //EL ENTRENADOR SE DESCONECTO
-							socket_closeConection(i,&fds_entrenadores);
-							}
-
-							else {
-								perror("recv");
-							}
-
-						}
-
-					/*
-					else {
-
-						// tenemos datos de algún cliente
-						for (j = 0; j <= fdmax; j++) {
-							// ¡enviar a todo el mundo!
-							if (FD_ISSET(j, &master)) {
-								// excepto al listener y a nosotros mismos
-								if (j != listener && j != i) {
-									if (send(j, buf, 100, 0) == -1) {
-										perror("send");
-										}
-									}
-								}
-							}
-
-						}
-
-					*/
-					else printf("%s\n",buf);
-					} // Esto es ¡TAN FEO!
-				}
-			}
-		int tamanio = queue_size(colaListos);
-		char v[2];
-		sprintf(v, "%i", tamanio);
-		nivel_gui_dibujar(listaDibujo, v);
-		}
 }
 
 int main(int argc, char** argv)
@@ -377,6 +290,121 @@ int main(int argc, char** argv)
 	log_destroy(infoLogger);
 
 	socket_startServer();
+
+
+
+
+
+	//**********************************
+	//**********************************
+	//FUNCION SERVER
+
+	fd_set fds_entrenadores;   // conjunto maestro de descriptores de fichero
+	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
+
+	int fdmax;        // número máximo de descriptores de fichero
+	int listener;     // descriptor de socket a la escucha
+	void* buf;
+	int nbytes;
+	int i, j;
+	FD_ZERO(&fds_entrenadores);    // borra los conjuntos maestro y temporal
+	FD_ZERO(&read_fds);
+
+	listener = socket_startListener();
+
+	// añadir listener al conjunto maestro
+	FD_SET(listener, &fds_entrenadores);
+
+	// seguir la pista del descriptor de fichero mayor
+	fdmax = listener; // por ahora es éste
+
+	// bucle principal
+
+	t_queue* colaListos;
+	colaListos = queue_create();
+
+
+
+	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
+
+	pthread_t hiloGrafico;
+	int valorHilo;
+
+	valorHilo = pthread_create(&hiloGrafico,NULL,thread_interfazGrafica,NULL);
+
+	if(valorHilo == 0)
+	{
+		perror("Error al crear hilo gráfico");
+		exit(1);
+	}
+
+	Jugador nuevoJugador;
+	int newfd;
+
+	for (;;) {
+		getch();
+		read_fds = fds_entrenadores; // cópialo
+
+		//Buscamos los sockets que quieren realizar algo con Select
+		socket_select(fdmax, &read_fds);
+
+		// explorar conexiones existentes en busca de datos que leer
+		for(i = 0; i <= fdmax; i++) {
+
+			if (FD_ISSET(i, &read_fds)) { // ¡¡tenemos datos!!
+
+				if (i == listener) {
+					//SE ACEPTA UN NUEVO ENTRENADOR
+					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
+					inicializar_jugador(&nuevoJugador, newfd);
+					//CrearPersonaje(listaDibujo, nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
+					queue_push(colaListos, &nuevoJugador);
+					}
+
+					//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
+					else {
+						buf = malloc(200);
+						// gestionar datos de un cliente
+						if ((nbytes = recv(i, buf,200, 0)) <= 0) { // error o conexión cerrada por el cliente
+							if (nbytes == 0) { //EL ENTRENADOR SE DESCONECTO
+								socket_closeConection(i,&fds_entrenadores);
+								}
+
+								else {
+									perror("recv");
+								}
+
+							}
+
+						/*
+						else {
+
+							// tenemos datos de algún cliente
+							for (j = 0; j <= fdmax; j++) {
+								// ¡enviar a todo el mundo!
+								if (FD_ISSET(j, &master)) {
+									// excepto al listener y a nosotros mismos
+									if (j != listener && j != i) {
+										if (send(j, buf, 100, 0) == -1) {
+											perror("send");
+											}
+										}
+									}
+								}
+
+							}
+
+						*/
+						else printf("%s\n",buf);
+						} // Esto es ¡TAN FEO!
+					}
+				}
+
+
+			//nivel_gui_dibujar(listaDibujo, v);
+			}
+
+
 
 
 	return 0;
