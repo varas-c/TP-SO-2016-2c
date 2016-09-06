@@ -21,26 +21,32 @@
 #include <arpa/inet.h>
 #include <commons/log.h>
 
+//Lee los parametros por consola y los guarda en un struct
 
 ParametrosConsola leerParametrosConsola(char** parametros)
 {
 	ParametrosConsola p;
 
-	p.nombreEntrenador = malloc(strlen(parametros[1])+1);
+	p.nombreEntrenador = malloc(strlen(parametros[1])+1); //Reservamos memoria
 	p.dirPokedex = malloc(strlen(parametros[2])+1);
-	strcat(p.nombreEntrenador,parametros[1]);
+
+	strcat(p.nombreEntrenador,parametros[1]); //guardamos
 	strcat(p.dirPokedex,parametros[2]);
 
 	return p;
 }
 
+//******************************************
+
+//Destructor de un struct ParametrosConsola
 void destruct_ParametrosConsola(ParametrosConsola *p)
 {
 	free(p->nombreEntrenador);
 	free(p->dirPokedex);
 }
 
-
+//******************************************
+//Verifica que los parametros pasados por consola sean los necesarios, solo los cuenta, nada mas.
 void verificarParametros(int argc)
 {
 	if(argc!=3)
@@ -51,7 +57,7 @@ void verificarParametros(int argc)
 }
 
 
-
+//******************************************
 //El calculo es 4 de "obj[" + largociudad + "]" + /n
 char* concatObjetivo(char* ciudad, char* obj)
 {
@@ -65,6 +71,8 @@ char* concatObjetivo(char* ciudad, char* obj)
 
 }
 
+//******************************************
+//Muestra los objetivos de un mapa
 void mostrarObjetivos (char **a)
 {
 	int cantViajes=0;
@@ -80,7 +88,8 @@ void mostrarObjetivos (char **a)
 
 }
 
-
+//******************************************
+//Cuenta la cantidad de viajes en una hoja de Viaje
 int cantidadDeViajes(char** hojaDeViaje)
 {
 	int cantViajes=0;
@@ -92,6 +101,7 @@ int cantidadDeViajes(char** hojaDeViaje)
 
 	return cantViajes;
 }
+
 /*
 void leerObjetivos(char* objetivos, t_config* config, int cantViajes,char** hojaDeViaje)
 {
@@ -111,27 +121,33 @@ void leerObjetivos(char* objetivos, t_config* config, int cantViajes,char** hoja
 }
 */
 
+//******************************************
 
+//Lee Metadata de un entrenador
 metadata leerMetadata()
 {
 	metadata mdata;
-	t_config* config; //Estructura
+	t_config* config; //Estructura config
 	int cantViajes;
 	char* auxiliar;
 
-	//Se lee el archivo con config_create y se almacena lo leido en config
 
 	//RUTA ABSOLUTA
 //	  config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Entrenador/config/metadata.config");
 	//RUTA RELATIVA
+
+	//Se lee el archivo con config_create y se almacena lo leido en config
 	config = config_create("../config/metadata.config");
 
+	//Si no se pudo abrir el archivo, salimos
 	if (config==NULL)
 	{
 		printf("Archivo metadata.config no encontrado.\n");
 		exit(20);
 	}
 
+
+	//Leemos el nombre en un auxiliar, luego lo copiamos
 	auxiliar = config_get_string_value(config,"nombre");
 	mdata.nombre = malloc(strlen(auxiliar)+1);
 	strcpy(mdata.nombre, auxiliar);
@@ -194,14 +210,18 @@ ConexionEntrenador leerConexionMapa()
 		exit(20);
 	}
 
+
+	//Leemos el puerto
 	auxiliar = config_get_string_value(config,"Puerto");
 	connect.puerto = malloc(strlen(auxiliar)+1);
 	strcpy(connect.puerto, auxiliar);
 
+	//Leemos la IP
 	auxiliar = config_get_string_value(config,"IP");
 	connect.ip = malloc(strlen(auxiliar)+1);
 	strcpy(connect.ip, auxiliar);
 
+	//Cerramos el archivo
 	config_destroy(config);
 	return connect;
 
