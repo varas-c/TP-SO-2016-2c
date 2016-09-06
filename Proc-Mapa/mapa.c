@@ -4,6 +4,7 @@
  *  Created on: 30/8/2016
  *      Author: utnso
  */
+#include <pthread.h>
 #include <stdio.h>
 #include <tad_items.h>
 #include <string.h>
@@ -19,6 +20,7 @@
 #include <commons/collections/queue.h>
 #include <math.h>
 #include <ctype.h>
+
 
 
 typedef struct{
@@ -205,19 +207,10 @@ void inicializar_jugador(Jugador* unJugador, int unSocket){
 }
 
 
-void socket_startServer()
+
+//ESTE ES EL HILO GRAFICO !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
+void* thread_planificador()
 {
-
-}
-
-
-
-void* thread_interfazGrafica()
-{
-	t_list* listaDibujo;
-	listaDibujo = list_create();
-	init_nivel();
-	nivel_gui_dibujar(listaDibujo, "");
 
 }
 
@@ -289,7 +282,7 @@ int main(int argc, char** argv)
 	log_destroy(traceLogger);
 	log_destroy(infoLogger);
 
-	socket_startServer();
+	//socket_startServer();
 
 
 
@@ -327,14 +320,14 @@ int main(int argc, char** argv)
 
 	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
 
-	pthread_t hiloGrafico;
+	pthread_t hiloPlanificador;
 	int valorHilo;
 
-	valorHilo = pthread_create(&hiloGrafico,NULL,thread_interfazGrafica,NULL);
+	valorHilo = pthread_create(&hiloPlanificador,NULL,thread_planificador,NULL);
 
-	if(valorHilo == 0)
+	if(valorHilo != 0)
 	{
-		perror("Error al crear hilo gráfico");
+		perror("Error al crear hilo Planificador");
 		exit(1);
 	}
 
@@ -357,8 +350,9 @@ int main(int argc, char** argv)
 					//SE ACEPTA UN NUEVO ENTRENADOR
 					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
 					inicializar_jugador(&nuevoJugador, newfd);
-					//CrearPersonaje(listaDibujo, nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
 					queue_push(colaListos, &nuevoJugador);
+
+					//ACA SE DEBE INFORMAR AL HILOGRAFICO PARA QUE CREE UN JUGADOR
 					}
 
 					//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
@@ -395,7 +389,7 @@ int main(int argc, char** argv)
 							}
 
 						*/
-						else printf("%s\n",buf);
+
 						} // Esto es ¡TAN FEO!
 					}
 				}

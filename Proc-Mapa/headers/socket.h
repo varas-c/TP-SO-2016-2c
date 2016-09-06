@@ -95,7 +95,7 @@ int socket_addNewConection(int listener, fd_set *master, int *fdmax)
 			*fdmax = newfd;
 		}
 
-	printf("selectserver: new connection from %s on ""socket %d\n", inet_ntoa(remoteaddr.sin_addr),newfd);
+	//printf("selectserver: new connection from %s on ""socket %d\n", inet_ntoa(remoteaddr.sin_addr),newfd);
 
 	}
 	return newfd;
