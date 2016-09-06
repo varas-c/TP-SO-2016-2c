@@ -131,11 +131,6 @@ metadata leerMetadata()
 	int cantViajes;
 	char* auxiliar;
 
-
-	//RUTA ABSOLUTA
-//	  config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Entrenador/config/metadata.config");
-	//RUTA RELATIVA
-
 	//Se lee el archivo con config_create y se almacena lo leido en config
 	config = config_create("../config/metadata.config");
 
@@ -193,15 +188,15 @@ metadata leerMetadata()
 	return mdata;
 }
 
-ConexionEntrenador leerConexionMapa()
+ConexionEntrenador leerConexionMapa(int mapa)
 {
 	ConexionEntrenador connect;
 	t_config* config; //Estructura
 	char* auxiliar;
 
-	//RUTA ABSOLUTA
-//	config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
-	//RUTA RELATIVA
+
+	//****************************
+	//ToDo: Aca debemos leer el mapa.config del mapa que recibimos por parametro
 	config = config_create("../../Proc-Mapa/config/mapa.config");
 
 	if(config==NULL)
@@ -209,7 +204,6 @@ ConexionEntrenador leerConexionMapa()
 		printf("Archivo mapa.config no encontrado");
 		exit(20);
 	}
-
 
 	//Leemos el puerto
 	auxiliar = config_get_string_value(config,"Puerto");
@@ -227,12 +221,47 @@ ConexionEntrenador leerConexionMapa()
 
 }
 
+typedef struct
+{
+	int posx;
+	int posy;
+}Pokenest;
+
+Pokenest inicializar_pokenest()
+{
+	Pokenest pokenest;
+	pokenest.posx = -1;
+	pokenest.posy = -1;
+
+	return pokenest;
+}
+
+typedef struct
+{
+	int numero;
+	char* nombre;
+}DatosMapa;
+
+DatosMapa inicializar_DatosMapa()
+{
+	DatosMapa mapa;
+	mapa.numero = 0;
+	return mapa;
+}
+
+
+char* obtenerNombreMapa(char* hojaDeViaje, int numeroMapa)
+{
+	return hojaDeViaje[numeroMapa];
+}
+
 int main(int argc, char** argv)
 {
 
 	/*
 	//Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
-	 *
+
+
 	ParametrosConsola parametros;
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
@@ -245,28 +274,95 @@ int main(int argc, char** argv)
 
 	metadata mdata;
 	mdata = leerMetadata();
-
-	//Leida la hoja de viaje, se debe buscar el socket y puerto del primer mapa
-
-	ConexionEntrenador connect;
-	connect = leerConexionMapa();
-
-	printf("\nIP %s \nPuerto: %s \n\n", connect.ip,connect.puerto);
-
-	//Ahora debemos conectarnos al mapa
-
-	char* numero_IP = connect.ip;
-	char* numero_Puerto = connect.puerto;
-	int fd_server = get_fdServer(numero_IP,numero_Puerto);
-
 	//--------------------------------------------
 	//----------------------------------------------
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
-	int a;
+	//--------------------------------------------
+	//----------------------------------------------
+
+	int fin_nivel = 0;
+	DatosMapa mapa = inicializar_DatosMapa();
+	Pokenest pokenest = inicializar_pokenest();
+
+
+	/* Este while es un "While Externo", el While externo es para poder avanzar de mapa una vez finalizado
+	 * el mapa actual
+	 */
 	while(1)
 	{
+		mapa.nombre = obtenerNombreMapa(mdata.hojaDeViaje,mapa.numero); //Obtenemos el nombre del mapa numero X
+
+		ConexionEntrenador connect;
+		connect = leerConexionMapa(mapa.nombre); //Leemos la información del Mapa nombre "LoQueSea"
+
+		//Ahora debemos conectarnos al mapa
+		int fd_server = get_fdServer(connect.ip,connect.puerto);
+
+		/*A partir de aca, ya nos conectamos al mapa, asi que tenemos que estar dentro de un While Interno hasta que terminamos
+		 * de capturar todos los pokemon, cuando terminamos, salimos del while interno y volvemos al externo.
+		 */
+
+		while(fin_nivel == 0) //Mientras que no hayamos ganado el nivel
+		{
+
+			//Aca vamos a estar pendiente de un recv que nos diga "Turno concedido"
+			//SI TENEMOS TURNO CONCEDIDO, PASAMOS A LAS ACCIONES
+
+
+			//*****IF TURNO CONCEDIDO = TRUE*****
+			//El turno concedido puede ser un while con un recv afuera al principio y uno abajo al final
+			//
+
+
+			/*Accion numero 1
+			Solicitar al mapa la ubicación de la PokeNest del próximo Pokémon que desea obtener, en caso de aún no conocerla.
+			Necesitamos una estructura Pokenest que guarde la ubicación de la misma
+
+			Si la pokenest tiene posx y posy = -1 es porque no tenemos datos, asi que hay que leer
+
+			*/
+
+			//*********************
+
+			/*Accion numero 2:
+			 * Avanzará una posición hacia la siguiente PokeNest1,
+			 * informando el movimiento al Mapa, en caso de aún no haber llegado a ella.
+			 *
+			 * SI ya conocemos la ubicacion de la Pokenest, hacemos el movimiento correspondiente,
+			 * actualizamos NUESTRA estructura entrenador con la nueva coordenada y le debemos indicar
+			 * al server QUE coordenada modificamos y el nuevo valor de dicha coordenada
+			 *
+			 *El mensaje sería "---- Coordenada ---- Valor-----"
+			 *Ejemplo: "X25", "Y31", "X8", etc
+			 */
+
+
+			//*********************
+
+			/*ACCION NUMERO 3:
+			 * Al llegar a las coordenadas de una PokeNest, solicitará al mapa atrapar un Pokémon.
+			 * El Entrenador quedará bloqueado hasta que el Mapa le confirme la captura del Pokémon.
+			 * En ese momento, el Entrenador evaluará (e informará al Mapa) si debe continuar atrapando Pokémons en este Mapa,
+			 * o si ya cumplió sus objetivos en el mismo.
+			 *
+			 * Para hacerlo tenemos el struct Entrenador y la Pokenest, basicamente es comparar si las coordenadas son iguales
+			 *
+			 *Para saber si ya cumplimos los objetivos, se puede crear una variable "cantidadDePokemonAAtrapar" que cuente cuantos Pokemon
+			 *tenemos que atrapar en este mapa. A medida que vamos capturando, descontamos. Si es es 0, terminamos el nivel, le informamos al mapa
+			 *salimos del mismo con un close connection
+			 *
+			 */
+
+		}
+
+		//FUERA DEL WHILE INTERNO
+		//Una vez que salimos del While interno, quiere decir que terminamos el mapa y hay que pasar a otro
+		//Antes, el entrenador tiene que dirigirse a la Pokedex y copiar la respectiva medalla del mapa
+
+		//Ahora si pasamos al siguiente mapa, podemos hacer numeroMapaActual++ y repetimos.
+		//En caso de que hayamos llegado al limite de mapas, hay que salir del while porque terminamos el juego.
 
 	}
 
