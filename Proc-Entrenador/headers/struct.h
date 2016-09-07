@@ -8,6 +8,11 @@
 #ifndef HEADERS_STRUCT_H_
 #define HEADERS_STRUCT_H_
 
+/* -----------------------------------------------
+ * METADATA DEL ENTRENADOR
+ * Almacena la información que se lee desde el archivo Metadata del Entrenador
+ ------------------------------------------------- */
+
 typedef struct
 {
 	char* nombre;
@@ -19,6 +24,10 @@ typedef struct
 
 }metadata;
 
+/* -----------------------------------------------
+ * ParametrosConsola
+ * Almacena la información que se lee desde la consola
+ ------------------------------------------------- */
 
 typedef struct
 {
@@ -26,11 +35,32 @@ typedef struct
 	char* dirPokedex;
 }ParametrosConsola;
 
+/* -----------------------------------------------
+ * ConexionEntrenador
+ * Almacena la información que se lee desde el archivo del Mapa donde esta la IP y Puerto
+ ------------------------------------------------- */
 
 typedef struct
 {
 	char* ip;
 	char* puerto;
 }ConexionEntrenador;
+
+/* -----------------------------------------------
+ * Entrenador
+ * Estructura para crear un jugador y poder moverlo, mostrarlo por pantalla.
+ ------------------------------------------------- */
+
+typedef struct{
+	char simbolo;
+	int posx;
+	int posy;
+	char movAnterior;
+	int flagx;
+	int flagy;
+	int destinox;
+	int destinoy;
+}Entrenador;
+
 
 #endif /* HEADERS_STRUCT_H_ */
