@@ -233,7 +233,7 @@ Pokenest new_pokenest(char** objetivos, int num)
 	Pokenest pokenest;
 	pokenest.posx = -1;
 	pokenest.posy = -1;
-	strcpy(pokenest.simbolo, objetivos[num]);
+	pokenest.simbolo = strdup(objetivos[num]);
 
 	return pokenest;
 }
@@ -330,9 +330,10 @@ void mover_entrenador(Entrenador *entrenador)
 
 
 
-char* obtenerNombreMapa(char* hojaDeViaje, int numeroMapa)
+char* obtenerNombreMapa(char** hojaDeViaje, int numeroMapa)
 {
-	return hojaDeViaje[numeroMapa];
+	char *a = strdup(hojaDeViaje[numeroMapa]);
+	return a;
 }
 
 
@@ -565,7 +566,9 @@ int main(int argc, char** argv)
 
 	Nivel nivel = new_nivel();
 	DatosMapa mapa = new_DatosMapa();
-	Pokenest pokenest;
+
+	Pokenest pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
+
 	int opcion = -1;
 	Entrenador entrenador;
 
