@@ -22,6 +22,12 @@
 #include <ctype.h>
 
 
+//VARIABLES GLOBALES
+#define TAMANIO_BUFFER 11
+t_queue* colaListos;
+t_list* listaDibujo;
+
+
 
 typedef struct{
 	char simbolo;
@@ -30,6 +36,7 @@ typedef struct{
 	char movAnterior;
 	int flagx;
 	int flagy;
+	char* pokemones;
 }Entrenador;
 
 typedef struct
@@ -38,6 +45,13 @@ typedef struct
 	int estado;
 	int socket;
 }Jugador;
+
+struct nodo
+{
+	Jugador jugador;
+	struct nodo* sgte;
+};
+typedef struct nodo ListaJugadores;
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -196,8 +210,9 @@ void inicializar_entrenador(Entrenador* entrenador)
     entrenador->posy = 1;
     entrenador->simbolo = '@';
     entrenador->movAnterior = 'y';
-    entrenador -> flagx = FALSE;
-    entrenador -> flagy = FALSE;
+    entrenador->flagx = FALSE;
+    entrenador->flagy = FALSE;
+    entrenador->pokemones = NULL;
 }
 
 void inicializar_jugador(Jugador* unJugador, int unSocket){
@@ -208,15 +223,108 @@ void inicializar_jugador(Jugador* unJugador, int unSocket){
 
 
 
-//ESTE ES EL HILO GRAFICO !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
+int agregar_a_lista (ListaJugadores* lista, Jugador jugador)
+{
+	ListaJugadores* aux;
+	aux=lista;
+	while(aux->sgte!=NULL)
+		aux=aux->sgte;
+
+	if (aux==lista && lista->jugador.socket==0)
+		lista->jugador=jugador;
+	else
+	{
+		if((aux->sgte=malloc(sizeof(ListaJugadores)))==NULL)
+			return 1;
+		aux->sgte->jugador=jugador;
+		aux->sgte->sgte=NULL;
+	}
+	return 0;
+}
+
+int lista_tiene_jugador(ListaJugadores lista, int socket)
+{
+	if (lista.jugador.socket == socket) return 1;
+	while(lista.sgte!=NULL)
+	{
+		lista=*(lista.sgte);
+		if(lista.jugador.socket == socket) return 1;
+
+	}
+	return 0;
+}
+
+void agregar_si_no_existe(ListaJugadores *lista, Jugador jugador)
+{
+	if (!lista_tiene_jugador(*lista, jugador.socket))
+		agregar_a_lista(lista, jugador);
+}
+
+
+
+//ESTE ES EL HILO PLANIFICADOR !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
 void* thread_planificador()
 {
+	ListaJugadores jugadoresConectados;
+	jugadoresConectados.sgte=NULL;
+	Jugador* jugadorPlanificado;
 
+	int quantum = 4; //TODO leer del archivo metadata.
+	int i=0;
+	char* buffer;
+
+	//init_nivel();
+
+	while(1)
+	{
+		jugadorPlanificado = (Jugador*)queue_pop(colaListos);
+		for(i=0; i<quantum;i++)
+		{
+			if (jugadorPlanificado != NULL && recv(jugadorPlanificado->socket, buffer, TAMANIO_BUFFER, 0)!=0) //No hay error de conexion
+			{
+				if (buffer[0]=='0') //Handshake
+				{
+					if (!lista_tiene_jugador(jugadoresConectados, jugadorPlanificado->socket))
+					{
+						printf("Detecto nuevo socket. Mensaje: %s\n", buffer);
+						//TODO Leer datos del buffer y completar jugadorPlanificado.
+					}
+				}
+				else
+				{
+					switch(buffer[0])
+					{
+						case '1':
+							buffer++;
+							break;
+							case '2':/*
+								buffer++;
+								if (buffer[0]=='x')
+									jugadorPlanificado->entrenador.posx++;
+								else
+									jugadorPlanificado->entrenador.posy++;*/
+								break;
+							case '3':
+								buffer++;
+								break;
+							case '4':
+								buffer++;
+								break;
+					}
+				}
+			}
+			else
+			{
+				//TODO cerrar conexion.
+			}
+		}
+		//nivel_gui_dibujar(listaDibujo, "Pueblo Paleta");
+	}
 }
+
 
 int main(int argc, char** argv)
 {
-
 	/*
 	ParametrosMapa parametros;
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
@@ -231,7 +339,7 @@ int main(int argc, char** argv)
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
-	log_info(infoLogger, "Se inicia Mapa.");
+	//log_info(infoLogger, "Se inicia Mapa.");
 
 	MetadataPokenest mdataPokenest;
 	MetadataMapa mdataMapa;
@@ -263,30 +371,13 @@ int main(int argc, char** argv)
 	printf("Posicion Y: %d\n",mdataPokenest.posicionY);
 	printf("\nDatos Pokemon ----------\n");
 	printf("Nivel: %d\n",mdataPokemon.nivel);
-
-
-
-	free(mdataPokenest.identificador);
-	free(mdataPokenest.tipoPokemon);
-	free(mdataMapa.algoritmo);
-	free(mdataMapa.ip);
-	free(mdataMapa.puerto);
-
 	*/
 
 
 	//Para crear una entrada en un archivo LOG:
 	//log_tipoDeLog (logger, "mensaje"). tipoDeLog = trace, info, error, etc
 
-	log_info(infoLogger, "Se cierra Mapa.");
-	log_destroy(traceLogger);
-	log_destroy(infoLogger);
-
 	//socket_startServer();
-
-
-
-
 
 	//**********************************
 	//**********************************
@@ -303,7 +394,7 @@ int main(int argc, char** argv)
 	FD_ZERO(&fds_entrenadores);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);
 
-	listener = socket_startListener();
+	listener = socket_startListener(atoi(mdataMapa.puerto));
 
 	// añadir listener al conjunto maestro
 	FD_SET(listener, &fds_entrenadores);
@@ -313,9 +404,7 @@ int main(int argc, char** argv)
 
 	// bucle principal
 
-	t_queue* colaListos;
 	colaListos = queue_create();
-
 
 
 	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
@@ -350,57 +439,43 @@ int main(int argc, char** argv)
 					//SE ACEPTA UN NUEVO ENTRENADOR
 					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
 					inicializar_jugador(&nuevoJugador, newfd);
+					//queue_push(colaListos, &nuevoJugador);
+					}
+				//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
+				else {
 					queue_push(colaListos, &nuevoJugador);
-
-					//ACA SE DEBE INFORMAR AL HILOGRAFICO PARA QUE CREE UN JUGADOR
-					}
-
-					//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
-					else {
-						buf = malloc(200);
-						// gestionar datos de un cliente
-						if ((nbytes = recv(i, buf,200, 0)) <= 0) { // error o conexión cerrada por el cliente
-							if (nbytes == 0) { //EL ENTRENADOR SE DESCONECTO
-								socket_closeConection(i,&fds_entrenadores);
-								}
-
-								else {
-									perror("recv");
-								}
-
+					/* gestionar datos de un cliente
+					if ((nbytes = recv(i, buf,200, 0)) <= 0) { // error o conexión cerrada por el cliente
+						if (nbytes == 0) { //EL ENTRENADOR SE DESCONECTO
+							socket_closeConection(i,&fds_entrenadores);
 							}
 
-						/*
 						else {
+							perror("recv");
+						}
 
-							// tenemos datos de algún cliente
-							for (j = 0; j <= fdmax; j++) {
-								// ¡enviar a todo el mundo!
-								if (FD_ISSET(j, &master)) {
-									// excepto al listener y a nosotros mismos
-									if (j != listener && j != i) {
-										if (send(j, buf, 100, 0) == -1) {
-											perror("send");
-											}
-										}
-									}
-								}
-
-							}
-
-						*/
-
-						} // Esto es ¡TAN FEO!
 					}
-				}
+					else {
+						// tenemos datos de algún cliente
+					}
+						*/
+				} // Esto es ¡TAN FEO!
+			}
+		}
 
 
 			//nivel_gui_dibujar(listaDibujo, v);
 			}
 
 
+	free(mdataPokenest.identificador);
+	free(mdataPokenest.tipoPokemon);
+	free(mdataMapa.algoritmo);
+	free(mdataMapa.ip);
+	free(mdataMapa.puerto);
 
-
+	//log_info(infoLogger, "Se cierra Mapa.");
+	log_destroy(traceLogger);
+	log_destroy(infoLogger);
 	return 0;
-
 }

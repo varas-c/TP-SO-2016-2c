@@ -263,7 +263,7 @@ int main(int argc, char** argv)
 	//----------------------------------------------
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
-
+	send(fd_server, "0Aloha\0", 7, 0);
 	int a;
 	while(1)
 	{
