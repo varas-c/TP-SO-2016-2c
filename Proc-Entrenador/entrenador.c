@@ -225,34 +225,314 @@ typedef struct
 {
 	int posx;
 	int posy;
+	char* simbolo;
 }Pokenest;
 
-Pokenest inicializar_pokenest()
+Pokenest new_pokenest(char** objetivos, int num)
 {
 	Pokenest pokenest;
 	pokenest.posx = -1;
 	pokenest.posy = -1;
+	strcpy(pokenest.simbolo, objetivos[num]);
 
 	return pokenest;
 }
 
 typedef struct
 {
-	int numero;
 	char* nombre;
 }DatosMapa;
 
-DatosMapa inicializar_DatosMapa()
+DatosMapa new_DatosMapa()
 {
 	DatosMapa mapa;
-	mapa.numero = 0;
 	return mapa;
 }
+
+//Si flagx=false then mover en X otherwise mover en Y
+void mover_entrenador(Entrenador *entrenador)
+{
+	int move = 0;
+
+	if(entrenador->destinox != 0 && entrenador->movAnterior == 'y' && move == 0)
+	{
+		if(entrenador->destinox < 0 ) //Me muevo hacia atras en X
+		{
+			entrenador->posx -=1;
+			entrenador->destinox += 1;
+		}
+
+		if(entrenador->destinox > 0)
+		{
+			entrenador->posx += 1;
+			entrenador->destinox -= 1;
+		}
+
+		entrenador->movAnterior = 'x';
+		move = 1;
+	}
+
+	if(entrenador->destinoy != 0 && entrenador->movAnterior == 'x' && move == 0)
+	{
+		if(entrenador->destinoy < 0 ) //Me muevo hacia atras en X
+		{
+			entrenador->posy -=1;
+			entrenador->destinoy += 1;
+		}
+
+		if(entrenador->destinoy > 0)
+		{
+			entrenador->posy += 1;
+			entrenador->destinoy -= 1;
+		}
+
+		entrenador->movAnterior = 'y';
+		move = 1;
+	}
+
+	if(entrenador->destinox != 0 && move == 0) //Si todavia me queda mvimiento en X
+	{
+		if(entrenador->destinox < 0 ) //Me muevo hacia atras en X
+				{
+					entrenador->posx -=1;
+					entrenador->destinox += 1;
+				}
+
+				if(entrenador->destinox > 0)
+				{
+					entrenador->posx += 1;
+					entrenador->destinox -= 1;
+				}
+
+				entrenador->movAnterior = 'x';
+				move = 1;
+	}
+
+	if(entrenador->destinoy != 0 && move == 0)
+	{
+		if(entrenador->destinoy < 0 ) //Me muevo hacia atras en X
+		{
+			entrenador->posy -=1;
+			entrenador->destinoy += 1;
+		}
+
+		if(entrenador->destinoy > 0)
+		{
+			entrenador->posy += 1;
+			entrenador->destinoy -= 1;
+		}
+
+		entrenador->movAnterior = 'y';
+		move = 1;
+	}
+
+}
+
 
 
 char* obtenerNombreMapa(char* hojaDeViaje, int numeroMapa)
 {
 	return hojaDeViaje[numeroMapa];
+}
+
+
+
+int recv_turnoConcedido(int fd_server)
+{
+	int tam_buffer = 15;
+	char mensaje[tam_buffer];
+
+	int valor_recv = recv(fd_server, (void*)mensaje, tam_buffer, 0);
+
+	if(valor_recv == -1)
+	{
+		perror("Error recv");
+		exit(1);
+	}
+
+	if(strcmp(mensaje,"turnoConcedido") == 0)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+//****************************************
+
+//Si la pokenest tiene posx y posy = -1 es porque no tenemos datos, asi que hay que leer
+int faltaPokenest(Pokenest pokenest)
+{
+	return pokenest.posx == -1 || pokenest.posy == -1;
+}
+
+//****************************************//****************************************
+//****************************************//****************************************
+
+
+int llegueAPokenest(const Entrenador entrenador, const Pokenest pokenest)
+{
+	if(entrenador.posx == pokenest.posx && entrenador.posy == pokenest.posy)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+//****************************************//****************************************
+//****************************************//****************************************
+
+int evaluar_opciones(Entrenador entrenador, Pokenest pokenest)
+{
+	/*Accion numero 1
+	Solicitar al mapa la ubicación de la PokeNest del próximo Pokémon que desea obtener, en caso de aún no conocerla.
+	Necesitamos una estructura Pokenest que guarde la ubicación de la misma
+	*/
+
+	if(faltaPokenest(pokenest))
+	{
+		return 1; //Tengo que pedirle la Pokenest al server
+	}
+
+	if(llegueAPokenest(entrenador,pokenest))
+	{
+		return 3; //Tengo que atrapar un Pokemon
+	}
+
+	return 2; //Tengo que caminar
+
+	//ToDo falta la opcion de notificar fin de objetivos!
+
+}
+
+//****************************************//****************************************
+//****************************************//****************************************
+
+void send_solicitarPokenest(Pokenest *pokenest, int fd_server)
+{
+	char* buffer;
+	int tam_buffer = 8;
+	buffer = malloc(8);
+
+	strcpy(buffer,"opc001");
+	strcat(buffer,pokenest->simbolo);
+
+	send(fd_server, buffer, tam_buffer,0);
+
+	free(buffer);
+}
+
+//****************************************//****************************************
+//****************************************//****************************************
+
+
+
+void send_moverEntrenador(Entrenador *entrenador)
+{
+	//Moverme
+	/*Accion numero 2:
+	* Avanzará una posición hacia la siguiente PokeNest1,
+	* * informando el movimiento al Mapa, en caso de aún no haber llegado a ella.
+	*
+	* SI ya conocemos la ubicacion de la Pokenest, hacemos el movimiento correspondiente,
+	* actualizamos NUESTRA estructura entrenador con la nueva coordenada y le debemos indicar
+	* al server QUE coordenada modificamos y el nuevo valor de dicha coordenada
+	*
+	El mensaje sería "---- Coordenada ---- Valor-----"
+	*Ejemplo: "X25", "Y31", "X8", etc
+	 */
+}
+
+//****************************************//****************************************
+//****************************************//****************************************
+
+void send_capturarPokemon()
+{
+
+}
+//****************************************//****************************************
+//****************************************//****************************************
+
+void send_finObjetivos()
+{
+
+}
+
+//****************************************//****************************************
+//****************************************//****************************************
+
+typedef struct
+{
+	int finNivel;
+	int nivelActual;
+	int numPokenest;
+}Nivel;
+
+Nivel new_nivel()
+{
+	Nivel nivel;
+	nivel.finNivel=0;
+	nivel.nivelActual=0;
+	nivel.numPokenest=0;
+
+	return nivel;
+}
+
+void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
+{
+	//Los mensajes recibidos al solicitar la Pokenest son de la forma  opc001-Coordenada-Coordenada
+	//Por ejemplo opc001-52-2
+	//OPC001 significa la operacion recv_solicitarPokenest
+	//52 es la coordenada en X
+	//2 es la coordenada en Y
+
+	int valor_recv;
+	int tam_buffer = 6+3+3+1; // 6 para opc001, 3 para coordenada X, 3 para coordenada Y, 1 para el barraN
+	char* buffer = malloc(tam_buffer);
+
+	char *straux;//Auxiliares
+	char *aux;//Auxiliares
+
+	valor_recv = recv(fd_server, buffer, tam_buffer, 0);// Se almacena el mensaje recibido en BUFFER
+
+	if(valor_recv == -1)  {
+		perror("Error recv"); //Hubo fallo, chau programa.
+		exit(1);
+	}
+
+	//Desciframos el mensaje recibido, como es un char*, usamos strtok y cortamos por los "-"
+	//Nota: Strtok corta una cadena en partes con el "Token" que le pases
+	//En nuestro caso, el mensaje es "opc001-XX-YY"
+	//Asi que lo corta en 3 strings: opc001, el otro XX, el otro YY;
+
+	straux = strtok(buffer,"-");
+	int vuelta = 0;
+
+	while (straux != NULL)
+	{
+		switch(vuelta)
+		{
+		case 0:
+			if(strcmp(straux,"opc001") != 0)
+			{
+				perror("Error Recv, codigo de mensaje");
+				exit(1);
+			}
+		break;
+		case 1:
+			pokenest->posx = (int) strtol(straux,&aux,10);
+		break;
+		case 2:
+			pokenest->posy = (int) strtol(straux,&aux,10);
+		}
+
+		vuelta++;
+		straux = strtok (NULL,"-");
+	}
+
+	free(buffer);
+
 }
 
 int main(int argc, char** argv)
@@ -282,20 +562,29 @@ int main(int argc, char** argv)
 	//--------------------------------------------
 	//----------------------------------------------
 
-	int fin_nivel = 0;
-	DatosMapa mapa = inicializar_DatosMapa();
-	Pokenest pokenest = inicializar_pokenest();
+
+	Nivel nivel = new_nivel();
+	DatosMapa mapa = new_DatosMapa();
+	Pokenest pokenest;
+	int opcion = -1;
+	Entrenador entrenador;
+
 
 
 	/* Este while es un "While Externo", el While externo es para poder avanzar de mapa una vez finalizado
 	 * el mapa actual
 	 */
+
+
+
+
 	while(1)
 	{
-		mapa.nombre = obtenerNombreMapa(mdata.hojaDeViaje,mapa.numero); //Obtenemos el nombre del mapa numero X
+		mapa.nombre = obtenerNombreMapa(mdata.hojaDeViaje,nivel.nivelActual); //Obtenemos el nombre del mapa numero X
 
 		ConexionEntrenador connect;
 		connect = leerConexionMapa(mapa.nombre); //Leemos la información del Mapa nombre "LoQueSea"
+
 
 		//Ahora debemos conectarnos al mapa
 		int fd_server = get_fdServer(connect.ip,connect.puerto);
@@ -304,56 +593,46 @@ int main(int argc, char** argv)
 		 * de capturar todos los pokemon, cuando terminamos, salimos del while interno y volvemos al externo.
 		 */
 
-		while(fin_nivel == 0) //Mientras que no hayamos ganado el nivel
+		while(nivel.finNivel == 0) //Mientras que no hayamos ganado el nivel
 		{
 
-			//Aca vamos a estar pendiente de un recv que nos diga "Turno concedido"
-			//SI TENEMOS TURNO CONCEDIDO, PASAMOS A LAS ACCIONES
+			if(recv_turnoConcedido(fd_server))
+			{
+				opcion = evaluar_opciones(entrenador,pokenest);
+
+				switch(opcion)
+				{
+					case 1:
+						send_solicitarPokenest(&pokenest, fd_server);
+						recv_solicitarPokenest(&pokenest, fd_server);
+					break;
+					case 2:
+						send_moverEntrenador(&entrenador);
+					break;
+					case 3:
+						send_capturarPokemon();
+					break;
+					case 4:
+						send_finObjetivos();
+					break;
+				}
 
 
-			//*****IF TURNO CONCEDIDO = TRUE*****
-			//El turno concedido puede ser un while con un recv afuera al principio y uno abajo al final
-			//
+				/*ACCION NUMERO 3:
+				 * Al llegar a las coordenadas de una PokeNest, solicitará al mapa atrapar un Pokémon.
+				* El Entrenador quedará bloqueado hasta que el Mapa le confirme la captura del Pokémon.
+				* En ese momento, el Entrenador evaluará (e informará al Mapa) si debe continuar atrapando Pokémons en este Mapa,
+					* o si ya cumplió sus objetivos en el mismo.
+
+				* Para hacerlo tenemos el struct Entrenador y la Pokenest, basicamente es comparar si las coordenadas son iguales
+					 *Para saber si ya cumplimos los objetivos, se puede crear una variable "cantidadDePokemonAAtrapar" que cuente cuantos Pokemon
+					*tenemos que atrapar en este mapa. A medida que vamos capturando, descontamos. Si es es 0, terminamos el nivel, le informamos al mapa
+					*salimos del mismo con un close connection
+					*
+					*/
+			}
 
 
-			/*Accion numero 1
-			Solicitar al mapa la ubicación de la PokeNest del próximo Pokémon que desea obtener, en caso de aún no conocerla.
-			Necesitamos una estructura Pokenest que guarde la ubicación de la misma
-
-			Si la pokenest tiene posx y posy = -1 es porque no tenemos datos, asi que hay que leer
-
-			*/
-
-			//*********************
-
-			/*Accion numero 2:
-			 * Avanzará una posición hacia la siguiente PokeNest1,
-			 * informando el movimiento al Mapa, en caso de aún no haber llegado a ella.
-			 *
-			 * SI ya conocemos la ubicacion de la Pokenest, hacemos el movimiento correspondiente,
-			 * actualizamos NUESTRA estructura entrenador con la nueva coordenada y le debemos indicar
-			 * al server QUE coordenada modificamos y el nuevo valor de dicha coordenada
-			 *
-			 *El mensaje sería "---- Coordenada ---- Valor-----"
-			 *Ejemplo: "X25", "Y31", "X8", etc
-			 */
-
-
-			//*********************
-
-			/*ACCION NUMERO 3:
-			 * Al llegar a las coordenadas de una PokeNest, solicitará al mapa atrapar un Pokémon.
-			 * El Entrenador quedará bloqueado hasta que el Mapa le confirme la captura del Pokémon.
-			 * En ese momento, el Entrenador evaluará (e informará al Mapa) si debe continuar atrapando Pokémons en este Mapa,
-			 * o si ya cumplió sus objetivos en el mismo.
-			 *
-			 * Para hacerlo tenemos el struct Entrenador y la Pokenest, basicamente es comparar si las coordenadas son iguales
-			 *
-			 *Para saber si ya cumplimos los objetivos, se puede crear una variable "cantidadDePokemonAAtrapar" que cuente cuantos Pokemon
-			 *tenemos que atrapar en este mapa. A medida que vamos capturando, descontamos. Si es es 0, terminamos el nivel, le informamos al mapa
-			 *salimos del mismo con un close connection
-			 *
-			 */
 
 		}
 

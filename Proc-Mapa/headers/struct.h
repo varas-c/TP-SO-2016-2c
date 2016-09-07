@@ -61,4 +61,9 @@ typedef struct
 	int nivel;
 }MetadataPokemon;
 
+/* -----------------------------------------------
+ * Poekenst
+ * Esctructura para crear Pokenest
+ ------------------------------------------------- */
+
 #endif /* HEADERS_STRUCTS_H_ */
