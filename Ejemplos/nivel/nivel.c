@@ -171,13 +171,65 @@ void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 
 }
 
+void cargarPokenests(t_list* pokenests, t_list* items)
+{
+	int i=0;
+	Pokenest* aux;
+	while(aux=list_get(pokenests,i))
+	{
+		CrearCaja(items, aux->simbolo, aux->posx, aux->posy, aux->cant);
+		i++;
+	}
+}
+
+ITEM_NIVEL* obtener_pokenest_por_simbolo(t_list* items, char id) {
+    bool _search_by_id(ITEM_NIVEL* item) {
+        return item->id == id;
+    }
+
+    return list_find(items, (void*) _search_by_id);
+}
+
+void interactuar(Entrenador* entrenador,t_list* items,char* objetivos,t_list* pokenests)
+{
+	int i=0,key;
+	char mostrar[20];
+
+	char proximo_simbolo;
+	ITEM_NIVEL* pokeaux;
+
+	sprintf(mostrar,"X:%i -- Y:%i",entrenador->posx,entrenador->posy);
+	nivel_gui_dibujar(items, mostrar);
+
+	while((pokeaux=obtener_pokenest_por_simbolo(pokenests,objetivos[i]))!=NULL)
+	{
+			calcular_coordenadas(entrenador,pokeaux->posx,pokeaux->posy);
+
+			while(!(entrenador->posx == pokeaux->posx && entrenador->posy ==pokeaux->posy))
+			{
+				key = getch();
+				mover_entrenador(entrenador);
+				MoverPersonaje(items, entrenador->simbolo, entrenador->posx, entrenador->posy);
+				nivel_gui_dibujar(items, mostrar);
+			}
+			restarRecurso(items, pokeaux->id);
+			i+=2;
+			nivel_gui_dibujar(items, mostrar);
+	}
+
+}
 
 int main(void) {
     t_list* items = list_create(); //Lista donde se almacenan los items
-
-    Pokenest pokenest;
-    Pokenest pokenest2;
+    t_list* pokenests = list_create();
+    Pokenest pokenest,pokenest2,pokenest3;
     Entrenador entrenador;
+
+    char objetivos[4][2];
+    strcpy(objetivos[0],"K");
+    strcpy(objetivos[1],"Z");
+    strcpy(objetivos[2],"J");
+    strcpy(objetivos[3],"'\0'");
 
 	//Inicializamos espacio de dibujo
 	nivel_gui_inicializar();
@@ -195,65 +247,20 @@ int main(void) {
     pokenest2.cant = 3;
     pokenest2.simbolo = 'K';
 
+    pokenest3.posx=25;
+    pokenest3.posy=11;
+    pokenest3.cant = 3;
+    pokenest3.simbolo = 'J'; //a esta ultima no va a ir
+
 	CrearPersonaje(items, '@',entrenador.posx, entrenador.posy);
 
-
-	CrearCaja(items, pokenest.simbolo, pokenest.posx, pokenest.posy, pokenest.cant);
-	CrearCaja(items, pokenest2.simbolo, pokenest2.posx, pokenest2.posy, pokenest2.cant);
-
-	char mostrar[20];
-	sprintf(mostrar,"X:%i -- Y:%i",entrenador.posx,entrenador.posy);
-	nivel_gui_dibujar(items, mostrar);
-
-	int flag = 0;
-
-	calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
-
-	while ( 1 ) {
-		int key = getch();
-
-		if(flag==0){
-
-		mover_entrenador(&entrenador);
-		MoverPersonaje(items, entrenador.simbolo, entrenador.posx, entrenador.posy);
-
-		if (entrenador.posx == pokenest.posx && entrenador.posy ==pokenest.posy) {
-			restarRecurso(items, pokenest.simbolo);
-
-			if(pokenest.cant > 0)
-			pokenest.cant-=1;
-		}
-
-		if(pokenest.cant == 0)
-		{
-			flag = 1;
-			entrenador.movAnterior = 'y';
-			calcular_coordenadas(&entrenador,pokenest2.posx,pokenest2.posy);
-		}
-
-		}
+	list_add(pokenests,&pokenest);
+	list_add(pokenests,&pokenest2);
+	list_add(pokenests,&pokenest3);
+	cargarPokenests(pokenests,items);
 
 
-
-		if (flag==1) {
-
-		mover_entrenador(&entrenador);
-		MoverPersonaje(items, entrenador.simbolo, entrenador.posx, entrenador.posy);
-
-		if (entrenador.posx == pokenest2.posx && entrenador.posy ==pokenest2.posy) {
-			//restarRecurso(items, pokenest2.simbolo);
-			BorrarItem(items, pokenest2.simbolo);
-		}
-
-		}
-
-		char buffer[20];
-		sprintf(buffer,"Y:%i",entrenador.posx,entrenador.posy);
-		nivel_gui_dibujar(items, buffer);
-
-
-	}
-
+	interactuar(&entrenador,items,objetivos,pokenests);
 
 	BorrarItem(items, '@');
 	BorrarItem(items, 'Z');
