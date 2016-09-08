@@ -267,7 +267,7 @@ void loggearColas(void){
 		log_info(infoLogger, "Los Entrenadores que se encuentran en la cola de listos son:\n");
 		while(auxLista!=NULL){
 			jugador = (Jugador*)queue_pop(auxLista);
-			log_info(infoLogger, "%s \n", jugador->entrenador);
+			log_info(infoLogger, "%s \n", jugador->entrenador); //esto me muestra todos los que estan la cola
 		}
 	}
 
