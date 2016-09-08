@@ -25,8 +25,10 @@
 //VARIABLES GLOBALES
 #define TAMANIO_BUFFER 11
 t_queue* colaListos;
+t_queue* colaBloqueados;
 t_list* listaDibujo;
-
+t_log* traceLogger;
+t_log* infoLogger;
 
 
 typedef struct{
@@ -62,8 +64,6 @@ ParametrosMapa leerParametrosConsola(char** argv)
 	return parametros;
 }
 
-
-
 void verificarParametros(int argc)
 {
 	if(argc!=3)
@@ -72,7 +72,6 @@ void verificarParametros(int argc)
 		exit(1);
 	}
 }
-
 
 MetadataMapa leerMetadataMapa()
 {
@@ -121,6 +120,7 @@ MetadataPokenest leerMetadataPokenest()
 {
 	MetadataPokenest mdata;
 	t_config* config; //Estructura
+
 	char* auxiliar;
 
 	//RUTA ABSOLUTA
@@ -221,8 +221,6 @@ void inicializar_jugador(Jugador* unJugador, int unSocket){
 	unJugador->estado = 0;
 }
 
-
-
 int agregar_a_lista (ListaJugadores* lista, Jugador jugador)
 {
 	ListaJugadores* aux;
@@ -260,7 +258,28 @@ void agregar_si_no_existe(ListaJugadores *lista, Jugador jugador)
 		agregar_a_lista(lista, jugador);
 }
 
+void loggearColas(void){
+	t_queue *auxLista;
+	auxLista = queue_create();
+	Jugador* jugador;
+	if (!queue_is_empty(colaListos)){
+		auxLista = colaListos;
+		log_info(infoLogger, "Los Entrenadores que se encuentran en la cola de listos son:\n");
+		while(auxLista!=NULL){
+			jugador = (Jugador*)queue_pop(auxLista);
+			log_info(infoLogger, "%s \n", jugador->entrenador);
+		}
+	}
 
+	if (!queue_is_empty(colaBloqueados)){
+			auxLista = colaBloqueados;
+			log_info(infoLogger, "Los Entrenadores que se encuentran en la cola de bloqueados son:\n");
+			while(auxLista!=NULL){
+				jugador = (Jugador*)queue_pop(auxLista);
+				log_info(infoLogger, "%s \n", jugador->entrenador);
+			}
+		}
+}
 
 //ESTE ES EL HILO PLANIFICADOR !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
 void* thread_planificador()
@@ -278,6 +297,11 @@ void* thread_planificador()
 	while(1)
 	{
 		jugadorPlanificado = (Jugador*)queue_pop(colaListos);
+	    //log_info(infoLogger, "El entrenador %s con el ip %d ha salido de la cola de listos."),
+	    	//(jugadorPlanificado)-> entrenador, (jugadorPlanificado)-> estado;
+	    		//, (jugadorPlanificado)-> estado, (jugadorPlanificado)->socket);
+		//loggearColas();
+
 		for(i=0; i<quantum;i++)
 		{
 			if (jugadorPlanificado != NULL && recv(jugadorPlanificado->socket, buffer, TAMANIO_BUFFER, 0)!=0) //No hay error de conexion
@@ -333,13 +357,9 @@ int main(int argc, char** argv)
 	printf("Nombre Mapa: %s --- Dir Pokedex: %s \n",parametros.nombreMapa, parametros.dirPokedex);
 */
 
-
-	t_log* traceLogger;
-	t_log* infoLogger;
-
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
-	//log_info(infoLogger, "Se inicia Mapa.");
+	log_info(infoLogger, "Se inicia Mapa.");
 
 	MetadataPokenest mdataPokenest;
 	MetadataMapa mdataMapa;
@@ -351,8 +371,7 @@ int main(int argc, char** argv)
 	mdataPokemon = leerMetadataPokemon();
 
 	//**********************************
-	//PARA HACER: FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
-
+	//ToDo FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
 
 	//**********************************
 
@@ -372,7 +391,6 @@ int main(int argc, char** argv)
 	printf("\nDatos Pokemon ----------\n");
 	printf("Nivel: %d\n",mdataPokemon.nivel);
 	*/
-
 
 	//Para crear una entrada en un archivo LOG:
 	//log_tipoDeLog (logger, "mensaje"). tipoDeLog = trace, info, error, etc
@@ -405,6 +423,7 @@ int main(int argc, char** argv)
 	// bucle principal
 
 	colaListos = queue_create();
+	//colaBloqueados = queue_create();
 
 
 	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
@@ -439,11 +458,16 @@ int main(int argc, char** argv)
 					//SE ACEPTA UN NUEVO ENTRENADOR
 					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
 					inicializar_jugador(&nuevoJugador, newfd);
-					//queue_push(colaListos, &nuevoJugador);
-					}
-				//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
+					queue_push(colaListos, &nuevoJugador);
+					log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
+					(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
+					loggearColas();
+				}
+					//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
 				else {
 					queue_push(colaListos, &nuevoJugador);
+					log_info(infoLogger, "%s ha ingresado a la cola de listos.", (&nuevoJugador) -> entrenador);
+					loggearColas();
 					/* gestionar datos de un cliente
 					if ((nbytes = recv(i, buf,200, 0)) <= 0) { // error o conexión cerrada por el cliente
 						if (nbytes == 0) { //EL ENTRENADOR SE DESCONECTO
@@ -474,7 +498,7 @@ int main(int argc, char** argv)
 	free(mdataMapa.ip);
 	free(mdataMapa.puerto);
 
-	//log_info(infoLogger, "Se cierra Mapa.");
+	log_info(infoLogger, "Se cierra Mapa.");
 	log_destroy(traceLogger);
 	log_destroy(infoLogger);
 	return 0;

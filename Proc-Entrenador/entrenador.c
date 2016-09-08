@@ -201,7 +201,7 @@ ConexionEntrenador leerConexionMapa(int mapa)
 
 	if(config==NULL)
 	{
-		printf("Archivo mapa.config no encontrado");
+		printf("Archivo mapa.config no encontrado\n");
 		exit(20);
 	}
 
