@@ -297,10 +297,12 @@ void* thread_planificador()
 	while(1)
 	{
 		jugadorPlanificado = (Jugador*)queue_pop(colaListos);
-	    //log_info(infoLogger, "El entrenador %s con el ip %d ha salido de la cola de listos."),
-	    	//(jugadorPlanificado)-> entrenador, (jugadorPlanificado)-> estado;
-	    		//, (jugadorPlanificado)-> estado, (jugadorPlanificado)->socket);
-		//loggearColas();
+
+		/*if(jugadorPlanificado != NULL){
+			log_info(infoLogger, "El entrenador %s con ip %d ysocket %d ha salido de la cola de listos.",
+	    	(jugadorPlanificado)-> entrenador, (jugadorPlanificado)-> estado, (jugadorPlanificado)->socket);
+			loggearColas();
+		}*/ //ahora funciona pero lo dejo comentado por las dudas
 
 		for(i=0; i<quantum;i++)
 		{
