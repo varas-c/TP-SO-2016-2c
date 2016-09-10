@@ -26,10 +26,12 @@
 #define TAMANIO_BUFFER 11
 t_queue* colaListos;
 t_queue* colaBloqueados;
+t_queue* colaDesconectados;
 t_list* listaDibujo;
 t_log* traceLogger;
 t_log* infoLogger;
-
+int socket_bloqueado = -1;
+pthread_mutex_t mutex_socket = PTHREAD_MUTEX_INITIALIZER;
 
 typedef struct{
 	char simbolo;
@@ -282,70 +284,59 @@ void loggearColas(void){
 }
 
 //ESTE ES EL HILO PLANIFICADOR !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
+
+
 void* thread_planificador()
 {
-	ListaJugadores jugadoresConectados;
-	jugadoresConectados.sgte=NULL;
-	Jugador* jugadorPlanificado;
+	//Hay que sacar a todos los que se fueron y nos avisó el mapa!
+	void* buffer_recv;
+	buffer_recv = malloc(50);
+	Jugador *jugadorJugando;
+	int socket_desconectado;
+	Jugador *jugadorDesconectado;
+	char turno[20] = "turnoConcedido";
 
-	int quantum = 4; //TODO leer del archivo metadata.
-	int i=0;
-	char* buffer;
-
-	//init_nivel();
 
 	while(1)
 	{
-		jugadorPlanificado = (Jugador*)queue_pop(colaListos);
-
-		/*if(jugadorPlanificado != NULL){
-			log_info(infoLogger, "El entrenador %s con ip %d ysocket %d ha salido de la cola de listos.",
-	    	(jugadorPlanificado)-> entrenador, (jugadorPlanificado)-> estado, (jugadorPlanificado)->socket);
-			loggearColas();
-		}*/ //ahora funciona pero lo dejo comentado por las dudas
-
-		for(i=0; i<quantum;i++)
-		{
-			if (jugadorPlanificado != NULL && recv(jugadorPlanificado->socket, buffer, TAMANIO_BUFFER, 0)!=0) //No hay error de conexion
-			{
-				if (buffer[0]=='0') //Handshake
-				{
-					if (!lista_tiene_jugador(jugadoresConectados, jugadorPlanificado->socket))
-					{
-						printf("Detecto nuevo socket. Mensaje: %s\n", buffer);
-						//TODO Leer datos del buffer y completar jugadorPlanificado.
-					}
-				}
-				else
-				{
-					switch(buffer[0])
-					{
-						case '1':
-							buffer++;
-							break;
-							case '2':/*
-								buffer++;
-								if (buffer[0]=='x')
-									jugadorPlanificado->entrenador.posx++;
-								else
-									jugadorPlanificado->entrenador.posy++;*/
-								break;
-							case '3':
-								buffer++;
-								break;
-							case '4':
-								buffer++;
-								break;
-					}
-				}
-			}
-			else
-			{
-				//TODO cerrar conexion.
-			}
-		}
-		//nivel_gui_dibujar(listaDibujo, "Pueblo Paleta");
+	sleep(0.1);
+	while(!queue_is_empty(colaDesconectados))
+	{
+		socket_desconectado = queue_pop(colaDesconectados);
+		fflush(stdout);
+		printf("Se fue el jugador: %i", socket_desconectado);
 	}
+
+	//Si nadie mas se quiere ir, es hora de Jugar!
+
+
+	int flag = 0;
+
+	pthread_mutex_lock(&mutex_socket);
+
+	if(!queue_is_empty(colaListos))
+	{
+	Jugador *jugador = malloc(sizeof(Jugador));
+	flag = 1;
+	jugador = queue_pop(colaListos);
+	socket_bloqueado = jugador->socket;
+
+	send(jugador->socket,turno,20,0);
+	recv(jugador->socket,buffer_recv,50,0);
+
+	}
+	pthread_mutex_unlock(&mutex_socket);
+
+
+	//-------
+
+
+
+
+
+
+	}
+
 }
 
 
@@ -425,13 +416,19 @@ int main(int argc, char** argv)
 	// bucle principal
 
 	colaListos = queue_create();
+	colaDesconectados = queue_create();
 	//colaBloqueados = queue_create();
 
 
 	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
 
+	int valor_recv;
+	void *buffer_recv;
+	int tamBuffer_recv = 10;
+	buffer_recv = malloc(tamBuffer_recv);
+
 	pthread_t hiloPlanificador;
-	int valorHilo;
+	int valorHilo = -1;
 
 	valorHilo = pthread_create(&hiloPlanificador,NULL,thread_planificador,NULL);
 
@@ -440,7 +437,6 @@ int main(int argc, char** argv)
 		perror("Error al crear hilo Planificador");
 		exit(1);
 	}
-
 	Jugador nuevoJugador;
 	int newfd;
 
@@ -451,47 +447,43 @@ int main(int argc, char** argv)
 		//Buscamos los sockets que quieren realizar algo con Select
 		socket_select(fdmax, &read_fds);
 
-		// explorar conexiones existentes en busca de datos que leer
+
+		//Recorremos los sockets con pedidos
 		for(i = 0; i <= fdmax; i++) {
 
-			if (FD_ISSET(i, &read_fds)) { // ¡¡tenemos datos!!
+			if (FD_ISSET(i, &read_fds)) {
 
+				//Si es el Listener, tenemos NUEVA CONEXION!
 				if (i == listener) {
 					//SE ACEPTA UN NUEVO ENTRENADOR
 					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
+					printf("Server avisa: %i",newfd);
 					inicializar_jugador(&nuevoJugador, newfd);
 					queue_push(colaListos, &nuevoJugador);
-					log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
-					(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
-					loggearColas();
+					//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
+					//(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
+					//loggearColas();
+
 				}
-					//A PARTIR DE ACA SE RECIBEN DATOS DEL CLIENTE
-				else {
-					queue_push(colaListos, &nuevoJugador);
-					log_info(infoLogger, "%s ha ingresado a la cola de listos.", (&nuevoJugador) -> entrenador);
-					loggearColas();
-					/* gestionar datos de un cliente
-					if ((nbytes = recv(i, buf,200, 0)) <= 0) { // error o conexión cerrada por el cliente
-						if (nbytes == 0) { //EL ENTRENADOR SE DESCONECTO
-							socket_closeConection(i,&fds_entrenadores);
-							}
+				//Si no es el Listener, el entrenador SE DESCONECTÓ!!
+				else
+				{
+					pthread_mutex_lock(&mutex_socket);
+					if(socket_bloqueado != i)
+					{
 
-						else {
-							perror("recv");
-						}
+					valor_recv = recv(i, buffer_recv, tamBuffer_recv, 0);
 
+					if(valor_recv == 0)
+					{
+						queue_push(colaDesconectados,&i);
 					}
-					else {
-						// tenemos datos de algún cliente
+					pthread_mutex_unlock(&mutex_socket);
 					}
-						*/
-				} // Esto es ¡TAN FEO!
+				}
 			}
 		}
-
-
-			//nivel_gui_dibujar(listaDibujo, v);
-			}
+	}
 
 
 	free(mdataPokenest.identificador);

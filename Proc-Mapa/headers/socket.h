@@ -19,7 +19,7 @@
 #include <arpa/inet.h>
 #include "struct.h"
 
-//#define PORT 9034
+#define PORT 9034
 
 //Obtiene un listener, si hay error, exit(1).
 int socket_listener() {
@@ -49,7 +49,7 @@ void socket_bind(int listener, int port)
 	struct sockaddr_in myaddr;     // dirección del servidor
 	myaddr.sin_family = AF_INET;
 	myaddr.sin_addr.s_addr = INADDR_ANY;
-	myaddr.sin_port = htons(port);
+	myaddr.sin_port = htons(PORT);
 	memset(&(myaddr.sin_zero), '\0', 8);
 
 	if (bind(listener, (struct sockaddr *) &myaddr, sizeof(myaddr)) == -1) {
