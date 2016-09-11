@@ -33,29 +33,23 @@ t_log* infoLogger;
 int socket_bloqueado = -1;
 pthread_mutex_t mutex_socket = PTHREAD_MUTEX_INITIALIZER;
 
-typedef struct{
-	char simbolo;
-	int posx;
-	int posy;
-	char movAnterior;
-	int flagx;
-	int flagy;
-	char* pokemones;
-}Entrenador;
+t_list* listaPokenest;
 
-typedef struct
-{
-	Entrenador entrenador;
-	int estado;
-	int socket;
-}Jugador;
 
-struct nodo
-{
-	Jugador jugador;
-	struct nodo* sgte;
+
+
+enum codigoOperaciones {
+	TURNO = 0,
+	POKENEST = 1,
 };
-typedef struct nodo ListaJugadores;
+
+enum sizeofBuffer
+{
+	size_TURNO = sizeof(int),
+	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
+};
+
+
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -168,8 +162,7 @@ MetadataPokenest leerMetadataPokenest()
 	strcpy(mdata.tipoPokemon, auxiliar);
 
 	auxiliar = config_get_string_value(config,"Identificador");
-	mdata.identificador = malloc(strlen(auxiliar)+1);
-	strcpy(mdata.identificador, auxiliar);
+	memcpy(&(mdata.simbolo),auxiliar,sizeof(char));
 
 
 	config_destroy(config);
@@ -223,6 +216,10 @@ void inicializar_jugador(Jugador* unJugador, int unSocket){
 	unJugador->estado = 0;
 }
 
+/*
+ *
+
+ /*
 int agregar_a_lista (ListaJugadores* lista, Jugador jugador)
 {
 	ListaJugadores* aux;
@@ -260,6 +257,8 @@ void agregar_si_no_existe(ListaJugadores *lista, Jugador jugador)
 		agregar_a_lista(lista, jugador);
 }
 
+*/
+
 void loggearColas(void){
 	t_queue *auxLista;
 	auxLista = queue_create();
@@ -283,18 +282,130 @@ void loggearColas(void){
 		}
 }
 
+typedef struct
+{
+	void* buffer;
+	int tam_buffer;
+}Paquete;
+
+
+//************************
+
+char dsrlz_Pokenest(void* buffer)
+{
+	char pokenest;
+	memcpy(&pokenest,buffer+sizeof(int),sizeof(char));
+	return pokenest;
+}
+
+
+Paquete srlz_Pokenest(MetadataPokenest pokenest)
+{
+	Paquete paquete;
+	paquete.buffer = malloc(size_POKENEST);
+	paquete.tam_buffer = size_POKENEST;
+
+	int size[4];
+	size[0] = sizeof(int);
+	size[1] = sizeof(char);
+	size[2] = sizeof(int);
+	size[3] = sizeof(int);
+
+
+	//Copiamos el codigo de operacion
+	int codigo = POKENEST;
+	memcpy(paquete.buffer,&codigo,size[0]);
+
+	//Copiamos el simbolo
+	memcpy(paquete.buffer + size[0], &(pokenest.simbolo),size[1]);
+
+	//Copiamos la coordenada en X
+	memcpy(paquete.buffer+size[0]+size[1],&(pokenest.posicionX),size[2]);
+
+	//Copiamos la coordenada en Y
+	memcpy(paquete.buffer+size[0]+size[1]+size[2],&(pokenest.posicionY),size[3]);
+
+	return paquete;
+}
+
+//
+
+void free_paquete(Paquete *paquete)
+{
+	free(paquete->buffer);
+	paquete->tam_buffer = -1;
+}
+
+//*********
+
+
+Paquete srlz_turno()
+{
+	Paquete paquete;
+	paquete.buffer = malloc(size_TURNO);
+	paquete.tam_buffer = size_TURNO;
+	int turno = TURNO;
+
+	memcpy(paquete.buffer,&turno,size_TURNO);
+
+	return paquete;
+}
+
+void send_turno(Paquete* paquete,int socket)
+{
+	send(socket,paquete->buffer,paquete->tam_buffer,0);
+}
+
+void dsrlz_pokenest(void* buffer)
+{
+	Pokenest pokenest;
+
+}
+
+
+MetadataPokenest buscar_Pokenest(char simbolo)
+{
+
+	bool _find_pokenest_(MetadataPokenest* aux)
+	{
+		return aux->simbolo == simbolo;
+	}
+
+	MetadataPokenest *ptr = (MetadataPokenest*) list_find(listaPokenest,(void*)_find_pokenest_);
+
+	MetadataPokenest pokenest;
+	pokenest.simbolo = ptr->simbolo;
+	pokenest.posicionX = ptr->posicionX;
+	pokenest.posicionY = ptr->posicionY;
+	pokenest.tipoPokemon = strdup(ptr->tipoPokemon);
+
+	return pokenest;
+
+}
+
+void send_Pokenest(int socket,Paquete *paquete)
+{
+	send(socket,paquete->buffer,paquete->tam_buffer,0);
+}
+
+
 //ESTE ES EL HILO PLANIFICADOR !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
-
-
 void* thread_planificador()
 {
+	Paquete paquete;
+
+
 	//Hay que sacar a todos los que se fueron y nos avisó el mapa!
 	void* buffer_recv;
+
 	buffer_recv = malloc(50);
 	Jugador *jugadorJugando;
 	int socket_desconectado;
 	Jugador *jugadorDesconectado;
-	char turno[20] = "turnoConcedido";
+	int quantum = 4;
+	int codOp = -1;
+	char pokenestPedida;
+	MetadataPokenest pokenestEnviar;
 
 
 	while(1)
@@ -302,30 +413,55 @@ void* thread_planificador()
 	sleep(0.1);
 	while(!queue_is_empty(colaDesconectados))
 	{
-		socket_desconectado = queue_pop(colaDesconectados);
-		fflush(stdout);
-		printf("Se fue el jugador: %i", socket_desconectado);
+		//ELIMINAMOS JUGADORES
+		socket_desconectado = (int) queue_pop(colaDesconectados);
 	}
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
 
-
 	int flag = 0;
 
-	pthread_mutex_lock(&mutex_socket);
+
 
 	if(!queue_is_empty(colaListos))
 	{
+	pthread_mutex_lock(&mutex_socket);
 	Jugador *jugador = malloc(sizeof(Jugador));
 	flag = 1;
 	jugador = queue_pop(colaListos);
 	socket_bloqueado = jugador->socket;
 
-	send(jugador->socket,turno,20,0);
+	//Ya tenemos jugador, ahora le mandamos un turno
+
+	paquete = srlz_turno();
+	send_turno(&paquete,jugador->socket);
+	free_paquete(&paquete);
+
+	//Ya mandamos el turno, ahora recibimos el pedido del entrenador
 	recv(jugador->socket,buffer_recv,50,0);
 
+	//Tomamos el primer int del buffer para ver el código de operacion
+	memcpy(&codOp,buffer_recv,sizeof(int));
+
+
+	//Evaluo el codigo de Operacion para ver que verga quiere
+	switch(codOp)
+	{
+	case POKENEST: //Nos pidieron una pokenest, hay que entregarla:
+		pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
+		pokenestEnviar = buscar_Pokenest(pokenestPedida);
+		paquete = srlz_Pokenest(pokenestEnviar);
+		send_Pokenest(jugador->socket,&paquete);
+	break;
 	}
+
+	free(buffer_recv);
 	pthread_mutex_unlock(&mutex_socket);
+
+	}
+
+
+
 
 
 	//-------
@@ -333,11 +469,10 @@ void* thread_planificador()
 
 
 
-
-
 	}
 
 }
+
 
 
 int main(int argc, char** argv)
@@ -354,17 +489,24 @@ int main(int argc, char** argv)
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
 	log_info(infoLogger, "Se inicia Mapa.");
 
-	MetadataPokenest mdataPokenest;
+
+	listaPokenest= list_create();
+
+
 	MetadataMapa mdataMapa;
 	MetadataPokemon mdataPokemon;
-
+	MetadataPokenest mdataPokenest;
 
 	mdataMapa = leerMetadataMapa();
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
 
-	//**********************************
-	//ToDo FALTAN LEER LOS ARCHIVOS DE CONFIGURACION DE POKEMON Y POKENEST, YA ESTAN LAS ESTRUCTURAS DEFINIDAS EN EL HEADER!
+
+	//Agrego a la lista
+	list_add(listaPokenest,&mdataPokenest);
+
+
+	//**********************************!
 
 	//**********************************
 
@@ -394,8 +536,9 @@ int main(int argc, char** argv)
 	//**********************************
 	//FUNCION SERVER
 
-	fd_set fds_entrenadores;   // conjunto maestro de descriptores de fichero
+
 	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
+	fd_set fds_entrenadores;   // conjunto maestro de descriptores de fichero
 
 	int fdmax;        // número máximo de descriptores de fichero
 	int listener;     // descriptor de socket a la escucha
@@ -486,7 +629,6 @@ int main(int argc, char** argv)
 	}
 
 
-	free(mdataPokenest.identificador);
 	free(mdataPokenest.tipoPokemon);
 	free(mdataMapa.algoritmo);
 	free(mdataMapa.ip);

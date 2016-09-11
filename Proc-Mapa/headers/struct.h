@@ -48,7 +48,7 @@ typedef struct
 	char* tipoPokemon;
 	int posicionX;
 	int posicionY;
-	char* identificador;
+	char simbolo;
 }MetadataPokenest;
 
 /* -----------------------------------------------
@@ -65,5 +65,35 @@ typedef struct
  * Poekenst
  * Esctructura para crear Pokenest
  ------------------------------------------------- */
+
+typedef struct{
+	char simbolo;
+	int posx;
+	int posy;
+	char movAnterior;
+	int flagx;
+	int flagy;
+	char* pokemones;
+}Entrenador;
+
+typedef struct
+{
+	Entrenador entrenador;
+	int estado;
+	int socket;
+}Jugador;
+
+
+typedef struct nodo ListaJugadores;
+
+//***************
+typedef struct
+{
+	int posx;
+	int posy;
+	char simbolo;
+}Pokenest;
+
+
 
 #endif /* HEADERS_STRUCTS_H_ */

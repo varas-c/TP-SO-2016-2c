@@ -183,6 +183,7 @@ void cargarPokenests(t_list* pokenests, t_list* items)
 }
 
 ITEM_NIVEL* obtener_pokenest_por_simbolo(t_list* items, char id) {
+
     bool _search_by_id(ITEM_NIVEL* item) {
         return item->id == id;
     }

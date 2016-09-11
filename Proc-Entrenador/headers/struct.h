@@ -21,7 +21,6 @@ typedef struct
 	char** objetivos;
 	int vidas;
 	int reintentos;
-
 }metadata;
 
 /* -----------------------------------------------
@@ -61,6 +60,13 @@ typedef struct{
 	int destinox;
 	int destinoy;
 }Entrenador;
+
+typedef struct
+{
+	int posx;
+	int posy;
+	char simbolo;
+}Pokenest;
 
 
 #endif /* HEADERS_STRUCT_H_ */

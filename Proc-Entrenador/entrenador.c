@@ -21,6 +21,19 @@
 #include <arpa/inet.h>
 #include <commons/log.h>
 
+enum codigoOperaciones {
+	TURNO = 0,
+	POKENEST = 1,
+};
+
+enum sizeofBuffer
+{
+	size_TURNO = sizeof(int),
+	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int)
+};
+
+
+
 //Lee los parametros por consola y los guarda en un struct
 
 ParametrosConsola leerParametrosConsola(char** parametros)
@@ -222,20 +235,15 @@ ConexionEntrenador leerConexionMapa(int mapa)
 
 }
 
-typedef struct
-{
-	int posx;
-	int posy;
-	char* simbolo;
-}Pokenest;
+
 
 Pokenest new_pokenest(char** objetivos, int num)
 {
 	Pokenest pokenest;
 	pokenest.posx = -1;
 	pokenest.posy = -1;
-	pokenest.simbolo = strdup(objetivos[num]);
-
+	char* aux = strdup(objetivos[num]);
+	memcpy(&pokenest.simbolo,aux, sizeof(char));
 	return pokenest;
 }
 
@@ -341,8 +349,9 @@ char* obtenerNombreMapa(char** hojaDeViaje, int numeroMapa)
 
 int recv_turnoConcedido(int fd_server)
 {
-	int tam_buffer = 15;
-	char mensaje[tam_buffer];
+	int tam_buffer = sizeof(int);
+	void* mensaje[tam_buffer];
+	int codigo;
 
 	int valor_recv = recv(fd_server, (void*)mensaje, tam_buffer, 0);
 
@@ -352,7 +361,10 @@ int recv_turnoConcedido(int fd_server)
 		exit(1);
 	}
 
-	if(strcmp(mensaje,"turnoConcedido") == 0)
+	//Deserializamos
+	memcpy(&codigo,mensaje,sizeof(int));
+
+	if(codigo == TURNO)
 	{
 		return 1;
 	}
@@ -413,12 +425,15 @@ int evaluar_opciones(Entrenador entrenador, Pokenest pokenest)
 
 void send_solicitarPokenest(Pokenest *pokenest, int fd_server)
 {
-	char* buffer;
-	int tam_buffer = 8;
-	buffer = malloc(8);
+	void* buffer;
+	int tam_buffer = sizeof(int)+sizeof(char);
+	buffer = malloc(tam_buffer);
 
-	strcpy(buffer,"opc001");
-	strcat(buffer,pokenest->simbolo);
+	int codigo = POKENEST;
+
+	//Copiamos primero el codigo, despues el simbolo de la Pokenest
+	memcpy(buffer,&codigo,sizeof(int));
+	memcpy(buffer+sizeof(int),&(pokenest->simbolo),sizeof(char));
 
 	send(fd_server, buffer, tam_buffer,0);
 
@@ -483,18 +498,12 @@ Nivel new_nivel()
 
 void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
 {
-	//Los mensajes recibidos al solicitar la Pokenest son de la forma  opc001-Coordenada-Coordenada
-	//Por ejemplo opc001-52-2
-	//OPC001 significa la operacion recv_solicitarPokenest
-	//52 es la coordenada en X
-	//2 es la coordenada en Y
 
 	int valor_recv;
-	int tam_buffer = 6+3+3+1; // 6 para opc001, 3 para coordenada X, 3 para coordenada Y, 1 para el barraN
-	char* buffer = malloc(tam_buffer);
+	int codigo;
+	int tam_buffer = size_POKENEST;
 
-	char *straux;//Auxiliares
-	char *aux;//Auxiliares
+	char* buffer = malloc(tam_buffer);
 
 	valor_recv = recv(fd_server, buffer, tam_buffer, 0);// Se almacena el mensaje recibido en BUFFER
 
@@ -503,39 +512,28 @@ void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
 		exit(1);
 	}
 
-	//Desciframos el mensaje recibido, como es un char*, usamos strtok y cortamos por los "-"
-	//Nota: Strtok corta una cadena en partes con el "Token" que le pases
-	//En nuestro caso, el mensaje es "opc001-XX-YY"
-	//Asi que lo corta en 3 strings: opc001, el otro XX, el otro YY;
+	//Verificamos que el codigo sea correcto
+	memcpy(&codigo,buffer,sizeof(int));
 
-	straux = strtok(buffer,"-");
-	int vuelta = 0;
-
-	while (straux != NULL)
+	if(codigo != POKENEST)
 	{
-		switch(vuelta)
-		{
-		case 0:
-			if(strcmp(straux,"opc001") != 0)
-			{
-				perror("Error Recv, codigo de mensaje");
-				exit(1);
-			}
-		break;
-		case 1:
-			pokenest->posx = (int) strtol(straux,&aux,10);
-		break;
-		case 2:
-			pokenest->posy = (int) strtol(straux,&aux,10);
-		}
-
-		vuelta++;
-		straux = strtok (NULL,"-");
+		exit(1);
 	}
 
-	free(buffer);
+	char simboloAux;
+
+	memcpy(&simboloAux,buffer+sizeof(int),sizeof(char));
+
+	if(pokenest->simbolo != simboloAux)
+	{
+		exit(1);
+	}
+
+	memcpy(&(pokenest->posx),buffer+sizeof(int)+sizeof(char),sizeof(int));
+	memcpy(&(pokenest->posy),buffer+sizeof(int)+sizeof(char)+sizeof(int),sizeof(int));
 
 }
+
 
 int main(int argc, char** argv)
 {
