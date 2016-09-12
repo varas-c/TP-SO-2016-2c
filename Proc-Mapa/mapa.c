@@ -37,6 +37,7 @@ t_list* listaPokenest;
 enum codigoOperaciones {
 	TURNO = 0,
 	POKENEST = 1,
+	MOVER = 2
 };
 
 enum sizeofBuffer
@@ -356,6 +357,43 @@ void send_Pokenest(int socket,Paquete *paquete)
 	send(socket,paquete->buffer,paquete->tam_buffer,0);
 }
 
+void send_Turno(int socket)
+{
+	Paquete paquete = srlz_turno();
+	send_turno(&paquete,socket);
+	free_paquete(&paquete);
+}
+
+int get_codigoOperacion(void* buffer)
+{
+	int codOp;
+	memcpy(&codOp,buffer,sizeof(int));
+	return codOp;
+}
+
+typedef struct
+{
+	int x;
+	int y;
+}PosEntrenador;
+
+PosEntrenador dsrlz_movEntrenador(void* buffer)
+{
+	PosEntrenador pos;
+
+	memcpy(&(pos.x),buffer+sizeof(int),sizeof(int));
+	memcpy(&(pos.y),buffer+sizeof(int)+sizeof(int),sizeof(int));
+
+	return pos;
+}
+
+void movEntrenador(PosEntrenador pos, Jugador* jugador)
+{
+	jugador->entrenador.posx = pos.x;
+	jugador->entrenador.posy = pos.y;
+
+}
+
 //ESTE ES EL HILO PLANIFICADOR !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
 void* thread_planificador()
 {
@@ -363,8 +401,9 @@ void* thread_planificador()
 
 	//Hay que sacar a todos los que se fueron y nos avisó el mapa!
 	void* buffer_recv;
+	int tam_buffer_recv = 100;
 
-	buffer_recv = malloc(50);
+
 	Jugador *jugadorJugando;
 	int socket_desconectado;
 	Jugador *jugadorDesconectado;
@@ -372,6 +411,8 @@ void* thread_planificador()
 	int codOp = -1;
 	char pokenestPedida;
 	MetadataPokenest pokenestEnviar;
+
+	PosEntrenador pos;
 
 	while(1)
 	{
@@ -388,45 +429,49 @@ void* thread_planificador()
 
 	if(!queue_is_empty(colaListos))
 	{
-	pthread_mutex_lock(&mutex_socket);
+	buffer_recv = malloc(tam_buffer_recv);
+	//pthread_mutex_lock(&mutex_socket);
 	Jugador *jugador = malloc(sizeof(Jugador));
 	flag = 1;
 	jugador = queue_pop(colaListos);
-	log_info(infoLogger, "%s se ha ido de la cola de listos con ip %d y el socket %d.",
-	(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
-	loggearColas();
+	//log_info(infoLogger, "%s se ha ido de la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
+	//loggearColas();
 	socket_bloqueado = jugador->socket;
 
 	//Ya tenemos jugador, ahora le mandamos un turno
+	send_Turno(jugador->socket);
 
-	paquete = srlz_turno();
-	send_turno(&paquete,jugador->socket);
-	free_paquete(&paquete);
 
 	//Ya mandamos el turno, ahora recibimos el pedido del entrenador
-	recv(jugador->socket,buffer_recv,50,0);
+	recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
 	//Tomamos el primer int del buffer para ver el código de operacion
-	memcpy(&codOp,buffer_recv,sizeof(int));
+	codOp = get_codigoOperacion(buffer_recv);
+
 
 	//Evaluo el codigo de Operacion para ver que verga quiere
 	switch(codOp)
 	{
 	case POKENEST: //Nos pidieron una pokenest, hay que entregarla:
 		pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
-		pokenestEnviar = buscar_Pokenest(pokenestPedida);
-		paquete = srlz_Pokenest(pokenestEnviar);
-		send_Pokenest(jugador->socket,&paquete);
+		pokenestEnviar = buscar_Pokenest(pokenestPedida); //Buscamos la info de la Pokenest pedida
+		paquete = srlz_Pokenest(pokenestEnviar); //Armamos un paquete serializado
+		send_Pokenest(jugador->socket,&paquete); //Enviamos el paquete :D
+		free_paquete(&paquete);//Liberamos el paquete
 	break;
+	case MOVER:
+		pos = dsrlz_movEntrenador(buffer_recv);
+		movEntrenador(pos,jugador);
+		break;
 	}
 
 	free(buffer_recv);
 	socket_bloqueado = -1;
 	queue_push(colaListos,jugador);
-	log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
-	(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
-	loggearColas();
-	pthread_mutex_unlock(&mutex_socket);
+	//free(jugador);
+	//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
+	//loggearColas();
+	//pthread_mutex_unlock(&mutex_socket);
 	}
 
 	//-------
@@ -447,7 +492,7 @@ int main(int argc, char** argv)
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
 	log_info(infoLogger, "Se inicia Mapa.");
 
-	nivel_gui_inicializar();
+	//nivel_gui_inicializar();
 	listaPokenest= list_create();
 
 	MetadataMapa mdataMapa;
@@ -587,7 +632,7 @@ int main(int argc, char** argv)
 	log_info(infoLogger, "Se cierra Mapa.");
 	log_destroy(traceLogger);
 	log_destroy(infoLogger);
-	nivel_gui_terminar();
+	//nivel_gui_terminar();
 
 	return 0;
 }

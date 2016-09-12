@@ -595,13 +595,13 @@ Paquete srlz_movEntrenador(Entrenador entrenador)
 {
 	Paquete paquete;
 	paquete.buffer = malloc(size_MOVER);
-	paquete.tam_buffer = size_MOVER();
+	paquete.tam_buffer = size_MOVER;
 
 	int codOp = MOVER;
 
 	memcpy(paquete.buffer,&codOp,sizeof(int));
-	memcpy(paquete.buffer+sizeof(int),entrenador.posx,sizeof(int));
-	memcpy(paquete.buffer+sizeof(int)*2,entrenador.posy,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int),&(entrenador.posx),sizeof(int));
+	memcpy(paquete.buffer+sizeof(int)*2,&(entrenador.posy),sizeof(int));
 
 	return paquete;
 }
