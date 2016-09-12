@@ -33,6 +33,7 @@ int socket_bloqueado = -1;
 pthread_mutex_t mutex_socket = PTHREAD_MUTEX_INITIALIZER;
 
 t_list* listaPokenest;
+t_list* gui_items;
 
 enum codigoOperaciones {
 	TURNO = 0,
@@ -416,7 +417,7 @@ void* thread_planificador()
 
 	while(1)
 	{
-	sleep(0.1);
+	sleep(1);
 	while(!queue_is_empty(colaDesconectados))
 	{
 		//ELIMINAMOS JUGADORES
@@ -459,9 +460,10 @@ void* thread_planificador()
 		send_Pokenest(jugador->socket,&paquete); //Enviamos el paquete :D
 		free_paquete(&paquete);//Liberamos el paquete
 	break;
-	case MOVER:
-		pos = dsrlz_movEntrenador(buffer_recv);
-		movEntrenador(pos,jugador);
+	case MOVER: //El entrenador se quiere mover
+		pos = dsrlz_movEntrenador(buffer_recv); //Obtengo las coordenadas X,Y
+		movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
+		MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
 		break;
 	}
 
@@ -475,6 +477,8 @@ void* thread_planificador()
 	}
 
 	//-------
+
+	nivel_gui_dibujar(gui_items, "Mapa Pokemon");
 
 	}
 }
@@ -492,7 +496,12 @@ int main(int argc, char** argv)
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
 	log_info(infoLogger, "Se inicia Mapa.");
 
-	//nivel_gui_inicializar();
+	//Inicializamos espacio de dibujo
+	nivel_gui_inicializar();
+
+	gui_items = list_create();
+
+
 	listaPokenest= list_create();
 
 	MetadataMapa mdataMapa;
@@ -505,6 +514,9 @@ int main(int argc, char** argv)
 
 	//Agrego a la lista
 	list_add(listaPokenest,&mdataPokenest);
+
+	//Agrego a la lista de dibujo
+	CrearCaja(gui_items, mdataPokenest.simbolo, mdataPokenest.posicionX, mdataPokenest.posicionY,6);
 
 	//**********************************!
 
@@ -599,6 +611,7 @@ int main(int argc, char** argv)
 					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
 					printf("Server avisa: %i",newfd);
 					inicializar_jugador(&nuevoJugador, newfd);
+					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
 					queue_push(colaListos, &nuevoJugador);
 					//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
 					//(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
@@ -622,6 +635,7 @@ int main(int argc, char** argv)
 				}
 			}
 		}
+
 	}
 
 	free(mdataPokenest.tipoPokemon);
@@ -632,7 +646,7 @@ int main(int argc, char** argv)
 	log_info(infoLogger, "Se cierra Mapa.");
 	log_destroy(traceLogger);
 	log_destroy(infoLogger);
-	//nivel_gui_terminar();
+	nivel_gui_terminar();
 
 	return 0;
 }
