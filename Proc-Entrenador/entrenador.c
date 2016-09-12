@@ -7,11 +7,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <commons/config.h>
 #include "headers/struct.h"
 #include "headers/socket.h"
 #include <sys/ioctl.h>
-#include <stdbool.h>
+
 #include <unistd.h>
 #include <errno.h>
 #include <netdb.h>
@@ -24,12 +25,14 @@
 enum codigoOperaciones {
 	TURNO = 0,
 	POKENEST = 1,
+	MOVER = 2
 };
 
 enum sizeofBuffer
 {
 	size_TURNO = sizeof(int),
-	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int)
+	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
+	size_MOVER = sizeof(int)+sizeof(int)+sizeof(int)
 };
 
 
@@ -302,19 +305,20 @@ void mover_entrenador(Entrenador *entrenador)
 	if(entrenador->destinox != 0 && move == 0) //Si todavia me queda mvimiento en X
 	{
 		if(entrenador->destinox < 0 ) //Me muevo hacia atras en X
-				{
-					entrenador->posx -=1;
-					entrenador->destinox += 1;
-				}
+		{
+			entrenador->posx -=1;
+			entrenador->destinox += 1;
+		}
 
-				if(entrenador->destinox > 0)
-				{
-					entrenador->posx += 1;
-					entrenador->destinox -= 1;
-				}
 
-				entrenador->movAnterior = 'x';
-				move = 1;
+		if(entrenador->destinox > 0)
+		{
+			entrenador->posx += 1;
+			entrenador->destinox -= 1;
+		}
+
+		entrenador->movAnterior = 'x';
+		move = 1;
 	}
 
 	if(entrenador->destinoy != 0 && move == 0)
@@ -534,6 +538,81 @@ void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
 
 }
 
+Entrenador new_Entrenador(metadata mdata)
+{
+	Entrenador entrenador;
+    entrenador.posx = 1;
+    entrenador.posy = 1;
+    entrenador.simbolo = mdata.simbolo;
+    entrenador.movAnterior = 'y';
+    entrenador.flagx = 0;
+    entrenador.flagy = 0;
+    entrenador.nombre = strdup(mdata.nombre);
+    entrenador.vidas = mdata.vidas;
+    entrenador.reintentos = mdata.reintentos;
+    return entrenador;
+}
+
+void calcular_coordenadas(Entrenador* entrenador, int x, int y)
+{
+	//Pregunto por X
+
+	if(x > entrenador->posx)
+	{
+		entrenador ->destinox = x - entrenador->posx;
+	}
+
+	if(entrenador->posx == x)
+	{
+		entrenador ->destinox = 0;
+	}
+
+	if(x < entrenador->posx)
+	{
+		entrenador->destinox = x - entrenador->posx;
+	}
+
+	//Pregunto por y
+
+	if(y > entrenador->posy)
+	{
+		entrenador ->destinoy = y - entrenador->posy;
+	}
+
+	if(entrenador->posy == y)
+	{
+		entrenador ->destinoy = 0;
+	}
+
+	if(y < entrenador->posy)
+	{
+		entrenador->destinoy = y - entrenador->posy;
+	}
+
+}
+
+Paquete srlz_movEntrenador(Entrenador entrenador)
+{
+	Paquete paquete;
+	paquete.buffer = malloc(size_MOVER);
+	paquete.tam_buffer = size_MOVER();
+
+	int codOp = MOVER;
+
+	memcpy(paquete.buffer,&codOp,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int),entrenador.posx,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int)*2,entrenador.posy,sizeof(int));
+
+	return paquete;
+}
+
+
+void send_movEntrenador(Paquete *paquete, int socket)
+{
+	send(socket,paquete->buffer,paquete->tam_buffer,0);
+}
+
+
 
 int main(int argc, char** argv)
 {
@@ -570,6 +649,9 @@ int main(int argc, char** argv)
 
 	int opcion = -1;
 	Entrenador entrenador;
+	entrenador = new_Entrenador(mdata);
+
+	Paquete paquete;
 
 
 
@@ -607,9 +689,12 @@ int main(int argc, char** argv)
 					case 1:
 						send_solicitarPokenest(&pokenest, fd_server);
 						recv_solicitarPokenest(&pokenest, fd_server);
+						calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
 					break;
 					case 2:
-						send_moverEntrenador(&entrenador);
+						mover_entrenador(&entrenador);
+						paquete = srlz_movEntrenador(entrenador);
+						send_movEntrenador(&paquete,fd_server);
 					break;
 					case 3:
 						send_capturarPokemon();

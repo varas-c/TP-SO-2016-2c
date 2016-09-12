@@ -5,8 +5,11 @@
  *      Author: utnso
  */
 
+
+
 #ifndef HEADERS_STRUCT_H_
 #define HEADERS_STRUCT_H_
+
 
 /* -----------------------------------------------
  * METADATA DEL ENTRENADOR
@@ -59,7 +62,11 @@ typedef struct{
 	int flagy;
 	int destinox;
 	int destinoy;
+	int vidas;
+	int reintentos;
+	char* nombre;
 }Entrenador;
+
 
 typedef struct
 {
@@ -67,6 +74,12 @@ typedef struct
 	int posy;
 	char simbolo;
 }Pokenest;
+
+typedef struct
+{
+	void* buffer;
+	int tam_buffer;
+}Paquete;
 
 
 #endif /* HEADERS_STRUCT_H_ */

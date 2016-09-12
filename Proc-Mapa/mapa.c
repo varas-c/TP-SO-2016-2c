@@ -456,6 +456,8 @@ void* thread_planificador()
 	}
 
 	free(buffer_recv);
+	socket_bloqueado = -1;
+	queue_push(colaListos,jugador);
 	pthread_mutex_unlock(&mutex_socket);
 
 	}
