@@ -64,7 +64,7 @@ void mover_entrenador(Entrenador *entrenador)
 
 	if(entrenador->destinoy != 0 && entrenador->movAnterior == 'x' && move == 0)
 	{
-		if(entrenador->destinoy < 0 ) //Me muevo hacia atras en X
+		if(entrenador->destinoy < 0 ) //Me muevo hacia atras en Y
 		{
 			entrenador->posy -=1;
 			entrenador->destinoy += 1;
@@ -223,7 +223,9 @@ void interactuar(Entrenador* entrenador,t_list* items,char* objetivos,t_list* po
 int main(void) {
     t_list* items = list_create(); //Lista donde se almacenan los items
     t_list* pokenests = list_create();
-    Pokenest pokenest,pokenest2,pokenest3;
+    Pokenest pokenest;
+    Pokenest pokenest2;
+    Pokenest pokenest3;
     Entrenador entrenador;
 
     char objetivos[4][2];
@@ -234,7 +236,6 @@ int main(void) {
 
 	//Inicializamos espacio de dibujo
 	nivel_gui_inicializar();
-
 
     inicializar_entrenador(&entrenador);
 
@@ -260,13 +261,10 @@ int main(void) {
 	list_add(pokenests,&pokenest3);
 	cargarPokenests(pokenests,items);
 
-
 	interactuar(&entrenador,items,objetivos,pokenests);
 
 	BorrarItem(items, '@');
 	BorrarItem(items, 'Z');
 
-
 	nivel_gui_terminar();
-
 }

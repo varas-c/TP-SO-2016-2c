@@ -21,7 +21,6 @@
 #include <math.h>
 #include <ctype.h>
 
-
 //VARIABLES GLOBALES
 #define TAMANIO_BUFFER 11
 t_queue* colaListos;
@@ -35,9 +34,6 @@ pthread_mutex_t mutex_socket = PTHREAD_MUTEX_INITIALIZER;
 
 t_list* listaPokenest;
 
-
-
-
 enum codigoOperaciones {
 	TURNO = 0,
 	POKENEST = 1,
@@ -48,8 +44,6 @@ enum sizeofBuffer
 	size_TURNO = sizeof(int),
 	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
 };
-
-
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -74,7 +68,6 @@ MetadataMapa leerMetadataMapa()
 	MetadataMapa mdata;
 	t_config* config; //Estructura
 	char* auxiliar;
-
 
 	//RUTA ABSOLUTA
 	//config = config_create("//home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
@@ -111,7 +104,6 @@ MetadataMapa leerMetadataMapa()
 	return mdata;
 }
 
-
 MetadataPokenest leerMetadataPokenest()
 {
 	MetadataPokenest mdata;
@@ -131,7 +123,6 @@ MetadataPokenest leerMetadataPokenest()
 	}
 
 	auxiliar = config_get_string_value(config, "Posicion");
-
 
 	//Procesamiento de posicion de string a dos ints
 	int i = strlen(auxiliar)-1;
@@ -164,7 +155,6 @@ MetadataPokenest leerMetadataPokenest()
 	auxiliar = config_get_string_value(config,"Identificador");
 	memcpy(&(mdata.simbolo),auxiliar,sizeof(char));
 
-
 	config_destroy(config);
 
 	return mdata;
@@ -193,12 +183,6 @@ MetadataPokemon leerMetadataPokemon()
 	return mdata;
 }
 
-
-void init_nivel()
-{
-	nivel_gui_inicializar();
-}
-
 void inicializar_entrenador(Entrenador* entrenador)
 {
     entrenador->posx = 1;
@@ -215,9 +199,6 @@ void inicializar_jugador(Jugador* unJugador, int unSocket){
 	unJugador->socket = unSocket;
 	unJugador->estado = 0;
 }
-
-/*
- *
 
  /*
 int agregar_a_lista (ListaJugadores* lista, Jugador jugador)
@@ -288,7 +269,6 @@ typedef struct
 	int tam_buffer;
 }Paquete;
 
-
 //************************
 
 char dsrlz_Pokenest(void* buffer)
@@ -297,7 +277,6 @@ char dsrlz_Pokenest(void* buffer)
 	memcpy(&pokenest,buffer+sizeof(int),sizeof(char));
 	return pokenest;
 }
-
 
 Paquete srlz_Pokenest(MetadataPokenest pokenest)
 {
@@ -310,7 +289,6 @@ Paquete srlz_Pokenest(MetadataPokenest pokenest)
 	size[1] = sizeof(char);
 	size[2] = sizeof(int);
 	size[3] = sizeof(int);
-
 
 	//Copiamos el codigo de operacion
 	int codigo = POKENEST;
@@ -338,7 +316,6 @@ void free_paquete(Paquete *paquete)
 
 //*********
 
-
 Paquete srlz_turno()
 {
 	Paquete paquete;
@@ -356,16 +333,8 @@ void send_turno(Paquete* paquete,int socket)
 	send(socket,paquete->buffer,paquete->tam_buffer,0);
 }
 
-void dsrlz_pokenest(void* buffer)
-{
-	Pokenest pokenest;
-
-}
-
-
 MetadataPokenest buscar_Pokenest(char simbolo)
 {
-
 	bool _find_pokenest_(MetadataPokenest* aux)
 	{
 		return aux->simbolo == simbolo;
@@ -380,7 +349,6 @@ MetadataPokenest buscar_Pokenest(char simbolo)
 	pokenest.tipoPokemon = strdup(ptr->tipoPokemon);
 
 	return pokenest;
-
 }
 
 void send_Pokenest(int socket,Paquete *paquete)
@@ -388,12 +356,10 @@ void send_Pokenest(int socket,Paquete *paquete)
 	send(socket,paquete->buffer,paquete->tam_buffer,0);
 }
 
-
 //ESTE ES EL HILO PLANIFICADOR !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
 void* thread_planificador()
 {
 	Paquete paquete;
-
 
 	//Hay que sacar a todos los que se fueron y nos avisó el mapa!
 	void* buffer_recv;
@@ -406,7 +372,6 @@ void* thread_planificador()
 	int codOp = -1;
 	char pokenestPedida;
 	MetadataPokenest pokenestEnviar;
-
 
 	while(1)
 	{
@@ -421,14 +386,15 @@ void* thread_planificador()
 
 	int flag = 0;
 
-
-
 	if(!queue_is_empty(colaListos))
 	{
 	pthread_mutex_lock(&mutex_socket);
 	Jugador *jugador = malloc(sizeof(Jugador));
 	flag = 1;
 	jugador = queue_pop(colaListos);
+	log_info(infoLogger, "%s se ha ido de la cola de listos con ip %d y el socket %d.",
+	(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
+	loggearColas();
 	socket_bloqueado = jugador->socket;
 
 	//Ya tenemos jugador, ahora le mandamos un turno
@@ -442,7 +408,6 @@ void* thread_planificador()
 
 	//Tomamos el primer int del buffer para ver el código de operacion
 	memcpy(&codOp,buffer_recv,sizeof(int));
-
 
 	//Evaluo el codigo de Operacion para ver que verga quiere
 	switch(codOp)
@@ -458,24 +423,16 @@ void* thread_planificador()
 	free(buffer_recv);
 	socket_bloqueado = -1;
 	queue_push(colaListos,jugador);
+	log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
+	(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
+	loggearColas();
 	pthread_mutex_unlock(&mutex_socket);
-
 	}
-
-
-
-
 
 	//-------
 
-
-
-
 	}
-
 }
-
-
 
 int main(int argc, char** argv)
 {
@@ -486,14 +443,12 @@ int main(int argc, char** argv)
 
 	printf("Nombre Mapa: %s --- Dir Pokedex: %s \n",parametros.nombreMapa, parametros.dirPokedex);
 */
-
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
 	log_info(infoLogger, "Se inicia Mapa.");
 
-
+	nivel_gui_inicializar();
 	listaPokenest= list_create();
-
 
 	MetadataMapa mdataMapa;
 	MetadataPokemon mdataPokemon;
@@ -503,10 +458,8 @@ int main(int argc, char** argv)
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
 
-
 	//Agrego a la lista
 	list_add(listaPokenest,&mdataPokenest);
-
 
 	//**********************************!
 
@@ -538,7 +491,6 @@ int main(int argc, char** argv)
 	//**********************************
 	//FUNCION SERVER
 
-
 	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
 	fd_set fds_entrenadores;   // conjunto maestro de descriptores de fichero
 
@@ -562,8 +514,7 @@ int main(int argc, char** argv)
 
 	colaListos = queue_create();
 	colaDesconectados = queue_create();
-	//colaBloqueados = queue_create();
-
+	colaBloqueados = queue_create();
 
 	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
 
@@ -592,7 +543,6 @@ int main(int argc, char** argv)
 		//Buscamos los sockets que quieren realizar algo con Select
 		socket_select(fdmax, &read_fds);
 
-
 		//Recorremos los sockets con pedidos
 		for(i = 0; i <= fdmax; i++) {
 
@@ -608,7 +558,6 @@ int main(int argc, char** argv)
 					//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
 					//(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
 					//loggearColas();
-
 				}
 				//Si no es el Listener, el entrenador SE DESCONECTÓ!!
 				else
@@ -630,7 +579,6 @@ int main(int argc, char** argv)
 		}
 	}
 
-
 	free(mdataPokenest.tipoPokemon);
 	free(mdataMapa.algoritmo);
 	free(mdataMapa.ip);
@@ -639,5 +587,7 @@ int main(int argc, char** argv)
 	log_info(infoLogger, "Se cierra Mapa.");
 	log_destroy(traceLogger);
 	log_destroy(infoLogger);
+	nivel_gui_terminar();
+
 	return 0;
 }
