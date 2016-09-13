@@ -4,6 +4,19 @@
  *  Created on: 30/8/2016
  *      Author: utnso
  */
+
+typedef struct
+{
+	void* buffer;
+	int tam_buffer;
+}Paquete;
+
+typedef struct
+{
+	int x;
+	int y;
+}PosEntrenador;
+
 #include <pthread.h>
 #include <stdio.h>
 #include <tad_items.h>
@@ -20,12 +33,10 @@
 #include <commons/collections/queue.h>
 #include <math.h>
 #include <ctype.h>
+#include "headers/configMapa.h"
+#include "headers/serializeMapa.h"
 
-typedef struct
-{
-	void* buffer;
-	int tam_buffer;
-}Paquete;
+
 
 
 /****************************************************************************************************************
@@ -47,27 +58,7 @@ pthread_mutex_t mutex_socket = PTHREAD_MUTEX_INITIALIZER;
 
 t_list* listaPokenest;
 
-/****************************************************************************************************************
- * ************************************************************************************************************
- *
-			ENUMS PARA LAS OPERACIONES DE SRLZ, DSRLZ, SEND Y RECV
 
-****************************************************************************************************************
-****************************************************************************************************************/
-enum codigoOperaciones {
-	TURNO = 0,
-	POKENEST = 1,
-	MOVER = 2,
-	SIMBOLO = 10
-};
-
-enum sizeofBuffer
-{
-	size_TURNO = sizeof(int),
-	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
-	size_MOVER = sizeof(int)+sizeof(int)+sizeof(int),
-	size_SIMBOLO = sizeof(int)+sizeof(char)
-};
 
 /****************************************************************************************************************
  * ************************************************************************************************************
@@ -96,185 +87,16 @@ void verificarParametros(int argc)
 }
 
 
+
 /****************************************************************************************************************
  * ************************************************************************************************************
  *
-			FUNCIONES DE LECTURA DE ARCHIVOS
-
 ****************************************************************************************************************
 ****************************************************************************************************************/
 
 
 
-/* leerMetadataMapa:
- * Lee todos los campos de un archivo Metadata Mapa y los guarda en un struct
- */
 
-MetadataMapa leerMetadataMapa()
-{
-	MetadataMapa mdata;
-	t_config* config; //Estructura
-	char* auxiliar;
-
-	//RUTA ABSOLUTA
-	//config = config_create("//home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
-	//RUTA RELATIVA
-	config = config_create("../config/mapa.config");
-
-	if(config==NULL)
-	{
-		printf("Archivo mapa.config no encontrado\n");
-		exit(20);
-	}
-
-	mdata.tiempoChequeoDeadlock = config_get_int_value(config, "TiempoChequeoDeadlock");
-	mdata.modoBatalla = config_get_int_value(config, "Batalla");
-	mdata.quantum = config_get_int_value(config,"quantum");
-	mdata.retardo = config_get_int_value(config,"retardo");
-
-	//Esta parte es para no perder la referencia de los punteros al hacer config_destroy
-
-	auxiliar = config_get_string_value(config,"algoritmo");
-	mdata.algoritmo = malloc(strlen(auxiliar)+1);
-	strcpy(mdata.algoritmo, auxiliar);
-
-	auxiliar = config_get_string_value(config,"IP");
-	mdata.ip = malloc(strlen(auxiliar)+1);
-	strcpy(mdata.ip, auxiliar);
-
-	auxiliar = config_get_string_value(config,"Puerto");
-	mdata.puerto = malloc(strlen(auxiliar)+1);
-	strcpy(mdata.puerto, auxiliar);
-
-	config_destroy(config);
-
-	return mdata;
-}
-
-/* leerMetadaPokenest:
- * Lee todos los campos de un archivo Metadata Pokenest y los guarda en un struct
- */
-
-MetadataPokenest leerMetadataPokenest()
-{
-	MetadataPokenest mdata;
-	t_config* config; //Estructura
-
-	char* auxiliar;
-
-	//RUTA ABSOLUTA
-	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
-	//RUTA RELATIVA
-	config = config_create("../config/pokenest.config");
-
-	if(config==NULL)
-	{
-		printf("Archivo pokenest.config no encontrado\n");
-		exit(20);
-	}
-
-	auxiliar = config_get_string_value(config, "Posicion");
-
-	//Procesamiento de posicion de string a dos ints
-	int i = strlen(auxiliar)-1;
-	int pos_es_y = 1;
-	int potencia = 0;
-	mdata.posicionX = 0;
-	mdata.posicionY = 0;
-
-	for (;i>=0;i--)
-	{
-		if (isdigit(auxiliar[i]))
-		{
-			if (pos_es_y)
-				mdata.posicionY += (auxiliar[i]-'0') * (int)powf(10,potencia);
-			else
-				mdata.posicionX += (auxiliar[i]-'0') * (int)powf(10,potencia);
-			potencia++;
-		}
-		else
-		{
-			pos_es_y = 0;
-			potencia = 0;
-		}
-	}
-
-	auxiliar = config_get_string_value(config, "Tipo");
-	mdata.tipoPokemon = malloc(strlen(auxiliar)+1);
-	strcpy(mdata.tipoPokemon, auxiliar);
-
-	auxiliar = config_get_string_value(config,"Identificador");
-	memcpy(&(mdata.simbolo),auxiliar,sizeof(char));
-
-	config_destroy(config);
-
-	return mdata;
-}
-
-/* leerMetadaPokemon:
- * Lee todos los campos de un archivo Metadata Pokemon y los guarda en un struct
- */
-
-
-MetadataPokemon leerMetadataPokemon()
-{
-	MetadataPokemon mdata;
-	t_config* config; //Estructura
-
-	//RUTA ABSOLUTA
-	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
-	//RUTA RELATIVA
-	config = config_create("../config/pokemon.config");
-
-	if(config==NULL)
-	{
-		printf("Archivo pokemon.config no encontrado\n");
-		exit(20);
-	}
-
-	mdata.nivel = config_get_int_value(config, "Nivel");
-
-	config_destroy(config);
-
-	return mdata;
-}
-
-
-
-/****************************************************************************************************************
- * ************************************************************************************************************
- *
-
-
-****************************************************************************************************************
-****************************************************************************************************************/
-
-
-Entrenador new_Entrenador(char simbolo)
-{
-	Entrenador entrenador;
-
-    entrenador.posx = 1;
-    entrenador.posy = 1;
-    entrenador.simbolo = simbolo;
-    entrenador.movAnterior = 'y';
-    entrenador.flagx = FALSE;
-    entrenador.flagy = FALSE;
-    entrenador.pokemones = NULL;
-
-    return entrenador;
-}
-
-Jugador new_Jugador(char simbolo, int socket){
-
-	Jugador jugador;
-
-	jugador.entrenador = new_Entrenador(simbolo);
-	jugador.socket = socket;
-	jugador.estado = 0;
-
-	return jugador;
-}
 
  /*
 int agregar_a_lista (ListaJugadores* lista, Jugador jugador)
@@ -339,46 +161,11 @@ void loggearColas(void){
 		}
 }
 
-
-
-//************************
-
-char dsrlz_Pokenest(void* buffer)
-{
-	char pokenest;
-	memcpy(&pokenest,buffer+sizeof(int),sizeof(char));
-	return pokenest;
-}
-
-Paquete srlz_Pokenest(MetadataPokenest pokenest)
-{
-	Paquete paquete;
-	paquete.buffer = malloc(size_POKENEST);
-	paquete.tam_buffer = size_POKENEST;
-
-	int size[4];
-	size[0] = sizeof(int);
-	size[1] = sizeof(char);
-	size[2] = sizeof(int);
-	size[3] = sizeof(int);
-
-	//Copiamos el codigo de operacion
-	int codigo = POKENEST;
-	memcpy(paquete.buffer,&codigo,size[0]);
-
-	//Copiamos el simbolo
-	memcpy(paquete.buffer + size[0], &(pokenest.simbolo),size[1]);
-
-	//Copiamos la coordenada en X
-	memcpy(paquete.buffer+size[0]+size[1],&(pokenest.posicionX),size[2]);
-
-	//Copiamos la coordenada en Y
-	memcpy(paquete.buffer+size[0]+size[1]+size[2],&(pokenest.posicionY),size[3]);
-
-	return paquete;
-}
-
-//
+/****************************************************************************************************************
+ * ************************************************************************************************************
+ *
+****************************************************************************************************************
+****************************************************************************************************************/
 
 void free_paquete(Paquete *paquete)
 {
@@ -386,19 +173,7 @@ void free_paquete(Paquete *paquete)
 	paquete->tam_buffer = -1;
 }
 
-//*********
 
-Paquete srlz_turno()
-{
-	Paquete paquete;
-	paquete.buffer = malloc(size_TURNO);
-	paquete.tam_buffer = size_TURNO;
-	int turno = TURNO;
-
-	memcpy(paquete.buffer,&turno,size_TURNO);
-
-	return paquete;
-}
 
 void send_turno(Paquete* paquete,int socket)
 {
@@ -435,35 +210,34 @@ void send_Turno(int socket)
 	free_paquete(&paquete);
 }
 
-int get_codigoOperacion(void* buffer)
-{
-	int codOp;
-	memcpy(&codOp,buffer,sizeof(int));
-	return codOp;
-}
-
-typedef struct
-{
-	int x;
-	int y;
-}PosEntrenador;
-
-PosEntrenador dsrlz_movEntrenador(void* buffer)
-{
-	PosEntrenador pos;
-
-	memcpy(&(pos.x),buffer+sizeof(int),sizeof(int));
-	memcpy(&(pos.y),buffer+sizeof(int)+sizeof(int),sizeof(int));
-
-	return pos;
-}
-
 void movEntrenador(PosEntrenador pos, Jugador* jugador)
 {
 	jugador->entrenador.posx = pos.x;
 	jugador->entrenador.posy = pos.y;
 
 }
+
+char recv_simboloEntrenador(int socket)
+{
+	char simbolo;
+
+	Paquete paquete;
+	paquete.buffer = malloc(size_SIMBOLO);
+	paquete.tam_buffer = size_SIMBOLO;
+
+
+	recv(socket,paquete.buffer,paquete.tam_buffer,0);
+
+	simbolo = dsrlz_simboloEntrenador(paquete.buffer);
+
+	return simbolo;
+}
+
+/****************************************************************************************************************
+ * ************************************************************************************************************
+ *
+****************************************************************************************************************
+****************************************************************************************************************/
 
 //ESTE ES EL HILO PLANIFICADOR !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
 void* thread_planificador()
@@ -518,7 +292,7 @@ void* thread_planificador()
 	recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
 	//Tomamos el primer int del buffer para ver el código de operacion
-	codOp = get_codigoOperacion(buffer_recv);
+	codOp = dsrlz_codigoOperacion(buffer_recv);
 
 
 	//Evaluo el codigo de Operacion para ver que verga quiere
@@ -562,43 +336,11 @@ void* thread_planificador()
 	}
 }
 
-char dsrlz_simboloEntrenador(void* buffer)
-{
-	int codigo;
-	char simbolo;
-
-	memcpy(&codigo,buffer,sizeof(int));
-
-	if(codigo != SIMBOLO)
-	{
-		perror("Error Codigo de Operacion: Simbolo dsrlz_simboloEntrenador() ");
-		exit(1);
-	}
-
-	memcpy(&simbolo,buffer+sizeof(int),sizeof(char));
-
-	return simbolo;
-
-}
-
-
-char recv_simboloEntrenador(int socket)
-{
-	char simbolo;
-
-	Paquete paquete;
-	paquete.buffer = malloc(size_SIMBOLO);
-	paquete.tam_buffer = size_SIMBOLO;
-
-
-	recv(socket,paquete.buffer,paquete.tam_buffer,0);
-
-	simbolo = dsrlz_simboloEntrenador(paquete.buffer);
-
-	return simbolo;
-}
-
-
+/****************************************************************************************************************
+ * ************************************************************************************************************
+ *
+****************************************************************************************************************
+****************************************************************************************************************/
 
 int main(int argc, char** argv)
 {
