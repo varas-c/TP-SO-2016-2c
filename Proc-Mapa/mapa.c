@@ -39,7 +39,16 @@ t_list* gui_items;
 t_log* traceLogger;
 t_log* infoLogger;
 
+MetadataMapa mdataMapa;
+MetadataPokemon mdataPokemon;
+MetadataPokenest mdataPokenest;
+
+// SEMAFOROS
 pthread_mutex_t mutex_socket = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_Listos = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_Bloqueados = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_Desconectados = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
 
 t_list* listaPokenest;
 
@@ -194,7 +203,7 @@ void* thread_planificador()
 	Jugador *jugador2;
 	int socket_desconectado;
 	Jugador *jugadorDesconectado;
-	int quantum = 4;
+	int quantum = mdataMapa.quantum;
 	int codOp = -1;
 	char pokenestPedida;
 	MetadataPokenest pokenestEnviar;
@@ -205,82 +214,86 @@ void* thread_planificador()
 	while(1)
 	{
 
-	sleep(1);
+	usleep(mdataMapa.retardo*1000);
 
+	pthread_mutex_lock(&mutex_Desconectados);
 	while(!queue_is_empty(colaDesconectados))
 	{
 		//ELIMINAMOS JUGADORES
 		//socket_desconectado = (int) queue_pop(colaDesconectados);
 	}
+	pthread_mutex_unlock(&mutex_Desconectados);
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
 
 	int flag = 0;
 
+	//TODO poner semaforo contador verificando lista vacia
 	if(!queue_is_empty(colaListos))
 	{
 
-	buffer_recv = malloc(tam_buffer_recv);
-	flag = 1;
+		buffer_recv = malloc(tam_buffer_recv);
+		flag = 1;
 
-	jugador = queue_pop(colaListos);
+		jugador = queue_pop(colaListos);
 
-	//log_info(infoLogger, "%s se ha ido de la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
-	//loggearColas();
-	//socket_bloqueado = jugador->socket;
+		//log_info(infoLogger, "%s se ha ido de la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
+		//loggearColas();
+		//socket_bloqueado = jugador->socket;
 
-	//Ya tenemos jugador, ahora le mandamos un turno
-	send_Turno(jugador->socket);
+		//Ya tenemos jugador, ahora le mandamos un turno
+		send_Turno(jugador->socket);
 
-	//Ya mandamos el turno, ahora recibimos el pedido del entrenador
-	recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
+		//Ya mandamos el turno, ahora recibimos el pedido del entrenador
+		recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
-	//Tomamos el primer int del buffer para ver el código de operacion
-	codOp = dsrlz_codigoOperacion(buffer_recv);
+		//Tomamos el primer int del buffer para ver el código de operacion
+		codOp = dsrlz_codigoOperacion(buffer_recv);
 
-	//02 - X - Y
+		//02 - X - Y
 
-	//Evaluo el codigo de Operacion para ver que verga quiere
-	switch(codOp)
-	{
-	case POKENEST: //Nos pidieron una pokenest, hay que entregarla:
-		pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
-		pokenestEnviar = buscar_Pokenest(pokenestPedida); //Buscamos la info de la Pokenest pedida
-		paquete = srlz_Pokenest(pokenestEnviar); //Armamos un paquete serializado
-		send_Pokenest(jugador->socket,&paquete); //Enviamos el paquete :D
-		free_paquete(&paquete);//Liberamos el paquete
-	break;
-	case MOVER: //El entrenador se quiere mover
-		pos = dsrlz_movEntrenador(buffer_recv); //Obtengo las coordenadas X,Y
-		movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
-		MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
+		//Evaluo el codigo de Operacion para ver que verga quiere
+		switch(codOp)
+		{
+		case POKENEST: //Nos pidieron una pokenest, hay que entregarla:
+			pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
+			pokenestEnviar = buscar_Pokenest(pokenestPedida); //Buscamos la info de la Pokenest pedida
+			paquete = srlz_Pokenest(pokenestEnviar); //Armamos un paquete serializado
+			send_Pokenest(jugador->socket,&paquete); //Enviamos el paquete :D
+			free_paquete(&paquete);//Liberamos el paquete
 		break;
-	/*
-	case CAPTURAR:
-		break:
-	case FINOBJETIVO:
-		break;
-		*/
+		case MOVER: //El entrenador se quiere mover
+			pos = dsrlz_movEntrenador(buffer_recv); //Obtengo las coordenadas X,Y
+			movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
+			MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
+			break;
+		/*
+		case CAPTURAR:
+			break:
+		case FINOBJETIVO:
+			break;
+			*/
+		}
+
+
+		sprintf(mostrar,"Jugador: %i",jugador->socket);
+
+		free(buffer_recv);
+
+		//pthread_mutex_lock(&mutex_socket);
+
+		pthread_mutex_lock(&mutex_Listos);
+		queue_push(colaListos,(void*)jugador);
+		log_trace(traceLogger, "Termina turno de jugador %c", jugador->entrenador.simbolo);
+		pthread_mutex_unlock(&mutex_Listos);
+		//log_info(infoLogger, "Jugador %c entra en Cola Listos", jugador->entrenador.simbolo);
+
+		//pthread_mutex_unlock(&mutex_socket);
+
+		//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
+		//loggearColas();
+		//pthread_mutex_lock(&mutex_socket);
 	}
-
-
-
-	sprintf(mostrar,"Jugador: %i",jugador->socket);
-
-	free(buffer_recv);
-
-	//pthread_mutex_lock(&mutex_socket);
-
-	queue_push(colaListos,(void*)jugador);
-
-	//pthread_mutex_unlock(&mutex_socket);
-
-	//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
-	//loggearColas();
-	//pthread_mutex_lock(&mutex_socket);
-	}
-
-	//-------
 
 	nivel_gui_dibujar(gui_items, mostrar);
 
@@ -314,10 +327,6 @@ int main(int argc, char** argv)
 
 	listaPokenest= list_create();
 
-	MetadataMapa mdataMapa;
-	MetadataPokemon mdataPokemon;
-	MetadataPokenest mdataPokenest;
-
 	mdataMapa = leerMetadataMapa();
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
@@ -326,33 +335,16 @@ int main(int argc, char** argv)
 	list_add(listaPokenest,&mdataPokenest);
 
 	//Agrego a la lista de dibujo
+	pthread_mutex_lock(&mutex_gui_items);
 	CrearCaja(gui_items, mdataPokenest.simbolo, mdataPokenest.posicionX, mdataPokenest.posicionY,6);
+	pthread_mutex_unlock(&mutex_gui_items);
 
 	//**********************************!
 
 	//**********************************
 
-	/*
-	printf("\nDatos Mapa ---------\n");
-	printf("Tiempo chequeo deadlock %d\n", mdataMapa.tiempoChequeoDeadlock);
-	printf("Batalla %d\n", mdataMapa.modoBatalla);
-	printf("Quantum %d\n", mdataMapa.quantum);
-	printf("Retardo %d\n", mdataMapa.retardo);
-	printf("IP %s\n", mdataMapa.ip);
-	printf("Puerto %s\n", mdataMapa.puerto);
-	printf("\nDatos Pokenest ----------\n");
-	printf("Identificador: %s\n",mdataPokenest.identificador);
-	printf("Tipo: %s\n",mdataPokenest.tipoPokemon);
-	printf("Posicion X: %d\n",mdataPokenest.posicionX);
-	printf("Posicion Y: %d\n",mdataPokenest.posicionY);
-	printf("\nDatos Pokemon ----------\n");
-	printf("Nivel: %d\n",mdataPokemon.nivel);
-	*/
-
 	//Para crear una entrada en un archivo LOG:
 	//log_tipoDeLog (logger, "mensaje"). tipoDeLog = trace, info, error, etc
-
-	//socket_startServer();
 
 	//**********************************
 	//**********************************
@@ -434,7 +426,10 @@ int main(int argc, char** argv)
 					aux->socket = nuevoJugador.socket;
 					aux->estado = nuevoJugador.estado;
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
+					pthread_mutex_lock(&mutex_Listos);
 					queue_push(colaListos, aux);
+					pthread_mutex_unlock(&mutex_Listos);
+					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
 					//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
 					//(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
 					//loggearColas();
@@ -448,8 +443,11 @@ int main(int argc, char** argv)
 
 					if(valor_recv == 0)
 					{
-
+						//TODO Completar
+						//pthread_mutex_lock(&mutex_Desconectados);
 						//queue_push(colaDesconectados,&i);
+						//pthread_mutex_unlock(&mutex_Desconectados);
+						//log_info(infoLogger, "Detectada desconexion de socket %d", i);
 					}
 
 				}
@@ -458,6 +456,7 @@ int main(int argc, char** argv)
 
 	}
 
+	//TODO IMPORTANTE: anticipar la cancelacion del programa y ejecutar esto.
 	free(mdataPokenest.tipoPokemon);
 	free(mdataMapa.algoritmo);
 	free(mdataMapa.ip);

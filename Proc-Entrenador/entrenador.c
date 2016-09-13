@@ -215,8 +215,7 @@ ConexionEntrenador leerConexionMapa(int mapa)
 
 	//****************************
 	//ToDo: Aca debemos leer el mapa.config del mapa que recibimos por parametro
-	config = config_create("/home/utnso/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
-	//config = config_create("../../Proc-Mapa/config/mapa.config");
+	config = config_create("../../Proc-Mapa/config/mapa.config");
 
 	if(config==NULL)
 	{
