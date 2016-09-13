@@ -97,6 +97,17 @@ typedef struct
 //***************
 //***************
 
+typedef struct
+{
+	void* buffer;
+	int tam_buffer;
+}Paquete;
+
+typedef struct
+{
+	int x;
+	int y;
+}PosEntrenador;
 
 
 
@@ -135,6 +146,8 @@ Jugador new_Jugador(char simbolo, int socket){
 
 	return jugador;
 }
+
+
 
 
 

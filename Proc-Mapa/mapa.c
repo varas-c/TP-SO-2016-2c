@@ -5,18 +5,6 @@
  *      Author: utnso
  */
 
-typedef struct
-{
-	void* buffer;
-	int tam_buffer;
-}Paquete;
-
-typedef struct
-{
-	int x;
-	int y;
-}PosEntrenador;
-
 #include <pthread.h>
 #include <stdio.h>
 #include <tad_items.h>
@@ -35,9 +23,6 @@ typedef struct
 #include <ctype.h>
 #include "headers/configMapa.h"
 #include "headers/serializeMapa.h"
-
-
-
 
 /****************************************************************************************************************
  * ************************************************************************************************************
@@ -94,49 +79,6 @@ void verificarParametros(int argc)
 ****************************************************************************************************************
 ****************************************************************************************************************/
 
-
-
-
-
- /*
-int agregar_a_lista (ListaJugadores* lista, Jugador jugador)
-{
-	ListaJugadores* aux;
-	aux=lista;
-	while(aux->sgte!=NULL)
-		aux=aux->sgte;
-
-	if (aux==lista && lista->jugador.socket==0)
-		lista->jugador=jugador;
-	else
-	{
-		if((aux->sgte=malloc(sizeof(ListaJugadores)))==NULL)
-			return 1;
-		aux->sgte->jugador=jugador;
-		aux->sgte->sgte=NULL;
-	}
-	return 0;
-}
-
-int lista_tiene_jugador(ListaJugadores lista, int socket)
-{
-	if (lista.jugador.socket == socket) return 1;
-	while(lista.sgte!=NULL)
-	{
-		lista=*(lista.sgte);
-		if(lista.jugador.socket == socket) return 1;
-
-	}
-	return 0;
-}
-
-void agregar_si_no_existe(ListaJugadores *lista, Jugador jugador)
-{
-	if (!lista_tiene_jugador(*lista, jugador.socket))
-		agregar_a_lista(lista, jugador);
-}
-
-*/
 
 void loggearColas(void){
 	t_queue *auxLista;
@@ -262,7 +204,9 @@ void* thread_planificador()
 
 	while(1)
 	{
+
 	sleep(1);
+
 	while(!queue_is_empty(colaDesconectados))
 	{
 		//ELIMINAMOS JUGADORES
@@ -275,6 +219,7 @@ void* thread_planificador()
 
 	if(!queue_is_empty(colaListos))
 	{
+
 	buffer_recv = malloc(tam_buffer_recv);
 	flag = 1;
 
@@ -287,13 +232,13 @@ void* thread_planificador()
 	//Ya tenemos jugador, ahora le mandamos un turno
 	send_Turno(jugador->socket);
 
-
 	//Ya mandamos el turno, ahora recibimos el pedido del entrenador
 	recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
 	//Tomamos el primer int del buffer para ver el código de operacion
 	codOp = dsrlz_codigoOperacion(buffer_recv);
 
+	//02 - X - Y
 
 	//Evaluo el codigo de Operacion para ver que verga quiere
 	switch(codOp)
@@ -310,6 +255,12 @@ void* thread_planificador()
 		movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
 		MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
 		break;
+	/*
+	case CAPTURAR:
+		break:
+	case FINOBJETIVO:
+		break;
+		*/
 	}
 
 
@@ -326,7 +277,7 @@ void* thread_planificador()
 
 	//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
 	//loggearColas();
-	//pthread_mutex_unlock(&mutex_socket);
+	//pthread_mutex_lock(&mutex_socket);
 	}
 
 	//-------
@@ -478,17 +429,15 @@ int main(int argc, char** argv)
 					simboloEntrenador = recv_simboloEntrenador(newfd);
 					nuevoJugador = new_Jugador(simboloEntrenador,newfd);
 
-					aux = malloc(sizeof(Jugador));
+					aux = malloc(sizeof(Jugador)); //NO HACERLE FREE !!!!!!!!!
 					aux->entrenador = nuevoJugador.entrenador;
 					aux->socket = nuevoJugador.socket;
 					aux->estado = nuevoJugador.estado;
-
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
 					queue_push(colaListos, aux);
 					//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
 					//(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
 					//loggearColas();
-
 
 				}
 				//Si no es el Listener, el entrenador SE DESCONECTÓ!!
@@ -499,7 +448,8 @@ int main(int argc, char** argv)
 
 					if(valor_recv == 0)
 					{
-						queue_push(colaDesconectados,&i);
+
+						//queue_push(colaDesconectados,&i);
 					}
 
 				}
