@@ -13,7 +13,6 @@
  * Almacena la información que se lee desde el archivo Metadata del Mapa
  ------------------------------------------------- */
 
-
 typedef struct
 {
 	int tiempoChequeoDeadlock;
@@ -76,6 +75,8 @@ typedef struct{
 	char* pokemones;
 }Entrenador;
 
+//***************//***************
+//***************//***************
 typedef struct
 {
 	Entrenador entrenador;
@@ -84,15 +85,17 @@ typedef struct
 }Jugador;
 
 
-typedef struct nodo ListaJugadores;
-
-//***************
+//***************//***************
+//***************//***************
 typedef struct
 {
 	int posx;
 	int posy;
 	char simbolo;
 }Pokenest;
+
+//***************
+//***************
 
 
 

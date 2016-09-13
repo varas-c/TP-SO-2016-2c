@@ -21,31 +21,61 @@
 #include <math.h>
 #include <ctype.h>
 
-//VARIABLES GLOBALES
+typedef struct
+{
+	void* buffer;
+	int tam_buffer;
+}Paquete;
+
+
+/****************************************************************************************************************
+ * ************************************************************************************************************
+			VARIABLES GLOBALES
+****************************************************************************************************************
+****************************************************************************************************************/
+
+
 #define TAMANIO_BUFFER 11
 t_queue* colaListos;
 t_queue* colaBloqueados;
 t_queue* colaDesconectados;
-t_list* listaDibujo;
+t_list* gui_items;
 t_log* traceLogger;
 t_log* infoLogger;
-int socket_bloqueado = -1;
+
 pthread_mutex_t mutex_socket = PTHREAD_MUTEX_INITIALIZER;
 
 t_list* listaPokenest;
-t_list* gui_items;
 
+/****************************************************************************************************************
+ * ************************************************************************************************************
+ *
+			ENUMS PARA LAS OPERACIONES DE SRLZ, DSRLZ, SEND Y RECV
+
+****************************************************************************************************************
+****************************************************************************************************************/
 enum codigoOperaciones {
 	TURNO = 0,
 	POKENEST = 1,
-	MOVER = 2
+	MOVER = 2,
+	SIMBOLO = 10
 };
 
 enum sizeofBuffer
 {
 	size_TURNO = sizeof(int),
 	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
+	size_MOVER = sizeof(int)+sizeof(int)+sizeof(int),
+	size_SIMBOLO = sizeof(int)+sizeof(char)
 };
+
+/****************************************************************************************************************
+ * ************************************************************************************************************
+ *
+			FUNCIONES DE LECTURA DE PARAMETROS POR CONSOLA (LOS QUE SE RECIBEN POR **ARGV)
+
+****************************************************************************************************************
+****************************************************************************************************************/
 
 ParametrosMapa leerParametrosConsola(char** argv)
 {
@@ -64,6 +94,21 @@ void verificarParametros(int argc)
 		exit(1);
 	}
 }
+
+
+/****************************************************************************************************************
+ * ************************************************************************************************************
+ *
+			FUNCIONES DE LECTURA DE ARCHIVOS
+
+****************************************************************************************************************
+****************************************************************************************************************/
+
+
+
+/* leerMetadataMapa:
+ * Lee todos los campos de un archivo Metadata Mapa y los guarda en un struct
+ */
 
 MetadataMapa leerMetadataMapa()
 {
@@ -105,6 +150,10 @@ MetadataMapa leerMetadataMapa()
 
 	return mdata;
 }
+
+/* leerMetadaPokenest:
+ * Lee todos los campos de un archivo Metadata Pokenest y los guarda en un struct
+ */
 
 MetadataPokenest leerMetadataPokenest()
 {
@@ -162,6 +211,11 @@ MetadataPokenest leerMetadataPokenest()
 	return mdata;
 }
 
+/* leerMetadaPokemon:
+ * Lee todos los campos de un archivo Metadata Pokemon y los guarda en un struct
+ */
+
+
 MetadataPokemon leerMetadataPokemon()
 {
 	MetadataPokemon mdata;
@@ -185,21 +239,41 @@ MetadataPokemon leerMetadataPokemon()
 	return mdata;
 }
 
-void inicializar_entrenador(Entrenador* entrenador)
+
+
+/****************************************************************************************************************
+ * ************************************************************************************************************
+ *
+
+
+****************************************************************************************************************
+****************************************************************************************************************/
+
+
+Entrenador new_Entrenador(char simbolo)
 {
-    entrenador->posx = 1;
-    entrenador->posy = 1;
-    entrenador->simbolo = '@';
-    entrenador->movAnterior = 'y';
-    entrenador->flagx = FALSE;
-    entrenador->flagy = FALSE;
-    entrenador->pokemones = NULL;
+	Entrenador entrenador;
+
+    entrenador.posx = 1;
+    entrenador.posy = 1;
+    entrenador.simbolo = simbolo;
+    entrenador.movAnterior = 'y';
+    entrenador.flagx = FALSE;
+    entrenador.flagy = FALSE;
+    entrenador.pokemones = NULL;
+
+    return entrenador;
 }
 
-void inicializar_jugador(Jugador* unJugador, int unSocket){
-	inicializar_entrenador(&(unJugador->entrenador));
-	unJugador->socket = unSocket;
-	unJugador->estado = 0;
+Jugador new_Jugador(char simbolo, int socket){
+
+	Jugador jugador;
+
+	jugador.entrenador = new_Entrenador(simbolo);
+	jugador.socket = socket;
+	jugador.estado = 0;
+
+	return jugador;
 }
 
  /*
@@ -265,11 +339,7 @@ void loggearColas(void){
 		}
 }
 
-typedef struct
-{
-	void* buffer;
-	int tam_buffer;
-}Paquete;
+
 
 //************************
 
@@ -404,14 +474,15 @@ void* thread_planificador()
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
 
-
-	Jugador *jugadorJugando;
+	Jugador *jugador;
+	Jugador *jugador2;
 	int socket_desconectado;
 	Jugador *jugadorDesconectado;
 	int quantum = 4;
 	int codOp = -1;
 	char pokenestPedida;
 	MetadataPokenest pokenestEnviar;
+	char* mostrar = malloc(100);
 
 	PosEntrenador pos;
 
@@ -421,7 +492,7 @@ void* thread_planificador()
 	while(!queue_is_empty(colaDesconectados))
 	{
 		//ELIMINAMOS JUGADORES
-		socket_desconectado = (int) queue_pop(colaDesconectados);
+		//socket_desconectado = (int) queue_pop(colaDesconectados);
 	}
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
@@ -431,13 +502,13 @@ void* thread_planificador()
 	if(!queue_is_empty(colaListos))
 	{
 	buffer_recv = malloc(tam_buffer_recv);
-	//pthread_mutex_lock(&mutex_socket);
-	Jugador *jugador = malloc(sizeof(Jugador));
 	flag = 1;
+
 	jugador = queue_pop(colaListos);
+
 	//log_info(infoLogger, "%s se ha ido de la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
 	//loggearColas();
-	socket_bloqueado = jugador->socket;
+	//socket_bloqueado = jugador->socket;
 
 	//Ya tenemos jugador, ahora le mandamos un turno
 	send_Turno(jugador->socket);
@@ -467,10 +538,18 @@ void* thread_planificador()
 		break;
 	}
 
+
+
+	sprintf(mostrar,"Jugador: %i",jugador->socket);
+
 	free(buffer_recv);
-	socket_bloqueado = -1;
-	queue_push(colaListos,jugador);
-	//free(jugador);
+
+	//pthread_mutex_lock(&mutex_socket);
+
+	queue_push(colaListos,(void*)jugador);
+
+	//pthread_mutex_unlock(&mutex_socket);
+
 	//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
 	//loggearColas();
 	//pthread_mutex_unlock(&mutex_socket);
@@ -478,10 +557,48 @@ void* thread_planificador()
 
 	//-------
 
-	nivel_gui_dibujar(gui_items, "Mapa Pokemon");
+	nivel_gui_dibujar(gui_items, mostrar);
 
 	}
 }
+
+char dsrlz_simboloEntrenador(void* buffer)
+{
+	int codigo;
+	char simbolo;
+
+	memcpy(&codigo,buffer,sizeof(int));
+
+	if(codigo != SIMBOLO)
+	{
+		perror("Error Codigo de Operacion: Simbolo dsrlz_simboloEntrenador() ");
+		exit(1);
+	}
+
+	memcpy(&simbolo,buffer+sizeof(int),sizeof(char));
+
+	return simbolo;
+
+}
+
+
+char recv_simboloEntrenador(int socket)
+{
+	char simbolo;
+
+	Paquete paquete;
+	paquete.buffer = malloc(size_SIMBOLO);
+	paquete.tam_buffer = size_SIMBOLO;
+
+
+	recv(socket,paquete.buffer,paquete.tam_buffer,0);
+
+	simbolo = dsrlz_simboloEntrenador(paquete.buffer);
+
+	return simbolo;
+}
+
+
 
 int main(int argc, char** argv)
 {
@@ -583,6 +700,7 @@ int main(int argc, char** argv)
 	pthread_t hiloPlanificador;
 	int valorHilo = -1;
 
+
 	valorHilo = pthread_create(&hiloPlanificador,NULL,thread_planificador,NULL);
 
 	if(valorHilo != 0)
@@ -590,11 +708,16 @@ int main(int argc, char** argv)
 		perror("Error al crear hilo Planificador");
 		exit(1);
 	}
+
+
 	Jugador nuevoJugador;
+	Jugador *aux;
 	int newfd;
+	char simboloEntrenador;
+
 
 	for (;;) {
-		getch();
+		//getch();
 		read_fds = fds_entrenadores; // cópialo
 
 		//Buscamos los sockets que quieren realizar algo con Select
@@ -607,22 +730,28 @@ int main(int argc, char** argv)
 
 				//Si es el Listener, tenemos NUEVA CONEXION!
 				if (i == listener) {
+
 					//SE ACEPTA UN NUEVO ENTRENADOR
 					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
-					printf("Server avisa: %i",newfd);
-					inicializar_jugador(&nuevoJugador, newfd);
+					simboloEntrenador = recv_simboloEntrenador(newfd);
+					nuevoJugador = new_Jugador(simboloEntrenador,newfd);
+
+					aux = malloc(sizeof(Jugador));
+					aux->entrenador = nuevoJugador.entrenador;
+					aux->socket = nuevoJugador.socket;
+					aux->estado = nuevoJugador.estado;
+
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
-					queue_push(colaListos, &nuevoJugador);
+					queue_push(colaListos, aux);
 					//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
 					//(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
 					//loggearColas();
+
+
 				}
 				//Si no es el Listener, el entrenador SE DESCONECTÓ!!
 				else
 				{
-					pthread_mutex_lock(&mutex_socket);
-					if(socket_bloqueado != i)
-					{
 
 					valor_recv = recv(i, buffer_recv, tamBuffer_recv, 0);
 
@@ -630,8 +759,7 @@ int main(int argc, char** argv)
 					{
 						queue_push(colaDesconectados,&i);
 					}
-					pthread_mutex_unlock(&mutex_socket);
-					}
+
 				}
 			}
 		}

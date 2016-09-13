@@ -25,14 +25,16 @@
 enum codigoOperaciones {
 	TURNO = 0,
 	POKENEST = 1,
-	MOVER = 2
+	MOVER = 2,
+	SIMBOLO = 10
 };
 
 enum sizeofBuffer
 {
 	size_TURNO = sizeof(int),
 	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
-	size_MOVER = sizeof(int)+sizeof(int)+sizeof(int)
+	size_MOVER = sizeof(int)+sizeof(int)+sizeof(int),
+	size_SIMBOLO = sizeof(int)+sizeof(char)
 };
 
 
@@ -148,7 +150,7 @@ metadata leerMetadata()
 	char* auxiliar;
 
 	//Se lee el archivo con config_create y se almacena lo leido en config
-	config = config_create("../config/metadata.config");
+	config = config_create("config/metadata.config");
 
 	//Si no se pudo abrir el archivo, salimos
 	if (config==NULL)
@@ -612,7 +614,29 @@ void send_movEntrenador(Paquete *paquete, int socket)
 	send(socket,paquete->buffer,paquete->tam_buffer,0);
 }
 
+Paquete srlz_simboloEntrenador(char simbolo)
+{
+	Paquete paquete;
+	paquete.buffer = malloc(size_SIMBOLO);
+	paquete.tam_buffer = size_SIMBOLO;
+	int codigo = SIMBOLO;
 
+	memcpy(paquete.buffer,&codigo,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int),&simbolo,sizeof(char));
+
+	return paquete;
+}
+
+void send_simboloEntrenador(char simbolo,int socket)
+{
+	Paquete paquete;
+	paquete = srlz_simboloEntrenador(simbolo);
+
+	send(socket,paquete.buffer,paquete.tam_buffer,0);
+
+	free(paquete.buffer);
+
+}
 
 int main(int argc, char** argv)
 {
@@ -672,6 +696,7 @@ int main(int argc, char** argv)
 
 		//Ahora debemos conectarnos al mapa
 		int fd_server = get_fdServer(connect.ip,connect.puerto);
+		send_simboloEntrenador(mdata.simbolo, fd_server);
 
 		/*A partir de aca, ya nos conectamos al mapa, asi que tenemos que estar dentro de un While Interno hasta que terminamos
 		 * de capturar todos los pokemon, cuando terminamos, salimos del while interno y volvemos al externo.
