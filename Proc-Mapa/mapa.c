@@ -93,23 +93,67 @@ void loggearColas(void){
 	t_queue *auxLista;
 	auxLista = queue_create();
 	Jugador* jugador;
+	char* simbolos=malloc(0);
+	short indice =0;
+	pthread_mutex_lock(&mutex_Listos); //Mutex de listas
+	pthread_mutex_lock(&mutex_Bloqueados);
+
 	if (!queue_is_empty(colaListos)){
-		auxLista = colaListos;
-		log_info(infoLogger, "Los Entrenadores que se encuentran en la cola de listos son:\n");
-		while(auxLista!=NULL){
-			jugador = (Jugador*)queue_pop(auxLista);
-			log_info(infoLogger, "%s \n", jugador->entrenador); //esto me muestra todos los que estan la cola
+		jugador = (Jugador*)queue_pop(colaListos);
+		while(jugador!=NULL){
+			simbolos=realloc(simbolos, sizeof(simbolos)+2);
+			simbolos[indice++]= jugador->entrenador.simbolo;
+			simbolos[indice++]= '-';
+			queue_push(auxLista, jugador);
+			jugador = (Jugador*)queue_pop(colaListos);
 		}
+
+		jugador = (Jugador*)queue_pop(auxLista);
+		simbolos=realloc(simbolos, sizeof(simbolos)+1);
+		simbolos[indice]='\0';
+		while (jugador!=NULL)
+		{
+			queue_push(colaListos, jugador);
+			jugador = (Jugador*)queue_pop(auxLista);
+		}
+
+		log_info(infoLogger, "Jugadores en cola Listos: %s", simbolos);
+		free(simbolos);
+		simbolos=malloc(0);
+	}
+	else{
+		log_info(infoLogger, "Cola Listos vacia.");
 	}
 
 	if (!queue_is_empty(colaBloqueados)){
-			auxLista = colaBloqueados;
-			log_info(infoLogger, "Los Entrenadores que se encuentran en la cola de bloqueados son:\n");
-			while(auxLista!=NULL){
-				jugador = (Jugador*)queue_pop(auxLista);
-				log_info(infoLogger, "%s \n", jugador->entrenador);
-			}
+		jugador = (Jugador*)queue_pop(colaBloqueados);
+		while(jugador!=NULL){
+			simbolos=realloc(simbolos, sizeof(simbolos)+2);
+			simbolos[indice++]= jugador->entrenador.simbolo;
+			simbolos[indice++]= '-';
+			queue_push(auxLista, jugador);
+			jugador = (Jugador*)queue_pop(colaBloqueados);
 		}
+
+		jugador = (Jugador*)queue_pop(auxLista);
+		simbolos=realloc(simbolos, sizeof(simbolos)+1);
+		simbolos[indice]='\0';
+		while (jugador!=NULL)
+		{
+			queue_push(colaBloqueados, jugador);
+			jugador = (Jugador*)queue_pop(auxLista);
+		}
+
+		log_info(infoLogger, "Jugadores en cola Bloqueados: %s", simbolos);
+	}
+	else{
+		log_info(infoLogger, "Cola Bloqueados vacia.");
+	}
+
+	free(simbolos);
+	queue_destroy(auxLista);
+	pthread_mutex_unlock(&mutex_Listos);
+	pthread_mutex_unlock(&mutex_Bloqueados);
 }
 
 /****************************************************************************************************************
@@ -237,8 +281,8 @@ void* thread_planificador()
 
 		jugador = queue_pop(colaListos);
 
-		//log_info(infoLogger, "%s se ha ido de la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
-		//loggearColas();
+		log_info(infoLogger, "Jugador %c sale de Listos.",jugador->entrenador.simbolo);
+		loggearColas();
 		//socket_bloqueado = jugador->socket;
 
 		//Ya tenemos jugador, ahora le mandamos un turno
@@ -293,7 +337,8 @@ void* thread_planificador()
 		queue_push(colaListos,(void*)jugador);
 		log_trace(traceLogger, "Termina turno de jugador %c", jugador->entrenador.simbolo);
 		pthread_mutex_unlock(&mutex_Listos);
-		//log_info(infoLogger, "Jugador %c entra en Cola Listos", jugador->entrenador.simbolo);
+		log_info(infoLogger, "Jugador %c entra en Cola Listos", jugador->entrenador.simbolo);
+		loggearColas();
 
 		//pthread_mutex_unlock(&mutex_socket);
 
@@ -437,10 +482,8 @@ int main(int argc, char** argv)
 					queue_push(colaListos, aux);
 					pthread_mutex_unlock(&mutex_Listos);
 					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
-					//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",
-					//(&nuevoJugador)-> entrenador, (&nuevoJugador)-> estado, (&nuevoJugador)->socket);
-					//loggearColas();
-
+					log_info(infoLogger, "Jugador %c entra en Cola Listos", nuevoJugador.entrenador.simbolo);
+					loggearColas();
 				}
 				//Si no es el Listener, el entrenador SE DESCONECTÓ!!
 				else
