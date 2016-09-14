@@ -26,6 +26,8 @@ enum codigoOperaciones {
 	TURNO = 0,
 	POKENEST = 1,
 	MOVER = 2,
+	CAPTURAR = 3,
+	FINOBJETIVOS = 4,
 	SIMBOLO = 10
 };
 
@@ -34,8 +36,11 @@ enum sizeofBuffer
 	size_TURNO = sizeof(int),
 	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
 	size_MOVER = sizeof(int)+sizeof(int)+sizeof(int),
-	size_SIMBOLO = sizeof(int)+sizeof(char)
+	size_CAPTURAR = sizeof(int) + sizeof(char),
+	size_SIMBOLO = sizeof(int)+sizeof(char),
+	size_FINOBJETIVOS = sizeof(int)
 };
+
 
 
 
@@ -449,37 +454,16 @@ void send_solicitarPokenest(Pokenest *pokenest, int fd_server)
 //****************************************//****************************************
 
 
-
-void send_moverEntrenador(Entrenador *entrenador)
-{
-	//Moverme
-	/*Accion numero 2:
-	* Avanzará una posición hacia la siguiente PokeNest1,
-	* * informando el movimiento al Mapa, en caso de aún no haber llegado a ella.
-	*
-	* SI ya conocemos la ubicacion de la Pokenest, hacemos el movimiento correspondiente,
-	* actualizamos NUESTRA estructura entrenador con la nueva coordenada y le debemos indicar
-	* al server QUE coordenada modificamos y el nuevo valor de dicha coordenada
-	*
-	El mensaje sería "---- Coordenada ---- Valor-----"
-	*Ejemplo: "X25", "Y31", "X8", etc
-	 */
-}
-
 //****************************************//****************************************
 //****************************************//****************************************
 
-void send_capturarPokemon()
+void send_capturarPokemon(Paquete *paquete,int server)
 {
-
+	send(server,paquete->buffer,paquete,0);
 }
 //****************************************//****************************************
 //****************************************//****************************************
 
-void send_finObjetivos()
-{
-
-}
 
 //****************************************//****************************************
 //****************************************//****************************************
@@ -536,6 +520,8 @@ void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
 
 	memcpy(&(pokenest->posx),buffer+sizeof(int)+sizeof(char),sizeof(int));
 	memcpy(&(pokenest->posy),buffer+sizeof(int)+sizeof(char)+sizeof(int),sizeof(int));
+
+	free(buffer);
 
 }
 
@@ -637,6 +623,41 @@ void send_simboloEntrenador(char simbolo,int socket)
 
 }
 
+
+Paquete srlz_capturarPokemon(char simbolo)
+{
+	Paquete paquete;
+	paquete.buffer = malloc(size_CAPTURAR);
+	paquete.tam_buffer = size_CAPTURAR;
+
+	int codigo = CAPTURAR;
+
+	memcpy(paquete.buffer,&codigo,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int),&simbolo,sizeof(char));
+
+	return paquete;
+}
+
+
+void send_finObjetivos(Paquete* paquete, int socket)
+{
+	send(socket,paquete->buffer,paquete->tam_buffer,0);
+}
+
+
+Paquete srlz_finObjetivos()
+{
+	Paquete paquete;
+	paquete.buffer = malloc(size_FINOBJETIVOS);
+	paquete.tam_buffer = size_FINOBJETIVOS;
+
+	int codigo = FINOBJETIVOS;
+
+	memcpy(paquete.buffer,&codigo,sizeof(int));
+
+	return paquete;
+}
+
 int main(int argc, char** argv)
 {
 
@@ -710,38 +731,27 @@ int main(int argc, char** argv)
 
 				switch(opcion)
 				{
-					case 1:
+					case POKENEST://Caso 1: QUEREMOS UNA POKENEST!
 						send_solicitarPokenest(&pokenest, fd_server);
 						recv_solicitarPokenest(&pokenest, fd_server);
 						calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
 					break;
-					case 2:
+					case MOVER://Caso 2: Queremos movernos!
 						mover_entrenador(&entrenador);
 						paquete = srlz_movEntrenador(entrenador);
 						send_movEntrenador(&paquete,fd_server);
 					break;
-					case 3:
-						send_capturarPokemon();
+					case CAPTURAR: //Caso 3: Ya llegamos a una Pokenest. QUEREMOS CAPTURAR
+						paquete = srlz_capturarPokemon(pokenest.simbolo);
+						send_capturarPokemon(&paquete,fd_server);
 					break;
-					case 4:
-						send_finObjetivos();
+					case FINOBJETIVOS:
+						paquete = srlz_finObjetivos();
+						send_finObjetivos(&paquete,fd_server);
 					break;
 				}
 
-
-				/*ACCION NUMERO 3:
-				 * Al llegar a las coordenadas de una PokeNest, solicitará al mapa atrapar un Pokémon.
-				* El Entrenador quedará bloqueado hasta que el Mapa le confirme la captura del Pokémon.
-				* En ese momento, el Entrenador evaluará (e informará al Mapa) si debe continuar atrapando Pokémons en este Mapa,
-					* o si ya cumplió sus objetivos en el mismo.
-
-				* Para hacerlo tenemos el struct Entrenador y la Pokenest, basicamente es comparar si las coordenadas son iguales
-					 *Para saber si ya cumplimos los objetivos, se puede crear una variable "cantidadDePokemonAAtrapar" que cuente cuantos Pokemon
-					*tenemos que atrapar en este mapa. A medida que vamos capturando, descontamos. Si es es 0, terminamos el nivel, le informamos al mapa
-					*salimos del mismo con un close connection
-					*
-					*/
-			}
+				free(paquete.buffer);
 
 		}
 
@@ -754,6 +764,7 @@ int main(int argc, char** argv)
 
 	}
 
+	}
 	return 0;
 }
 

@@ -267,12 +267,19 @@ void* thread_planificador()
 			movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
 			MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
 			break;
-		/*
-		case CAPTURAR:
-			break:
-		case FINOBJETIVO:
+
+		case CAPTURAR: //TODO: FALTA COMPLETAR!!
+			pokenestPedida = dsrlz_Pokenest(buffer_recv);//Identificamos la pokenest pedida
+			//Hay que preguntar si tenemos recursos
+			//Si tenemos recursos, hay que mandarle un mensaje para que copie el archivo!
+			//Si no tenemos recursos hay que bloquearlo!!!
+		break;
+		case FINOBJETIVOS:
+			//TODO:
 			break;
-			*/
+
+
+
 		}
 
 
