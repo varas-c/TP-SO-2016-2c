@@ -5,18 +5,10 @@
  *      Author: utnso
  */
 
-
-
 #ifndef HEADERS_STRUCT_H_
 #define HEADERS_STRUCT_H_
 
-
-/* -----------------------------------------------
- * METADATA DEL ENTRENADOR
- * Almacena la información que se lee desde el archivo Metadata del Entrenador
- ------------------------------------------------- */
-
-typedef struct
+typedef struct //metadata
 {
 	char* nombre;
 	char simbolo;
@@ -25,35 +17,23 @@ typedef struct
 	int vidas;
 	int reintentos;
 }metadata;
+//**********************************************************************************************************
 
-/* -----------------------------------------------
- * ParametrosConsola
- * Almacena la información que se lee desde la consola
- ------------------------------------------------- */
-
-typedef struct
+typedef struct //ParametrosConsola
 {
 	char* nombreEntrenador;
 	char* dirPokedex;
 }ParametrosConsola;
+//**********************************************************************************************************
 
-/* -----------------------------------------------
- * ConexionEntrenador
- * Almacena la información que se lee desde el archivo del Mapa donde esta la IP y Puerto
- ------------------------------------------------- */
-
-typedef struct
+typedef struct //conexionEntrenador
 {
 	char* ip;
 	char* puerto;
 }ConexionEntrenador;
+//**********************************************************************************************************
 
-/* -----------------------------------------------
- * Entrenador
- * Estructura para crear un jugador y poder moverlo, mostrarlo por pantalla.
- ------------------------------------------------- */
-
-typedef struct{
+typedef struct{ //Entrenador
 	char simbolo;
 	int posx;
 	int posy;
@@ -66,20 +46,79 @@ typedef struct{
 	int reintentos;
 	char* nombre;
 }Entrenador;
+//**********************************************************************************************************
 
-
-typedef struct
+typedef struct //Pokenest
 {
 	int posx;
 	int posy;
 	char simbolo;
 }Pokenest;
+//**********************************************************************************************************
 
-typedef struct
+typedef struct //Paquete
 {
 	void* buffer;
 	int tam_buffer;
 }Paquete;
+//**********************************************************************************************************
 
+typedef struct //DatosMapa
+{
+	char* nombre;
+}DatosMapa;
+//**********************************************************************************************************
+
+typedef struct //Nivel
+{
+	int finNivel;
+	int nivelActual;
+	int numPokenest;
+}Nivel;
+
+//***************//********!!!!!!!!!!!NEW DE STRUCTS!!!!!!!!!!!!!!//***************//***************
+
+Pokenest new_pokenest(char** objetivos, int num)
+{
+	Pokenest pokenest;
+	pokenest.posx = -1;
+	pokenest.posy = -1;
+	char* aux = strdup(objetivos[num]);
+	memcpy(&pokenest.simbolo,aux, sizeof(char));
+	return pokenest;
+}
+//**********************************************************************************************************
+
+DatosMapa new_DatosMapa()
+{
+	DatosMapa mapa;
+	return mapa;
+}
+//**********************************************************************************************************
+
+Nivel new_nivel()
+{
+	Nivel nivel;
+	nivel.finNivel=0;
+	nivel.nivelActual=0;
+	nivel.numPokenest=0;
+	return nivel;
+}
+//**********************************************************************************************************
+
+Entrenador new_Entrenador(metadata mdata)
+{
+	Entrenador entrenador;
+    entrenador.posx = 1;
+    entrenador.posy = 1;
+    entrenador.simbolo = mdata.simbolo;
+    entrenador.movAnterior = 'y';
+    entrenador.flagx = 0;
+    entrenador.flagy = 0;
+    entrenador.nombre = strdup(mdata.nombre);
+    entrenador.vidas = mdata.vidas;
+    entrenador.reintentos = mdata.reintentos;
+    return entrenador;
+}
 
 #endif /* HEADERS_STRUCT_H_ */

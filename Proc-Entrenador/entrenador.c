@@ -4,85 +4,28 @@
  *  Created on: 29/8/2016
  *      Author: utnso
  */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <commons/config.h>
-#include "headers/struct.h"
-#include "headers/socket.h"
+#include <commons/log.h>
 #include <sys/ioctl.h>
-
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <unistd.h>
 #include <errno.h>
 #include <netdb.h>
-#include <sys/types.h>
 #include <netinet/in.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
-#include <commons/log.h>
+#include "headers/struct.h"
+#include "headers/socket.h"
+#include "headers/configEntrenador.h"
+#include "headers/send.h"
+#include "headers/serializeEntrenador.h"
 
-enum codigoOperaciones {
-	TURNO = 0,
-	POKENEST = 1,
-	MOVER = 2,
-	CAPTURAR = 3,
-	FINOBJETIVOS = 4,
-	SIMBOLO = 10
-};
-
-enum sizeofBuffer
-{
-	size_TURNO = sizeof(int),
-	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
-	size_MOVER = sizeof(int)+sizeof(int)+sizeof(int),
-	size_CAPTURAR = sizeof(int) + sizeof(char),
-	size_SIMBOLO = sizeof(int)+sizeof(char),
-	size_FINOBJETIVOS = sizeof(int)
-};
-
-
-
-
-//Lee los parametros por consola y los guarda en un struct
-
-ParametrosConsola leerParametrosConsola(char** parametros)
-{
-	ParametrosConsola p;
-
-	p.nombreEntrenador = malloc(strlen(parametros[1])+1); //Reservamos memoria
-	p.dirPokedex = malloc(strlen(parametros[2])+1);
-
-	strcat(p.nombreEntrenador,parametros[1]); //guardamos
-	strcat(p.dirPokedex,parametros[2]);
-
-	return p;
-}
-
-//******************************************
-
-//Destructor de un struct ParametrosConsola
-void destruct_ParametrosConsola(ParametrosConsola *p)
-{
-	free(p->nombreEntrenador);
-	free(p->dirPokedex);
-}
-
-//******************************************
-//Verifica que los parametros pasados por consola sean los necesarios, solo los cuenta, nada mas.
-void verificarParametros(int argc)
-{
-	if(argc!=3)
-	{
-		printf("\n\n Error - Faltan parametros\n\n");
-		exit(1);
-	}
-}
-
-
-//******************************************
-//El calculo es 4 de "obj[" + largociudad + "]" + /n
-char* concatObjetivo(char* ciudad, char* obj)
+char* concatObjetivo(char* ciudad, char* obj)//El calculo es 4 de "obj[" + largociudad + "]" + /n
 {
 	obj = malloc(4*sizeof(char)+strlen(ciudad)*sizeof(char)+2);
 
@@ -93,10 +36,9 @@ char* concatObjetivo(char* ciudad, char* obj)
 	return obj;
 
 }
-
 //******************************************
-//Muestra los objetivos de un mapa
-void mostrarObjetivos (char **a)
+
+void mostrarObjetivos (char **a)//Muestra los objetivos de un mapa
 {
 	int cantViajes=0;
 
@@ -105,15 +47,12 @@ void mostrarObjetivos (char **a)
 	{
 			printf("%s",a[cantViajes]);
 			cantViajes++;
-
 	}
 	printf("\n");
-
 }
-
 //******************************************
-//Cuenta la cantidad de viajes en una hoja de Viaje
-int cantidadDeViajes(char** hojaDeViaje)
+
+int cantidadDeViajes(char** hojaDeViaje)//Cuenta la cantidad de viajes en una hoja de Viaje
 {
 	int cantViajes=0;
 
@@ -146,129 +85,7 @@ void leerObjetivos(char* objetivos, t_config* config, int cantViajes,char** hoja
 
 //******************************************
 
-//Lee Metadata de un entrenador
-metadata leerMetadata()
-{
-	metadata mdata;
-	t_config* config; //Estructura config
-	int cantViajes;
-	char* auxiliar;
-
-	//Se lee el archivo con config_create y se almacena lo leido en config
-	config = config_create("config/metadata.config");
-
-	//Si no se pudo abrir el archivo, salimos
-	if (config==NULL)
-	{
-		printf("Archivo metadata.config no encontrado.\n");
-		exit(20);
-	}
-
-
-	//Leemos el nombre en un auxiliar, luego lo copiamos
-	auxiliar = config_get_string_value(config,"nombre");
-	mdata.nombre = malloc(strlen(auxiliar)+1);
-	strcpy(mdata.nombre, auxiliar);
-
-	//auxiliar = config_get_string_value(config,"simbolo");
-	mdata.simbolo = *config_get_string_value(config,"simbolo");
-	//strcpy(mdata.simbolo, auxiliar);
-
-	mdata.hojaDeViaje = config_get_array_value(config, "hojaDeViaje");
-
-
-	//---------------ACA SE LEEN LOS OBJETIVOS -------------
-	cantViajes = cantidadDeViajes(mdata.hojaDeViaje);
-	mdata.objetivos = malloc(cantViajes*sizeof(char*));
-
-	//Esto deberia ir en una funcion aparte pero no se como pasar por parametro mdata.objetivos porque es un char**
-	//Hay una funcion leerObjetivos que habría que arreglar
-	////leerObjetivos(mdata.objetivos, config,cantViajes,mdata.hojaDeViaje);
-
-	char* ciudad;
-	char* leer = NULL;
-
-	int i;
-	for(i=0;i<cantViajes;i++)
-	{
-		//4*sizeof(char)+strlen(ciudad)*sizeof(char)+2
-		ciudad = mdata.hojaDeViaje[i];
-		leer = malloc(4*sizeof(char)+strlen(ciudad)*sizeof(char)+2);
-		strcpy(leer,"obj[");
-		strcat(leer,ciudad);
-		strcat(leer,"]");
-		mdata.objetivos[i] = config_get_array_value(config,leer);
-		mostrarObjetivos(mdata.objetivos[i]);
-		free(leer);
-	}
-
-	//---------------------------------------------------------
-
-	mdata.vidas = config_get_int_value(config,"vidas");
-	mdata.reintentos = config_get_int_value(config,"reintentos");
-
-	config_destroy(config);
-	return mdata;
-}
-
-ConexionEntrenador leerConexionMapa(int mapa)
-{
-	ConexionEntrenador connect;
-	t_config* config; //Estructura
-	char* auxiliar;
-
-
-	//****************************
-	//ToDo: Aca debemos leer el mapa.config del mapa que recibimos por parametro
-	config = config_create("../../Proc-Mapa/config/mapa.config");
-
-	if(config==NULL)
-	{
-		printf("Archivo mapa.config no encontrado\n");
-		exit(20);
-	}
-
-	//Leemos el puerto
-	auxiliar = config_get_string_value(config,"Puerto");
-	connect.puerto = malloc(strlen(auxiliar)+1);
-	strcpy(connect.puerto, auxiliar);
-
-	//Leemos la IP
-	auxiliar = config_get_string_value(config,"IP");
-	connect.ip = malloc(strlen(auxiliar)+1);
-	strcpy(connect.ip, auxiliar);
-
-	//Cerramos el archivo
-	config_destroy(config);
-	return connect;
-
-}
-
-
-
-Pokenest new_pokenest(char** objetivos, int num)
-{
-	Pokenest pokenest;
-	pokenest.posx = -1;
-	pokenest.posy = -1;
-	char* aux = strdup(objetivos[num]);
-	memcpy(&pokenest.simbolo,aux, sizeof(char));
-	return pokenest;
-}
-
-typedef struct
-{
-	char* nombre;
-}DatosMapa;
-
-DatosMapa new_DatosMapa()
-{
-	DatosMapa mapa;
-	return mapa;
-}
-
-//Si flagx=false then mover en X otherwise mover en Y
-void mover_entrenador(Entrenador *entrenador)
+void mover_entrenador(Entrenador *entrenador)//Si flagx=false then mover en X otherwise mover en Y
 {
 	int move = 0;
 
@@ -316,7 +133,6 @@ void mover_entrenador(Entrenador *entrenador)
 			entrenador->destinox += 1;
 		}
 
-
 		if(entrenador->destinox > 0)
 		{
 			entrenador->posx += 1;
@@ -344,18 +160,7 @@ void mover_entrenador(Entrenador *entrenador)
 		entrenador->movAnterior = 'y';
 		move = 1;
 	}
-
 }
-
-
-
-char* obtenerNombreMapa(char** hojaDeViaje, int numeroMapa)
-{
-	char *a = strdup(hojaDeViaje[numeroMapa]);
-	return a;
-}
-
-
 
 int recv_turnoConcedido(int fd_server)
 {
@@ -370,7 +175,6 @@ int recv_turnoConcedido(int fd_server)
 		perror("Error recv");
 		exit(1);
 	}
-
 	//Deserializamos
 	memcpy(&codigo,mensaje,sizeof(int));
 
@@ -378,21 +182,15 @@ int recv_turnoConcedido(int fd_server)
 	{
 		return 1;
 	}
-
 	return 0;
 }
-
 //****************************************
 
-//Si la pokenest tiene posx y posy = -1 es porque no tenemos datos, asi que hay que leer
-int faltaPokenest(Pokenest pokenest)
+int faltaPokenest(Pokenest pokenest)//Si la pokenest tiene posx y posy = -1 es porque no tenemos datos,hay que leer
 {
 	return pokenest.posx == -1 || pokenest.posy == -1;
 }
-
 //****************************************//****************************************
-//****************************************//****************************************
-
 
 int llegueAPokenest(const Entrenador entrenador, const Pokenest pokenest)
 {
@@ -400,11 +198,8 @@ int llegueAPokenest(const Entrenador entrenador, const Pokenest pokenest)
 	{
 		return 1;
 	}
-
 	return 0;
 }
-
-//****************************************//****************************************
 //****************************************//****************************************
 
 int evaluar_opciones(Entrenador entrenador, Pokenest pokenest)
@@ -418,76 +213,18 @@ int evaluar_opciones(Entrenador entrenador, Pokenest pokenest)
 	{
 		return 1; //Tengo que pedirle la Pokenest al server
 	}
-
 	if(llegueAPokenest(entrenador,pokenest))
 	{
 		return 3; //Tengo que atrapar un Pokemon
 	}
-
 	return 2; //Tengo que caminar
 
 	//ToDo falta la opcion de notificar fin de objetivos!
-
-}
-
-//****************************************//****************************************
-//****************************************//****************************************
-
-void send_solicitarPokenest(Pokenest *pokenest, int fd_server)
-{
-	void* buffer;
-	int tam_buffer = sizeof(int)+sizeof(char);
-	buffer = malloc(tam_buffer);
-
-	int codigo = POKENEST;
-
-	//Copiamos primero el codigo, despues el simbolo de la Pokenest
-	memcpy(buffer,&codigo,sizeof(int));
-	memcpy(buffer+sizeof(int),&(pokenest->simbolo),sizeof(char));
-
-	send(fd_server, buffer, tam_buffer,0);
-
-	free(buffer);
-}
-
-//****************************************//****************************************
-//****************************************//****************************************
-
-
-//****************************************//****************************************
-//****************************************//****************************************
-
-void send_capturarPokemon(Paquete *paquete,int server)
-{
-	send(server,paquete->buffer,paquete,0);
 }
 //****************************************//****************************************
-//****************************************//****************************************
-
-
-//****************************************//****************************************
-//****************************************//****************************************
-
-typedef struct
-{
-	int finNivel;
-	int nivelActual;
-	int numPokenest;
-}Nivel;
-
-Nivel new_nivel()
-{
-	Nivel nivel;
-	nivel.finNivel=0;
-	nivel.nivelActual=0;
-	nivel.numPokenest=0;
-
-	return nivel;
-}
 
 void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
 {
-
 	int valor_recv;
 	int codigo;
 	int tam_buffer = size_POKENEST;
@@ -522,22 +259,6 @@ void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
 	memcpy(&(pokenest->posy),buffer+sizeof(int)+sizeof(char)+sizeof(int),sizeof(int));
 
 	free(buffer);
-
-}
-
-Entrenador new_Entrenador(metadata mdata)
-{
-	Entrenador entrenador;
-    entrenador.posx = 1;
-    entrenador.posy = 1;
-    entrenador.simbolo = mdata.simbolo;
-    entrenador.movAnterior = 'y';
-    entrenador.flagx = 0;
-    entrenador.flagy = 0;
-    entrenador.nombre = strdup(mdata.nombre);
-    entrenador.vidas = mdata.vidas;
-    entrenador.reintentos = mdata.reintentos;
-    return entrenador;
 }
 
 void calcular_coordenadas(Entrenador* entrenador, int x, int y)
@@ -575,95 +296,11 @@ void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 	{
 		entrenador->destinoy = y - entrenador->posy;
 	}
-
-}
-
-Paquete srlz_movEntrenador(Entrenador entrenador)
-{
-	Paquete paquete;
-	paquete.buffer = malloc(size_MOVER);
-	paquete.tam_buffer = size_MOVER;
-
-	int codOp = MOVER;
-
-	memcpy(paquete.buffer,&codOp,sizeof(int));
-	memcpy(paquete.buffer+sizeof(int),&(entrenador.posx),sizeof(int));
-	memcpy(paquete.buffer+sizeof(int)*2,&(entrenador.posy),sizeof(int));
-
-	return paquete;
-}
-
-
-void send_movEntrenador(Paquete *paquete, int socket)
-{
-	send(socket,paquete->buffer,paquete->tam_buffer,0);
-}
-
-Paquete srlz_simboloEntrenador(char simbolo)
-{
-	Paquete paquete;
-	paquete.buffer = malloc(size_SIMBOLO);
-	paquete.tam_buffer = size_SIMBOLO;
-	int codigo = SIMBOLO;
-
-	memcpy(paquete.buffer,&codigo,sizeof(int));
-	memcpy(paquete.buffer+sizeof(int),&simbolo,sizeof(char));
-
-	return paquete;
-}
-
-void send_simboloEntrenador(char simbolo,int socket)
-{
-	Paquete paquete;
-	paquete = srlz_simboloEntrenador(simbolo);
-
-	send(socket,paquete.buffer,paquete.tam_buffer,0);
-
-	free(paquete.buffer);
-
-}
-
-
-Paquete srlz_capturarPokemon(char simbolo)
-{
-	Paquete paquete;
-	paquete.buffer = malloc(size_CAPTURAR);
-	paquete.tam_buffer = size_CAPTURAR;
-
-	int codigo = CAPTURAR;
-
-	memcpy(paquete.buffer,&codigo,sizeof(int));
-	memcpy(paquete.buffer+sizeof(int),&simbolo,sizeof(char));
-
-	return paquete;
-}
-
-
-void send_finObjetivos(Paquete* paquete, int socket)
-{
-	send(socket,paquete->buffer,paquete->tam_buffer,0);
-}
-
-
-Paquete srlz_finObjetivos()
-{
-	Paquete paquete;
-	paquete.buffer = malloc(size_FINOBJETIVOS);
-	paquete.tam_buffer = size_FINOBJETIVOS;
-
-	int codigo = FINOBJETIVOS;
-
-	memcpy(paquete.buffer,&codigo,sizeof(int));
-
-	return paquete;
 }
 
 int main(int argc, char** argv)
 {
-
-	/*
-	//Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
-
+	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
 
 	ParametrosConsola parametros;
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
@@ -671,20 +308,13 @@ int main(int argc, char** argv)
 	printf("%s --- %s", parametros.dirPokedex, parametros.nombreEntrenador);
 	destruct_ParametrosConsola(&parametros);//Liberamos los parametros
 
-	//--------------------------------
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 	*/
 
 	metadata mdata;
 	mdata = leerMetadata();
-	//--------------------------------------------
-	//----------------------------------------------
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
-
-	//--------------------------------------------
-	//----------------------------------------------
-
 
 	Nivel nivel = new_nivel();
 	DatosMapa mapa = new_DatosMapa();
@@ -697,12 +327,9 @@ int main(int argc, char** argv)
 
 	Paquete paquete;
 
-
-
 	/* Este while es un "While Externo", el While externo es para poder avanzar de mapa una vez finalizado
-	 * el mapa actual
+	  el mapa actual
 	 */
-
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
@@ -712,7 +339,6 @@ int main(int argc, char** argv)
 
 		ConexionEntrenador connect;
 		connect = leerConexionMapa(mapa.nombre); //Leemos la información del Mapa nombre "LoQueSea"
-
 
 		//Ahora debemos conectarnos al mapa
 		int fd_server = get_fdServer(connect.ip,connect.puerto);
@@ -724,7 +350,6 @@ int main(int argc, char** argv)
 
 		while(nivel.finNivel == 0) //Mientras que no hayamos ganado el nivel
 		{
-
 			if(recv_turnoConcedido(fd_server))
 			{
 				opcion = evaluar_opciones(entrenador,pokenest);
@@ -752,7 +377,6 @@ int main(int argc, char** argv)
 				}
 
 				free(paquete.buffer);
-
 		}
 
 		//FUERA DEL WHILE INTERNO
@@ -761,10 +385,7 @@ int main(int argc, char** argv)
 
 		//Ahora si pasamos al siguiente mapa, podemos hacer numeroMapaActual++ y repetimos.
 		//En caso de que hayamos llegado al limite de mapas, hay que salir del while porque terminamos el juego.
-
 	}
-
 	}
 	return 0;
 }
-

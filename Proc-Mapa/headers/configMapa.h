@@ -8,9 +8,9 @@
 #ifndef HEADERS_CONFIGMAPA_H_
 #define HEADERS_CONFIGMAPA_H_
 
-/****************************************************************************************************************
+/****************************************************
 			FUNCIONES DE LECTURA DE ARCHIVOS
-****************************************************************************************************************/
+****************************************************/
 
 MetadataMapa leerMetadataMapa()         //Lee todos los campos de un archivo Metadata Mapa y los guarda en un struct
 {
