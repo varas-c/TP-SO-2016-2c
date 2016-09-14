@@ -10,32 +10,33 @@
 #include <tad_items.h>
 #include <string.h>
 #include <stdlib.h>
-#include <commons/config.h>
 #include <sys/ioctl.h>
 #include <curses.h>
-#include "headers/struct.h"
-#include <nivel.h>
-#include <commons/collections/list.h>
-#include "headers/socket.h"
-#include <commons/log.h>
-#include <commons/collections/queue.h>
 #include <math.h>
 #include <ctype.h>
+#include <nivel.h>
+#include <commons/log.h>
+#include <commons/collections/queue.h>
+#include <commons/config.h>
+#include <commons/collections/list.h>
+#include "headers/struct.h"
+#include "headers/socket.h"
 #include "headers/configMapa.h"
 #include "headers/serializeMapa.h"
+#include "headers/pokenest.h"
+#include "headers/entrenador.h"
 
 /****************************************************************************************************************
- * ************************************************************************************************************
 			VARIABLES GLOBALES
-****************************************************************************************************************
 ****************************************************************************************************************/
-
 
 #define TAMANIO_BUFFER 11
 t_queue* colaListos;
 t_queue* colaBloqueados;
 t_queue* colaDesconectados;
+
 t_list* gui_items;
+
 t_log* traceLogger;
 t_log* infoLogger;
 
@@ -50,44 +51,9 @@ pthread_mutex_t mutex_Bloqueados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Desconectados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
 
-t_list* listaPokenest;
-
-
-
 /****************************************************************************************************************
- * ************************************************************************************************************
- *
 			FUNCIONES DE LECTURA DE PARAMETROS POR CONSOLA (LOS QUE SE RECIBEN POR **ARGV)
-
-****************************************************************************************************************
 ****************************************************************************************************************/
-
-ParametrosMapa leerParametrosConsola(char** argv)
-{
-	ParametrosMapa parametros;
-	parametros.nombreMapa = argv[1];
-	parametros.dirPokedex = argv[2];
-
-	return parametros;
-}
-
-void verificarParametros(int argc)
-{
-	if(argc!=3)
-	{
-		printf("Error - Faltan parametros \n");
-		exit(1);
-	}
-}
-
-
-
-/****************************************************************************************************************
- * ************************************************************************************************************
- *
-****************************************************************************************************************
-****************************************************************************************************************/
-
 
 void loggearColas(void){
 	t_queue *auxLista;
@@ -155,90 +121,26 @@ void loggearColas(void){
 	pthread_mutex_unlock(&mutex_Listos);
 	pthread_mutex_unlock(&mutex_Bloqueados);
 }
-
-/****************************************************************************************************************
- * ************************************************************************************************************
- *
-****************************************************************************************************************
-****************************************************************************************************************/
+//****************************************************************************************************************
 
 void free_paquete(Paquete *paquete)
 {
 	free(paquete->buffer);
 	paquete->tam_buffer = -1;
 }
-
-
-
-void send_turno(Paquete* paquete,int socket)
-{
-	send(socket,paquete->buffer,paquete->tam_buffer,0);
-}
-
-MetadataPokenest buscar_Pokenest(char simbolo)
-{
-	bool _find_pokenest_(MetadataPokenest* aux)
-	{
-		return aux->simbolo == simbolo;
-	}
-
-	MetadataPokenest *ptr = (MetadataPokenest*) list_find(listaPokenest,(void*)_find_pokenest_);
-
-	MetadataPokenest pokenest;
-	pokenest.simbolo = ptr->simbolo;
-	pokenest.posicionX = ptr->posicionX;
-	pokenest.posicionY = ptr->posicionY;
-	pokenest.tipoPokemon = strdup(ptr->tipoPokemon);
-
-	return pokenest;
-}
-
-void send_Pokenest(int socket,Paquete *paquete)
-{
-	send(socket,paquete->buffer,paquete->tam_buffer,0);
-}
+//****************************************************************************************************************
 
 void send_Turno(int socket)
 {
 	Paquete paquete = srlz_turno();
-	send_turno(&paquete,socket);
+	send(socket,paquete.buffer,paquete.tam_buffer,0);
 	free_paquete(&paquete);
 }
+//****************************************************************************************************************
 
-void movEntrenador(PosEntrenador pos, Jugador* jugador)
-{
-	jugador->entrenador.posx = pos.x;
-	jugador->entrenador.posy = pos.y;
-
-}
-
-char recv_simboloEntrenador(int socket)
-{
-	char simbolo;
-
-	Paquete paquete;
-	paquete.buffer = malloc(size_SIMBOLO);
-	paquete.tam_buffer = size_SIMBOLO;
-
-
-	recv(socket,paquete.buffer,paquete.tam_buffer,0);
-
-	simbolo = dsrlz_simboloEntrenador(paquete.buffer);
-
-	return simbolo;
-}
-
-/****************************************************************************************************************
- * ************************************************************************************************************
- *
-****************************************************************************************************************
-****************************************************************************************************************/
-
-//ESTE ES EL HILO PLANIFICADOR !!!! :D. Escribí aca directamente el codigo, en el main ya estan las instrucciones para ejecutarlo
-void* thread_planificador()
-{
-	Paquete paquete;
-
+void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
+{							//Escribí aca directamente el codigo, en el main ya estan las instrucciones
+	Paquete paquete;		// para ejecutarlo
 	//Hay que sacar a todos los que se fueron y nos avisó el mapa!
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
@@ -257,7 +159,6 @@ void* thread_planificador()
 
 	while(1)
 	{
-
 	usleep(mdataMapa.retardo*1000);
 
 	pthread_mutex_lock(&mutex_Desconectados);
@@ -275,7 +176,6 @@ void* thread_planificador()
 	//TODO poner semaforo contador verificando lista vacia
 	if(!queue_is_empty(colaListos))
 	{
-
 		buffer_recv = malloc(tam_buffer_recv);
 		flag = 1;
 
@@ -307,7 +207,8 @@ void* thread_planificador()
 			free_paquete(&paquete);//Liberamos el paquete
 		break;
 		case MOVER: //El entrenador se quiere mover
-			pos = dsrlz_movEntrenador(buffer_recv); //Obtengo las coordenadas X,Y
+			pos = dsrlz_movEntrenador(buffer_recv);
+			//Obtengo las coordenadas X,Y
 			movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
 			MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
 			break;
@@ -322,10 +223,7 @@ void* thread_planificador()
 			//TODO:
 			break;
 
-
-
 		}
-
 
 		sprintf(mostrar,"Jugador: %i",jugador->socket);
 
@@ -351,12 +249,7 @@ void* thread_planificador()
 
 	}
 }
-
-/****************************************************************************************************************
- * ************************************************************************************************************
- *
-****************************************************************************************************************
-****************************************************************************************************************/
+//****************************************************************************************************************
 
 int main(int argc, char** argv)
 {
@@ -376,7 +269,6 @@ int main(int argc, char** argv)
 
 	gui_items = list_create();
 
-
 	listaPokenest= list_create();
 
 	mdataMapa = leerMetadataMapa();
@@ -391,14 +283,11 @@ int main(int argc, char** argv)
 	CrearCaja(gui_items, mdataPokenest.simbolo, mdataPokenest.posicionX, mdataPokenest.posicionY,6);
 	pthread_mutex_unlock(&mutex_gui_items);
 
-	//**********************************!
-
 	//**********************************
 
 	//Para crear una entrada en un archivo LOG:
 	//log_tipoDeLog (logger, "mensaje"). tipoDeLog = trace, info, error, etc
 
-	//**********************************
 	//**********************************
 	//FUNCION SERVER
 
@@ -437,7 +326,6 @@ int main(int argc, char** argv)
 	pthread_t hiloPlanificador;
 	int valorHilo = -1;
 
-
 	valorHilo = pthread_create(&hiloPlanificador,NULL,thread_planificador,NULL);
 
 	if(valorHilo != 0)
@@ -446,12 +334,10 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-
 	Jugador nuevoJugador;
 	Jugador *aux;
 	int newfd;
 	char simboloEntrenador;
-
 
 	for (;;) {
 		//getch();
@@ -488,7 +374,6 @@ int main(int argc, char** argv)
 				//Si no es el Listener, el entrenador SE DESCONECTÓ!!
 				else
 				{
-
 					valor_recv = recv(i, buffer_recv, tamBuffer_recv, 0);
 
 					if(valor_recv == 0)
@@ -499,11 +384,9 @@ int main(int argc, char** argv)
 						//pthread_mutex_unlock(&mutex_Desconectados);
 						//log_info(infoLogger, "Detectada desconexion de socket %d", i);
 					}
-
 				}
 			}
 		}
-
 	}
 
 	//TODO IMPORTANTE: anticipar la cancelacion del programa y ejecutar esto.

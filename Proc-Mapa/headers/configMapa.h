@@ -9,20 +9,10 @@
 #define HEADERS_CONFIGMAPA_H_
 
 /****************************************************************************************************************
- * ************************************************************************************************************
- *
 			FUNCIONES DE LECTURA DE ARCHIVOS
-
-****************************************************************************************************************
 ****************************************************************************************************************/
 
-
-
-/* leerMetadataMapa:
- * Lee todos los campos de un archivo Metadata Mapa y los guarda en un struct
- */
-
-MetadataMapa leerMetadataMapa()
+MetadataMapa leerMetadataMapa()         //Lee todos los campos de un archivo Metadata Mapa y los guarda en un struct
 {
 	MetadataMapa mdata;
 	t_config* config; //Estructura
@@ -62,12 +52,9 @@ MetadataMapa leerMetadataMapa()
 
 	return mdata;
 }
+//****************************************************************************************************************
 
-/* leerMetadaPokenest:
- * Lee todos los campos de un archivo Metadata Pokenest y los guarda en un struct
- */
-
-MetadataPokenest leerMetadataPokenest()
+MetadataPokenest leerMetadataPokenest() //Lee todos los campos de un archivo Metadata Pokenest y los guarda en un struct
 {
 	MetadataPokenest mdata;
 	t_config* config; //Estructura
@@ -122,13 +109,9 @@ MetadataPokenest leerMetadataPokenest()
 
 	return mdata;
 }
+//****************************************************************************************************************
 
-/* leerMetadaPokemon:
- * Lee todos los campos de un archivo Metadata Pokemon y los guarda en un struct
- */
-
-
-MetadataPokemon leerMetadataPokemon()
+MetadataPokemon leerMetadataPokemon()   //Lee todos los campos de un archivo Metadata Pokemon y los guarda en un struct
 {
 	MetadataPokemon mdata;
 	t_config* config; //Estructura
@@ -149,6 +132,26 @@ MetadataPokemon leerMetadataPokemon()
 	config_destroy(config);
 
 	return mdata;
+}
+//****************************************************************************************************************
+
+ParametrosMapa leerParametrosConsola(char** argv)
+{
+	ParametrosMapa parametros;
+	parametros.nombreMapa = argv[1];
+	parametros.dirPokedex = argv[2];
+
+	return parametros;
+}
+//****************************************************************************************************************
+
+void verificarParametros(int argc)
+{
+	if(argc!=3)
+	{
+		printf("Error - Faltan parametros \n");
+		exit(1);
+	}
 }
 
 #endif /* HEADERS_CONFIGMAPA_H_ */

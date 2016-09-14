@@ -7,6 +7,7 @@
 
 #ifndef HEADERS_SOCKET_H_
 #define HEADERS_SOCKET_H_
+#define PORT 9034
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,34 +20,28 @@
 #include <arpa/inet.h>
 #include "struct.h"
 
-#define PORT 9034
-
 //Obtiene un listener, si hay error, exit(1).
-int socket_listener() {
-
-	int listener;
-
+int socket_listener()
+{	int listener;
 	if ((listener = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
 		exit(1);
 	}
-
 	return listener;
 }
 
 void socket_setsockopt(int listener)
-{
-	int yes = 1;
+{	int yes = 1;
 	// obviar el mensaje "address already in use" (la dirección ya se está usando)
 	if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int))== -1) {
 		perror("setsockopt");
 		exit(1);
 	}
 }
+//****************************************************************************************************************
 
 void socket_bind(int listener, int port)
-{
-	struct sockaddr_in myaddr;     // dirección del servidor
+{	struct sockaddr_in myaddr;     // dirección del servidor
 	myaddr.sin_family = AF_INET;
 	myaddr.sin_addr.s_addr = INADDR_ANY;
 	myaddr.sin_port = htons(PORT);
@@ -56,31 +51,29 @@ void socket_bind(int listener, int port)
 		perror("bind");
 		exit(1);
 	}
-
 }
+//****************************************************************************************************************
 
 void socket_listen(int listener)
-{
-	if (listen(listener, 10) == -1) {
+{	if (listen(listener, 10) == -1) {
 		perror("listen");
 		exit(1);
 	}
 }
+//****************************************************************************************************************
 
 void socket_select(int fdmax, fd_set *read_fds)
-{
-	if (select(fdmax + 1, read_fds, NULL, NULL, NULL) == -1) {
+{	if (select(fdmax + 1, read_fds, NULL, NULL, NULL) == -1) {
 		perror("select");
 		exit(1);
 	}
 }
+//****************************************************************************************************************
 
 int socket_addNewConection(int listener, fd_set *master, int *fdmax)
-{
-	int addrlen;
+{	int addrlen;
 	struct sockaddr_in remoteaddr; // dirección del cliente
 	int newfd;        // descriptor de socket de nueva conexión aceptada
-
 	// gestionar nuevas conexiones
 	addrlen = sizeof(remoteaddr);
 
@@ -94,12 +87,11 @@ int socket_addNewConection(int listener, fd_set *master, int *fdmax)
 		if (newfd > *fdmax) {    // actualizar el máximo
 			*fdmax = newfd;
 		}
-
 	//printf("selectserver: new connection from %s on ""socket %d\n", inet_ntoa(remoteaddr.sin_addr),newfd);
-
 	}
 	return newfd;
 }
+//****************************************************************************************************************
 
 void socket_closeConection(int socket, fd_set *master)
 {
@@ -107,7 +99,7 @@ void socket_closeConection(int socket, fd_set *master)
 	close(socket); // bye!
 	FD_CLR(socket, master); // eliminar del conjunto maestro
 }
-
+//****************************************************************************************************************
 
 int socket_startListener(puerto)
 {
@@ -126,8 +118,5 @@ int socket_startListener(puerto)
 
 	return listener;
 }
-
-
-
 
 #endif /* HEADERS_SOCKET_H_ */

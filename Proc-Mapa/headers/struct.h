@@ -8,12 +8,7 @@
 #ifndef HEADERS_STRUCTS_H_
 #define HEADERS_STRUCTS_H_
 
-/* -----------------------------------------------
- * METADATA DEL MAPA
- * Almacena la información que se lee desde el archivo Metadata del Mapa
- ------------------------------------------------- */
-
-typedef struct
+typedef struct    //MetadataMapa
 {
 	int tiempoChequeoDeadlock;
 	int modoBatalla;
@@ -23,49 +18,30 @@ typedef struct
 	char* ip;
 	char* puerto;
 }MetadataMapa;
+//****************************************************************************************************************
 
-/* -----------------------------------------------
- * PARAMETROS DEL MAPA
- * Almacena la información que se lee desde la consola al ejecutar el mapa
- * Los parametros se leen desde **argv
- ------------------------------------------------- */
-
-typedef struct
+typedef struct   //ParametrosMapa,Almacena la información que se lee desde la consola al ejecutar el mapa, los parametros se leen desde **argv
 {
 	char* nombreMapa;
 	char* dirPokedex;
 
 }ParametrosMapa;
+//****************************************************************************************************************
 
-/* -----------------------------------------------
- * METADATAPOKENEST
- * Almacena la información de las PokeNest
- ------------------------------------------------- */
-
-typedef struct
-{
-	char* tipoPokemon;
+typedef struct   //MetadataPokenest
+{	char* tipoPokemon;
 	int posicionX;
 	int posicionY;
 	char simbolo;
 }MetadataPokenest;
+//****************************************************************************************************************
 
-/* -----------------------------------------------
- * METADATAPOKEMON
- * Almacena la información de los Pokemon
- ------------------------------------------------- */
-
-typedef struct
-{
-	int nivel;
+typedef struct   //MetadataPokemon
+{	int nivel;
 }MetadataPokemon;
+//****************************************************************************************************************
 
-/* -----------------------------------------------
- * Poekenst
- * Esctructura para crear Pokenest
- ------------------------------------------------- */
-
-typedef struct{
+typedef struct{  //Entrenador
 	char simbolo;
 	int posx;
 	int posy;
@@ -74,52 +50,39 @@ typedef struct{
 	int flagy;
 	char* pokemones;
 }Entrenador;
+//****************************************************************************************************************
 
-//***************//***************
-//***************//***************
-typedef struct
-{
-	Entrenador entrenador;
+typedef struct   //Jugador
+{	Entrenador entrenador;
 	int estado;
 	int socket;
 }Jugador;
+//****************************************************************************************************************
 
-
-//***************//***************
-//***************//***************
-typedef struct
+typedef struct   //Pokenest
 {
 	int posx;
 	int posy;
 	char simbolo;
 }Pokenest;
+//****************************************************************************************************************
 
-//***************
-//***************
-
-typedef struct
+typedef struct   //Paquete
 {
 	void* buffer;
 	int tam_buffer;
 }Paquete;
+//****************************************************************************************************************
 
-typedef struct
+typedef struct   //PosEntrenador
 {
 	int x;
 	int y;
 }PosEntrenador;
 
 
+//***************//********!!!!!!!!!!!NEW DE STRUCTS!!!!!!!!!!!!!!//***************//***************
 
-
-//***************//***************//***************//***************//***************//***************//***************//***************
-//***************//***************//***************//***************//***************//***************//***************//***************
-//***************//***************//***************//***************//***************//***************//***************//***************
-//***************//******** ************!!!!!!!!!!!NEW DE STRUCTS!!!!!!!!!!!!!!//***************//***************//***************
-//***************//***************//***************//***************//***************//***************//***************//***************
-//***************//***************//***************//***************//***************//***************//***************//***************
-//***************//***************//***************//***************//***************//***************//***************//***************
-//***************//***************//***************//***************//***************//***************//***************//***************
 
 Entrenador new_Entrenador(char simbolo)
 {
@@ -135,6 +98,7 @@ Entrenador new_Entrenador(char simbolo)
 
     return entrenador;
 }
+//****************************************************************************************************************
 
 Jugador new_Jugador(char simbolo, int socket){
 
@@ -146,9 +110,5 @@ Jugador new_Jugador(char simbolo, int socket){
 
 	return jugador;
 }
-
-
-
-
 
 #endif /* HEADERS_STRUCTS_H_ */
