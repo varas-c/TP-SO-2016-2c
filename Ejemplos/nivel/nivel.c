@@ -5,9 +5,12 @@
 #include <stdlib.h>
 #include <curses.h>
 #include <commons/collections/list.h>
+#include <commons/config.h>
+#include <pkmn/battle.h>
+#include <pkmn/factory.h>
+#include "struct.h"
 #include "nivel.h"
-
-
+#include "configMapa.h"
 
 /*
  * @NAME: rnd
@@ -18,26 +21,6 @@ void rnd(int *x, int max){
 	*x = (*x<max) ? *x : max-1;
 	*x = (*x>0) ? *x : 1;
 }
-
-typedef struct
-{
-	char simbolo;
-	int posx;
-	int posy;
-	int cant;
-}Pokenest;
-
-typedef struct{
-	char simbolo;
-	int posx;
-	int posy;
-	char movAnterior;
-	int flagx;
-	int flagy;
-	int destinox;
-	int destinoy;
-}Entrenador;
-
 
 //Si flagx=false then mover en X otherwise mover en Y
 void mover_entrenador(Entrenador *entrenador)
@@ -220,7 +203,14 @@ void interactuar(Entrenador* entrenador,t_list* items,char* objetivos,t_list* po
 
 }
 
+t_pokemon generarPokemon(MetadataPokemon* mdata,t_pkmn_factory* fabrica, char* especie)
+{
+	return *create_pokemon(fabrica, especie, mdata->nivel);
+}
+
 int main(void) {
+	/*
+
     t_list* items = list_create(); //Lista donde se almacenan los items
     t_list* pokenests = list_create();
     Pokenest pokenest;
@@ -267,4 +257,26 @@ int main(void) {
 	BorrarItem(items, 'Z');
 
 	nivel_gui_terminar();
+	*/
+
+	t_pokemon poke1, poke2;
+	MetadataPokemon mdata1,mdata2;
+	char* buffer=malloc(25);
+	strcpy(buffer,"Pikachu001.dat");
+
+	mdata1 = leerMetadataPokemon(buffer);
+
+	strcpy(buffer,"Squirtle001.dat");
+
+	mdata2 = leerMetadataPokemon(buffer);
+
+	t_pkmn_factory* fabrica = create_pkmn_factory();     //SE CREA LA FABRICA PARA HACER POKEMONES
+
+	poke1 = generarPokemon(&mdata1,fabrica,"Pikachu");
+	poke2 = generarPokemon(&mdata2,fabrica,"Squirtle");
+
+	t_pokemon* perdedor = pkmn_battle(&poke1, &poke2);
+
+	printf("El perdedor es: %s",perdedor->species);
+
 }

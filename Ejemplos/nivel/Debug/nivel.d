@@ -1,3 +1,7 @@
-nivel.d: ../nivel.c ../nivel.h
+nivel.d: ../nivel.c ../struct.h ../nivel.h ../configMapa.h
+
+../struct.h:
 
 ../nivel.h:
+
+../configMapa.h:
