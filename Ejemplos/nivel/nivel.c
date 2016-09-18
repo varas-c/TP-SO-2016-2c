@@ -279,4 +279,5 @@ int main(void) {
 
 	printf("El perdedor es: %s",perdedor->species);
 
+	return 0;
 }

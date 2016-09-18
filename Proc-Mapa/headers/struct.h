@@ -45,17 +45,18 @@ typedef struct{  //Entrenador
 	char simbolo;
 	int posx;
 	int posy;
-	char movAnterior;
-	int flagx;
-	int flagy;
-	char* pokemones;
+	int destinox;
+	int destinoy;
+	char* pokemons;
 }Entrenador;
+
 //****************************************************************************************************************
 
 typedef struct   //Jugador
 {	Entrenador entrenador;
 	int estado;
 	int socket;
+	int ingreso;
 }Jugador;
 //****************************************************************************************************************
 
@@ -91,22 +92,22 @@ Entrenador new_Entrenador(char simbolo)
     entrenador.posx = 1;
     entrenador.posy = 1;
     entrenador.simbolo = simbolo;
-    entrenador.movAnterior = 'y';
-    entrenador.flagx = FALSE;
-    entrenador.flagy = FALSE;
-    entrenador.pokemones = NULL;
+    entrenador.pokemons = NULL;
+    entrenador.destinox = -1;
+    entrenador.destinoy = -1;
 
     return entrenador;
 }
 //****************************************************************************************************************
 
-Jugador new_Jugador(char simbolo, int socket){
+Jugador new_Jugador(char simbolo, int socket, int ingreso){
 
 	Jugador jugador;
 
 	jugador.entrenador = new_Entrenador(simbolo);
 	jugador.socket = socket;
 	jugador.estado = 0;
+	jugador.ingreso = ingreso;
 
 	return jugador;
 }

@@ -227,7 +227,7 @@ void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
 {
 	int valor_recv;
 	int codigo;
-	int tam_buffer = size_POKENEST;
+	int tam_buffer = size_POKENEST_response;
 
 	char* buffer = malloc(tam_buffer);
 
@@ -298,6 +298,33 @@ void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 	}
 }
 
+
+
+
+//*********************************
+//********************************
+
+void send_coordenadas(Entrenador entrenador)
+{
+
+}
+
+
+Paquete srlz_solicitarPokenest(Pokenest pokenest)
+{
+	Paquete paquete;
+	paquete.buffer = malloc(size_POKENEST_request);
+	paquete.tam_buffer = size_POKENEST_request;
+
+	int codigo = POKENEST;
+
+	//Copiamos primero el codigo, despues el simbolo de la Pokenest
+	memcpy(paquete.buffer,&codigo,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int),&(pokenest.simbolo),sizeof(char));
+
+	return paquete;
+}
+
 int main(int argc, char** argv)
 {
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
@@ -357,9 +384,11 @@ int main(int argc, char** argv)
 				switch(opcion)
 				{
 					case POKENEST://Caso 1: QUEREMOS UNA POKENEST!
-						send_solicitarPokenest(&pokenest, fd_server);
+						paquete = srlz_solicitarPokenest(pokenest);
+						send_solicitarPokenest(&paquete,fd_server);
 						recv_solicitarPokenest(&pokenest, fd_server);
 						calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
+						//send_coordenadas(entrenador);
 					break;
 					case MOVER://Caso 2: Queremos movernos!
 						mover_entrenador(&entrenador);

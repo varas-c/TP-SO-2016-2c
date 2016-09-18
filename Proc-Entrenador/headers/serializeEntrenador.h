@@ -15,19 +15,27 @@ enum codigoOperaciones {
 	MOVER = 2,
 	CAPTURAR = 3,
 	FINOBJETIVOS = 4,
-	SIMBOLO = 10
+
+
+
+	SIMBOLO = 10,
+	COORDENADAS = 11
 };
 
+//****************************************************************************************************************
 
 enum sizeofBuffer
 {
 	size_TURNO = sizeof(int),
-	size_POKENEST = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
+	size_POKENEST_response = sizeof(int) + sizeof(char)+sizeof(int)+sizeof(int),
+	size_POKENEST_request = sizeof(int) + sizeof(char),
 	size_MOVER = sizeof(int)+sizeof(int)+sizeof(int),
 	size_CAPTURAR = sizeof(int) + sizeof(char),
 	size_SIMBOLO = sizeof(int)+sizeof(char),
-	size_FINOBJETIVOS = sizeof(int)
+	size_FINOBJETIVOS = sizeof(int),
+	size_COORDENADAS = sizeof(int)+sizeof(int)+sizeof(int),
 };
+
 
 Paquete srlz_movEntrenador(Entrenador entrenador)
 {

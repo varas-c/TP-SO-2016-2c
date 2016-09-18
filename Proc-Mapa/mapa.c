@@ -19,12 +19,18 @@
 #include <commons/collections/queue.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
+
+/****************************************************************************************************************
+			INCLUDES PROPIOS :)
+****************************************************************************************************************/
+
 #include "headers/struct.h"
 #include "headers/socket.h"
 #include "headers/configMapa.h"
 #include "headers/serializeMapa.h"
 #include "headers/pokenest.h"
 #include "headers/entrenador.h"
+
 
 /****************************************************************************************************************
 			VARIABLES GLOBALES
@@ -36,7 +42,7 @@ t_queue* colaBloqueados;
 t_queue* colaDesconectados;
 
 t_list* gui_items;
-
+t_list* listaPokemon;
 t_log* traceLogger;
 t_log* infoLogger;
 
@@ -50,6 +56,11 @@ pthread_mutex_t mutex_Listos = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Bloqueados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Desconectados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
+
+int cant_jugadores = 0;
+
+
+#include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
 
 /****************************************************************************************************************
 			FUNCIONES DE LECTURA DE PARAMETROS POR CONSOLA (LOS QUE SE RECIBEN POR **ARGV)
@@ -138,6 +149,7 @@ void send_Turno(int socket)
 }
 //****************************************************************************************************************
 
+<<<<<<< HEAD
 Jugador *buscarJugadorPorSocket(t_queue* colaListos, int socketBuscado){
 	t_queue* cola_auxiliar = queue_create();
 	Jugador *auxiliar, *auxiliar2, *encontrado;
@@ -166,6 +178,13 @@ Jugador *buscarJugadorPorSocket(t_queue* colaListos, int socketBuscado){
 }
 
 //****************************************************************************************************************
+=======
+
+//****************************************************************************************************************
+
+
+
+>>>>>>> 413b405c6f501133e2818aa7d5574f1e33055bf1
 void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 {							//Escribí aca directamente el codigo, en el main ya estan las instrucciones
 	Paquete paquete;		// para ejecutarlo
@@ -310,8 +329,10 @@ int main(int argc, char** argv)
 	gui_items = list_create();
 
 	listaPokenest= list_create();
+	listaPokemon = list_create();
 
 	mdataMapa = leerMetadataMapa();
+
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
 
@@ -398,16 +419,23 @@ int main(int argc, char** argv)
 					//SE ACEPTA UN NUEVO ENTRENADOR
 					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
 					simboloEntrenador = recv_simboloEntrenador(newfd);
-					nuevoJugador = new_Jugador(simboloEntrenador,newfd);
+					cant_jugadores++;
+					nuevoJugador = new_Jugador(simboloEntrenador,newfd, cant_jugadores);
 
-					aux = malloc(sizeof(Jugador)); //NO HACERLE FREE !!!!!!!!!
+					aux = malloc(sizeof(Jugador)); //NO HACERLE FREE !!!!!!!!! LIBERAR CON EL PUNTERO PUSHEADO A LA COLA DE LISTOS
 					aux->entrenador = nuevoJugador.entrenador;
 					aux->socket = nuevoJugador.socket;
 					aux->estado = nuevoJugador.estado;
+
+					//Creamos el personaje
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
+
+					//Mutua exclusion con el planificador !
 					pthread_mutex_lock(&mutex_Listos);
 					queue_push(colaListos, aux);
 					pthread_mutex_unlock(&mutex_Listos);
+
+					//Loggeamos info
 					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
 					log_info(infoLogger, "Jugador %c entra en Cola Listos", nuevoJugador.entrenador.simbolo);
 					loggearColas();
