@@ -36,6 +36,9 @@ t_queue* colaBloqueados;
 t_queue* colaDesconectados;
 
 t_list* gui_items;
+t_list* listaPokemon;
+
+
 
 t_log* traceLogger;
 t_log* infoLogger;
@@ -137,6 +140,72 @@ void send_Turno(int socket)
 	free_paquete(&paquete);
 }
 //****************************************************************************************************************
+
+int movRestantes(Entrenador entrenador)
+{
+	int movRestantes;
+	movRestantes = entrenador.destinox + entrenador.destinoy;
+	return movRestantes;
+}
+
+
+void sort_SRDF()
+{
+	int cantJugadores = queue_size(colaListos);
+	t_queue* colaAux = queue_create();
+	int i;
+	int corte = 0;
+	Jugador* min;
+	Jugador* aux;
+
+
+	while(corte != 1 )
+	{
+
+	min = queue_pop(colaListos); //Agarro el primero de la cola y asumo que es el mas chico
+
+	for(i=0;i<cantJugadores;i++)
+	{
+		aux = queue_pop(colaListos);
+
+		if(movRestantes(min->entrenador) > movRestantes(aux->entrenador)) //Si se cumple, el que sacamos de la cola tiene MENOS Distancia!
+		{
+			queue_push(colaAux,min); //Metemos en la cola al que era minimo porque ahora ya no lo es
+			min = aux; //Ahora el mas chiquito es el AUX, el 2do que sacamos
+		}
+
+		else
+		{
+			queue_push(colaAux,aux);
+		}
+	}
+
+	if(queue_size(colaListos) == 1)
+	{
+		aux = queue_pop(colaListos);
+		corte = 1;
+
+		//Ya terminamos de ordenar! //Metemos todas las cosas en la colaListos
+		int cantNueva = queue_size(colaAux);
+		int K;
+		for(K=0;K<cantNueva;K++)
+		{
+			aux = queue_pop(colaAux);
+			queue_push(colaListos,aux);
+		}
+
+	}
+
+	cantJugadores--;
+	}
+
+
+}
+
+
+//****************************************************************************************************************
+
+
 
 void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 {							//Escribí aca directamente el codigo, en el main ya estan las instrucciones
@@ -270,8 +339,10 @@ int main(int argc, char** argv)
 	gui_items = list_create();
 
 	listaPokenest= list_create();
+	listaPokemon = list_create();
 
 	mdataMapa = leerMetadataMapa();
+
 	mdataPokenest = leerMetadataPokenest();
 	mdataPokemon = leerMetadataPokemon();
 
@@ -359,14 +430,20 @@ int main(int argc, char** argv)
 					simboloEntrenador = recv_simboloEntrenador(newfd);
 					nuevoJugador = new_Jugador(simboloEntrenador,newfd);
 
-					aux = malloc(sizeof(Jugador)); //NO HACERLE FREE !!!!!!!!!
+					aux = malloc(sizeof(Jugador)); //NO HACERLE FREE !!!!!!!!! LIBERAR CON EL PUNTERO PUSHEADO A LA COLA DE LISTOS
 					aux->entrenador = nuevoJugador.entrenador;
 					aux->socket = nuevoJugador.socket;
 					aux->estado = nuevoJugador.estado;
+
+					//Creamos el personaje
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
+
+					//Mutua exclusion con el planificador !
 					pthread_mutex_lock(&mutex_Listos);
 					queue_push(colaListos, aux);
 					pthread_mutex_unlock(&mutex_Listos);
+
+					//Loggeamos info
 					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
 					log_info(infoLogger, "Jugador %c entra en Cola Listos", nuevoJugador.entrenador.simbolo);
 					loggearColas();

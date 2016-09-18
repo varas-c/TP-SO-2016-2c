@@ -32,10 +32,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1140759356" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1796584519" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
-								<option id="gnu.cpp.link.option.libs.53659697" superClass="gnu.cpp.link.option.libs" valueType="libs">
+								<option id="gnu.cpp.link.option.libs.53659697" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="commons"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="ncurses"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="nivel-gui"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pkmn-battle"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.912039993" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

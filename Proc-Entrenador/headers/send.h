@@ -9,27 +9,15 @@
 #define HEADERS_SEND_H_
 #include "serializeEntrenador.h"
 
-void send_solicitarPokenest(Pokenest *pokenest, int fd_server)
+void send_solicitarPokenest(Paquete* paquete, int fd_server)
 {
-	void* buffer;
-	int tam_buffer = sizeof(int)+sizeof(char);
-	buffer = malloc(tam_buffer);
-
-	int codigo = POKENEST;
-
-	//Copiamos primero el codigo, despues el simbolo de la Pokenest
-	memcpy(buffer,&codigo,sizeof(int));
-	memcpy(buffer+sizeof(int),&(pokenest->simbolo),sizeof(char));
-
-	send(fd_server, buffer, tam_buffer,0);
-
-	free(buffer);
+	send(fd_server, paquete->buffer, paquete->tam_buffer,0);
 }
 //****************************************//****************************************
 
 void send_capturarPokemon(Paquete *paquete,int server)
 {
-	send(server,paquete->buffer,paquete,0);
+	send(server,paquete->buffer,paquete->tam_buffer,0);
 }
 //****************************************//****************************************
 
