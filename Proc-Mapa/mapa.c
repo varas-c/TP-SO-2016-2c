@@ -6,6 +6,7 @@
  */
 
 #include <pthread.h>
+#include <sys/select.h>
 #include <stdio.h>
 #include <tad_items.h>
 #include <string.h>
@@ -19,6 +20,7 @@
 #include <commons/collections/queue.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
+
 
 /****************************************************************************************************************
 			INCLUDES PROPIOS :)
@@ -150,29 +152,35 @@ void send_Turno(int socket)
 //****************************************************************************************************************
 
 Jugador *buscarJugadorPorSocket(t_queue* colaListos, int socketBuscado){
+
 	t_queue* cola_auxiliar = queue_create();
 	Jugador *auxiliar, *auxiliar2, *encontrado;
 	int tamanio = queue_size(colaListos);
 	int tamanio2;
+
 	while(tamanio > 0){
-		auxiliar = malloc(sizeof(Jugador));
 		auxiliar = queue_pop(colaListos);
 		if(auxiliar->socket != socketBuscado){
 			queue_push(cola_auxiliar, auxiliar);
-		}else{
+		}
+
+		else{
 			encontrado = auxiliar;
 		}
+
 		tamanio = tamanio-1;
+
 		}
+
 		tamanio2 = queue_size(cola_auxiliar);
-		while(tamanio2 > 0){
+		while(tamanio2 > 0)
+		{
 			auxiliar2 = malloc(sizeof(Jugador));
 			auxiliar2 = queue_pop(cola_auxiliar);
 			queue_push(colaListos, auxiliar2);
 			tamanio2 = tamanio2 - 1;
 		}
-	free(auxiliar);
-	free(auxiliar2);
+
 	return encontrado;
 }
 
@@ -191,7 +199,7 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 	int estado_socket;
 	Jugador *jugador;
 	Jugador *jugadorAux;
-	int socket_desconectado;
+	int* socket_desconectado;
 	Jugador *jugadorDesconectado;
 	int quantum = mdataMapa.quantum;
 	int codOp = -1;
@@ -208,13 +216,12 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 	pthread_mutex_lock(&mutex_Desconectados);
 	while(!queue_is_empty(colaDesconectados))
 	{
-		jugadorDesconectado = malloc(sizeof(Jugador));
 		socket_desconectado = queue_pop(colaDesconectados);
 		pthread_mutex_lock(&mutex_Listos);
-		jugadorDesconectado = buscarJugadorPorSocket(colaListos, socket_desconectado);
-		pthread_mutex_unlock(&mutex_Listos);
+		jugadorDesconectado = buscarJugadorPorSocket(colaListos, *socket_desconectado);
 		BorrarItem(gui_items,jugadorDesconectado->entrenador.simbolo);
 		free(jugadorDesconectado);
+		pthread_mutex_unlock(&mutex_Listos);
 	}
 	pthread_mutex_unlock(&mutex_Desconectados);
 
@@ -399,7 +406,7 @@ int main(int argc, char** argv)
 	char simboloEntrenador;
 
 	for (;;) {
-		getch();
+		//getch();
 		read_fds = fds_entrenadores; // cópialo
 
 		//Buscamos los sockets que quieren realizar algo con Select
@@ -445,12 +452,13 @@ int main(int argc, char** argv)
 					if(valor_recv == 0)
 					{
 						//TODO Completar
-						close(i);
+
 						pthread_mutex_lock(&mutex_Desconectados);
+						FD_CLR(i,&fds_entrenadores);
 						aux2 = malloc(sizeof(int));
 						*aux2 = i;
 						queue_push(colaDesconectados,aux2);
-						//queue_push(colaDesconectados,&i);
+						close(i);
 						pthread_mutex_unlock(&mutex_Desconectados);
 						//log_info(infoLogger, "Detectada desconexion de socket %d", i);
 					}
