@@ -56,6 +56,7 @@ typedef struct   //Jugador
 {	Entrenador entrenador;
 	int estado;
 	int socket;
+	int ingreso;
 }Jugador;
 //****************************************************************************************************************
 
@@ -99,13 +100,14 @@ Entrenador new_Entrenador(char simbolo)
 }
 //****************************************************************************************************************
 
-Jugador new_Jugador(char simbolo, int socket){
+Jugador new_Jugador(char simbolo, int socket, int ingreso){
 
 	Jugador jugador;
 
 	jugador.entrenador = new_Entrenador(simbolo);
 	jugador.socket = socket;
 	jugador.estado = 0;
+	jugador.ingreso = ingreso;
 
 	return jugador;
 }

@@ -19,12 +19,18 @@
 #include <commons/collections/queue.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
+
+/****************************************************************************************************************
+			INCLUDES PROPIOS :)
+****************************************************************************************************************/
+
 #include "headers/struct.h"
 #include "headers/socket.h"
 #include "headers/configMapa.h"
 #include "headers/serializeMapa.h"
 #include "headers/pokenest.h"
 #include "headers/entrenador.h"
+
 
 /****************************************************************************************************************
 			VARIABLES GLOBALES
@@ -37,9 +43,6 @@ t_queue* colaDesconectados;
 
 t_list* gui_items;
 t_list* listaPokemon;
-
-
-
 t_log* traceLogger;
 t_log* infoLogger;
 
@@ -53,6 +56,11 @@ pthread_mutex_t mutex_Listos = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Bloqueados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Desconectados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
+
+int cant_jugadores = 0;
+
+
+#include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
 
 /****************************************************************************************************************
 			FUNCIONES DE LECTURA DE PARAMETROS POR CONSOLA (LOS QUE SE RECIBEN POR **ARGV)
@@ -140,67 +148,6 @@ void send_Turno(int socket)
 	free_paquete(&paquete);
 }
 //****************************************************************************************************************
-
-int movRestantes(Entrenador entrenador)
-{
-	int movRestantes;
-	movRestantes = entrenador.destinox + entrenador.destinoy;
-	return movRestantes;
-}
-
-
-void sort_SRDF()
-{
-	int cantJugadores = queue_size(colaListos);
-	t_queue* colaAux = queue_create();
-	int i;
-	int corte = 0;
-	Jugador* min;
-	Jugador* aux;
-
-
-	while(corte != 1 )
-	{
-
-	min = queue_pop(colaListos); //Agarro el primero de la cola y asumo que es el mas chico
-
-	for(i=0;i<cantJugadores;i++)
-	{
-		aux = queue_pop(colaListos);
-
-		if(movRestantes(min->entrenador) > movRestantes(aux->entrenador)) //Si se cumple, el que sacamos de la cola tiene MENOS Distancia!
-		{
-			queue_push(colaAux,min); //Metemos en la cola al que era minimo porque ahora ya no lo es
-			min = aux; //Ahora el mas chiquito es el AUX, el 2do que sacamos
-		}
-
-		else
-		{
-			queue_push(colaAux,aux);
-		}
-	}
-
-	if(queue_size(colaListos) == 1)
-	{
-		aux = queue_pop(colaListos);
-		corte = 1;
-
-		//Ya terminamos de ordenar! //Metemos todas las cosas en la colaListos
-		int cantNueva = queue_size(colaAux);
-		int K;
-		for(K=0;K<cantNueva;K++)
-		{
-			aux = queue_pop(colaAux);
-			queue_push(colaListos,aux);
-		}
-
-	}
-
-	cantJugadores--;
-	}
-
-
-}
 
 
 //****************************************************************************************************************
@@ -428,7 +375,8 @@ int main(int argc, char** argv)
 					//SE ACEPTA UN NUEVO ENTRENADOR
 					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
 					simboloEntrenador = recv_simboloEntrenador(newfd);
-					nuevoJugador = new_Jugador(simboloEntrenador,newfd);
+					cant_jugadores++;
+					nuevoJugador = new_Jugador(simboloEntrenador,newfd, cant_jugadores);
 
 					aux = malloc(sizeof(Jugador)); //NO HACERLE FREE !!!!!!!!! LIBERAR CON EL PUNTERO PUSHEADO A LA COLA DE LISTOS
 					aux->entrenador = nuevoJugador.entrenador;
