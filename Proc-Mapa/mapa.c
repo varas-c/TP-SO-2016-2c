@@ -149,7 +149,6 @@ void send_Turno(int socket)
 }
 //****************************************************************************************************************
 
-<<<<<<< HEAD
 Jugador *buscarJugadorPorSocket(t_queue* colaListos, int socketBuscado){
 	t_queue* cola_auxiliar = queue_create();
 	Jugador *auxiliar, *auxiliar2, *encontrado;
@@ -178,13 +177,11 @@ Jugador *buscarJugadorPorSocket(t_queue* colaListos, int socketBuscado){
 }
 
 //****************************************************************************************************************
-=======
 
 //****************************************************************************************************************
 
 
 
->>>>>>> 413b405c6f501133e2818aa7d5574f1e33055bf1
 void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 {							//Escribí aca directamente el codigo, en el main ya estan las instrucciones
 	Paquete paquete;		// para ejecutarlo
