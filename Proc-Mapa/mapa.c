@@ -138,15 +138,43 @@ void send_Turno(int socket)
 }
 //****************************************************************************************************************
 
+Jugador *buscarJugadorPorSocket(t_queue* colaListos, int socketBuscado){
+	t_queue* cola_auxiliar = queue_create();
+	Jugador *auxiliar, *auxiliar2, *encontrado;
+	int tamanio = queue_size(colaListos);
+	int tamanio2;
+	while(tamanio > 0){
+		auxiliar = malloc(sizeof(Jugador));
+		auxiliar = queue_pop(colaListos);
+		if(auxiliar->socket != socketBuscado){
+			queue_push(cola_auxiliar, auxiliar);
+		}else{
+			encontrado = auxiliar;
+		}
+		tamanio = tamanio-1;
+		}
+		tamanio2 = queue_size(cola_auxiliar);
+		while(tamanio2 > 0){
+			auxiliar2 = malloc(sizeof(Jugador));
+			auxiliar2 = queue_pop(cola_auxiliar);
+			queue_push(colaListos, auxiliar2);
+			tamanio2 = tamanio2 - 1;
+		}
+	free(auxiliar);
+	free(auxiliar2);
+	return encontrado;
+}
+
+//****************************************************************************************************************
 void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 {							//Escribí aca directamente el codigo, en el main ya estan las instrucciones
 	Paquete paquete;		// para ejecutarlo
 	//Hay que sacar a todos los que se fueron y nos avisó el mapa!
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
-
+	int estado_socket;
 	Jugador *jugador;
-	Jugador *jugador2;
+	Jugador *jugadorAux;
 	int socket_desconectado;
 	Jugador *jugadorDesconectado;
 	int quantum = mdataMapa.quantum;
@@ -164,8 +192,13 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 	pthread_mutex_lock(&mutex_Desconectados);
 	while(!queue_is_empty(colaDesconectados))
 	{
-		//ELIMINAMOS JUGADORES
-		//socket_desconectado = (int) queue_pop(colaDesconectados);
+		jugadorDesconectado = malloc(sizeof(Jugador));
+		socket_desconectado = queue_pop(colaDesconectados);
+		pthread_mutex_lock(&mutex_Listos);
+		jugadorDesconectado = buscarJugadorPorSocket(colaListos, socket_desconectado);
+		pthread_mutex_unlock(&mutex_Listos);
+		BorrarItem(gui_items,jugadorDesconectado->entrenador.simbolo);
+		free(jugadorDesconectado);
 	}
 	pthread_mutex_unlock(&mutex_Desconectados);
 
@@ -189,8 +222,15 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 		send_Turno(jugador->socket);
 
 		//Ya mandamos el turno, ahora recibimos el pedido del entrenador
-		recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
+		estado_socket = recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
+		if(estado_socket == 0){
+			jugadorAux = malloc(sizeof(Jugador));
+			jugadorAux = jugador;
+			BorrarItem(gui_items,jugadorAux->entrenador.simbolo);
+			close(jugadorAux->socket);
+			free(jugadorAux);
+		}else{
 		//Tomamos el primer int del buffer para ver el código de operacion
 		codOp = dsrlz_codigoOperacion(buffer_recv);
 
@@ -224,7 +264,7 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 			break;
 
 		}
-
+		}
 		sprintf(mostrar,"Jugador: %i",jugador->socket);
 
 		free(buffer_recv);
@@ -336,11 +376,12 @@ int main(int argc, char** argv)
 
 	Jugador nuevoJugador;
 	Jugador *aux;
+	int *aux2;
 	int newfd;
 	char simboloEntrenador;
 
 	for (;;) {
-		//getch();
+		getch();
 		read_fds = fds_entrenadores; // cópialo
 
 		//Buscamos los sockets que quieren realizar algo con Select
@@ -379,9 +420,13 @@ int main(int argc, char** argv)
 					if(valor_recv == 0)
 					{
 						//TODO Completar
-						//pthread_mutex_lock(&mutex_Desconectados);
+						close(i);
+						pthread_mutex_lock(&mutex_Desconectados);
+						aux2 = malloc(sizeof(int));
+						*aux2 = i;
+						queue_push(colaDesconectados,aux2);
 						//queue_push(colaDesconectados,&i);
-						//pthread_mutex_unlock(&mutex_Desconectados);
+						pthread_mutex_unlock(&mutex_Desconectados);
 						//log_info(infoLogger, "Detectada desconexion de socket %d", i);
 					}
 				}

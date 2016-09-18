@@ -376,9 +376,8 @@ int main(int argc, char** argv)
 					break;
 				}
 
-				free(paquete.buffer);
+				//free(paquete.buffer);
 		}
-
 		//FUERA DEL WHILE INTERNO
 		//Una vez que salimos del While interno, quiere decir que terminamos el mapa y hay que pasar a otro
 		//Antes, el entrenador tiene que dirigirse a la Pokedex y copiar la respectiva medalla del mapa
@@ -387,5 +386,6 @@ int main(int argc, char** argv)
 		//En caso de que hayamos llegado al limite de mapas, hay que salir del while porque terminamos el juego.
 	}
 	}
+	//free(paquete.buffer);
 	return 0;
 }
