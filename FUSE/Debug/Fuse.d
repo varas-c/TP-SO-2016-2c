@@ -1,0 +1,1 @@
+Fuse.d: ../Fuse.c
