@@ -18,6 +18,7 @@
 -
 - NOTA: USAR SEMAFOROS! La funcion no tiene ninguno, implementarlos fuera de la función.
 */
+
 void sort_SRDF()
 {
 	t_list* lista = list_create(); //Creamos cola auxiliar.

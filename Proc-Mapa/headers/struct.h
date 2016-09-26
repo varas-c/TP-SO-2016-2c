@@ -33,6 +33,7 @@ typedef struct   //MetadataPokenest
 	int posicionX;
 	int posicionY;
 	char simbolo;
+	t_queue* colaDePokemon;
 }MetadataPokenest;
 //****************************************************************************************************************
 
