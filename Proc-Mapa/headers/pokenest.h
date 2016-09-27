@@ -10,7 +10,7 @@
 
 t_list* listaPokenest;
 
-MetadataPokenest buscar_Pokenest(char simbolo)
+MetadataPokenest* buscar_Pokenest(char simbolo)
 {
 	bool _find_pokenest_(MetadataPokenest* aux)
 	{
@@ -19,13 +19,7 @@ MetadataPokenest buscar_Pokenest(char simbolo)
 
 	MetadataPokenest *ptr = (MetadataPokenest*) list_find(listaPokenest,(void*)_find_pokenest_);
 
-	MetadataPokenest pokenest;
-	pokenest.simbolo = ptr->simbolo;
-	pokenest.posicionX = ptr->posicionX;
-	pokenest.posicionY = ptr->posicionY;
-	pokenest.tipoPokemon = strdup(ptr->tipoPokemon);
-
-	return pokenest;
+	return ptr;
 }
 //****************************************************************************************************************
 

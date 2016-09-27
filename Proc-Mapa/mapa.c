@@ -20,7 +20,9 @@
 #include <commons/collections/queue.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
-
+#include <dirent.h>
+#include <pkmn/battle.h>
+#include <pkmn/factory.h>
 
 /****************************************************************************************************************
 			INCLUDES PROPIOS :)
@@ -60,9 +62,11 @@ pthread_mutex_t mutex_Desconectados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
 
 int cant_jugadores = 0;
-
+fd_set fds_entrenadores;
 
 #include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
+
+bool ROBAR = FALSE;
 
 /****************************************************************************************************************
 			FUNCIONES DE LECTURA DE PARAMETROS POR CONSOLA (LOS QUE SE RECIBEN POR **ARGV)
@@ -188,7 +192,227 @@ Jugador *buscarJugadorPorSocket(t_queue* colaListos, int socketBuscado){
 
 //****************************************************************************************************************
 
+int tomarDecisionCapturaPokemon(Jugador* jugador, char pokenestPedida)
+{
+	MetadataPokenest* pokenest;
+	pokenest = buscar_Pokenest(pokenestPedida);
+	Pokemon* pokemon;
 
+	if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
+	{
+		pokemon = queue_pop(pokenest->colaDePokemon);
+		list_add(jugador->pokemonCapturados,pokemon);
+		return 0;
+	}
+
+	else
+	{
+		// TODO: NO HAY MAS POKEMONS! hay que bloquear al entrenador
+		queue_push(colaBloqueados,jugador);
+		return 1;
+	}
+
+
+}
+
+void srlz_datPokemon()
+{
+
+}
+
+
+//****************************************************************************************************************
+
+int cantPokemonEnDir(char* ruta)
+{
+	struct dirent *archivo = NULL;
+	int cantPokes = 0;
+	DIR* rutaLeer = NULL;
+
+	rutaLeer = opendir(ruta);
+
+	if(rutaLeer == NULL)
+	{
+		perror("cantPokemonEnDir - open(ruta) == NULL");
+		exit(1);
+	}
+
+	while(NULL != (archivo = readdir(rutaLeer)))
+	{
+		if(archivo->d_type == DT_REG && strcmp(archivo->d_name,"metadata") != 0) //Si es un archivo y no es metadata -> es un pokemon!
+		{
+			cantPokes++;
+		}
+	}
+
+	closedir(rutaLeer);
+
+	return cantPokes;
+}
+
+char* stringPokemonDat(char* nombrePoke, int numPoke)
+{
+	char *pokeDat;
+	pokeDat = malloc(sizeof(char)*50);
+	snprintf(pokeDat, 50, "%s%03d.dat", nombrePoke, numPoke);
+
+	return pokeDat;
+
+}
+
+char* getRutaPokenest(ParametrosMapa parametros)
+{
+	char* rutaPokenest = malloc(sizeof(char)*256);
+	char* Mapas = "/Mapas/";
+	char* Pokenest = "/Pokenest/";
+
+	//Hay que entrar a la ruta de la Pokedex que nos pasaron por parametro (mnt/pokedex)
+	strcpy(rutaPokenest,parametros.dirPokedex);
+
+	//Ahora a "/Mapas/"
+	strcat(rutaPokenest,Mapas); // -- mnt/pokedex/Mapas/
+
+	//Ahora a la carpeta del mapa correspondiente.
+	strcat(rutaPokenest,parametros.nombreMapa); // -- mnt/pokedex/Mapas/--nombreMapa--
+
+	//A la carpeta Pokenest
+	strcat(rutaPokenest,Pokenest); // mnt/pokedex/Mapas/--nombreMapa--/Pokenest/
+
+	//----------------Terminams! :D---------------
+
+	return rutaPokenest;
+}
+
+
+//Para cada Pokenest E
+void leerTodasLasPokenest(ParametrosMapa parametros)
+{
+	char* rutaPokenest;
+	rutaPokenest = getRutaPokenest(parametros);
+
+	MetadataPokenest *pokenest;
+
+	char* rutaAux = NULL;
+
+	DIR *dpPokenest = NULL;
+	struct dirent *dptrPokenest = NULL;
+
+	char* pokemonDat = NULL;
+
+	t_pkmn_factory* fabrica = create_pkmn_factory();     //SE CREA LA FABRICA PARA HACER POKEMONES
+
+	dpPokenest = opendir(rutaPokenest); //Abrimos la rutaPokenest (PRUEBA: /mnt/pokedex/Mapas/Mapa1/Pokenest)
+
+	Pokemon *pokemon;
+
+	if(dpPokenest == NULL)
+	{
+	   perror("Error en countDirs - leerTodasLasPokenest() ");
+	   exit(1);
+	}
+
+	//Leemos una a una las carpetas de /mnt/pokedex/Mapas/Mapa1/Pokenest
+	//Carpetas: Charmander, PIkachu, etc
+	while(NULL != (dptrPokenest = readdir(dpPokenest)) )
+	{
+		if(strcmp(dptrPokenest->d_name,".") == 0 || strcmp(dptrPokenest->d_name,"..") == 0)
+		{
+			continue;
+		}
+
+		else
+		{
+
+			//******************************
+			////Encontramos una carpeta dentro de /mnt/pokedex/Mapas/Mapa1/Pokenest
+			//Puede ser Pikachu,Charmande,r etc, son todas carpetas
+
+			//Encontramos una carpeta Pokemon, hay que abrirla y leer todos sus archivos
+			rutaAux = malloc(sizeof(char)*256);
+			strcpy(rutaAux,rutaPokenest); //Copiamos la ruta Pokenest
+			strcat(rutaAux,dptrPokenest->d_name); //Copiamos el nombre de la carpeta que hay que leer
+			strcat(rutaAux,"/");
+
+			//inicializamos las variables para una nueva Pokenest!
+			pokenest = malloc(sizeof(MetadataPokenest));
+
+			//Dentro de la carpeta hay un metadata que hay que leer!
+
+			//Leemos la metadata
+			*pokenest = leerMetadataPokenest(rutaAux,"metadata");
+
+			pokenest->colaDePokemon = queue_create();
+
+			//Ya leimos la Pokenest, ahora hay que leer los archivos pokemon que tienen el nombre DE LA CARPETA solo que son archivos y tienen numero y .dat!
+
+			pokenest->cantPokemon = cantPokemonEnDir(rutaAux); //Aca tenemos la cantidad maxima de PokemonXXX.dat que hay que leer
+			int i;
+
+			for(i=1;i<=pokenest->cantPokemon;i++)
+			{
+				pokemon = malloc(sizeof(Pokemon));
+				pokemon->numero = i;
+				pokemonDat = stringPokemonDat(dptrPokenest->d_name,i);
+				mdataPokemon = leerMetadataPokemon(rutaAux,pokemonDat);
+				pokemon->pokemon = create_pokemon(fabrica, dptrPokenest->d_name, mdataPokemon.nivel);
+				queue_push(pokenest->colaDePokemon,pokemon);
+			}
+
+			list_add(listaPokenest,pokenest);
+
+		}
+	}
+
+	free(rutaAux);
+	free(rutaPokenest);
+	closedir(dpPokenest);
+	destroy_pkmn_factory(fabrica);
+
+}
+
+void gui_crearPokenests()
+{
+	int cantPokenest = list_size(listaPokenest);
+	int i=0;
+
+	MetadataPokenest* pokenest;
+	for(i=0;i<cantPokenest;i++)
+	{
+	pokenest = list_get(listaPokenest,i);
+	CrearCaja(gui_items, pokenest->simbolo, pokenest->posicionX, pokenest->posicionY,pokenest->cantPokemon);
+	}
+
+
+}
+
+
+void printfLista()
+{
+	int cant;
+	cant = list_size(listaPokenest);
+	Pokemon* pokemon;
+	MetadataPokenest *pokenest;
+	int i=0;
+
+	for(i=0;i<cant;i++)
+	{
+		pokenest = list_get(listaPokenest,i);
+
+		printf("Simbolo: %c \n",pokenest->simbolo);
+
+		while(queue_size(pokenest->colaDePokemon) != 0)
+		{
+			pokemon = queue_pop(pokenest->colaDePokemon);
+			printf("Pokemon: %s Numero %i \n",pokemon->pokemon->species,pokemon->numero);
+		}
+
+		printf("\n \n");
+	}
+
+}
+
+
+//*************************************************************************
 
 void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 {							//Escribí aca directamente el codigo, en el main ya estan las instrucciones
@@ -204,8 +428,9 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 	int quantum = mdataMapa.quantum;
 	int codOp = -1;
 	char pokenestPedida;
-	MetadataPokenest pokenestEnviar;
+	MetadataPokenest* pokenestEnviar;
 	char* mostrar = malloc(100);
+	int opc;
 
 	PosEntrenador pos;
 
@@ -232,10 +457,11 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 	//TODO poner semaforo contador verificando lista vacia
 	if(!queue_is_empty(colaListos))
 	{
+		jugador = queue_pop(colaListos);
+
 		buffer_recv = malloc(tam_buffer_recv);
 		flag = 1;
 
-		jugador = queue_pop(colaListos);
 
 		log_info(infoLogger, "Jugador %c sale de Listos.",jugador->entrenador.simbolo);
 		loggearColas();
@@ -247,17 +473,18 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 		//Ya mandamos el turno, ahora recibimos el pedido del entrenador
 		estado_socket = recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
-		if(estado_socket == 0){
-			jugadorAux = malloc(sizeof(Jugador));
+		if(estado_socket == 0)
+		{
 			jugadorAux = jugador;
 			BorrarItem(gui_items,jugadorAux->entrenador.simbolo);
 			close(jugadorAux->socket);
 			free(jugadorAux);
-		}else{
+		}
+
+		else
+		{
 		//Tomamos el primer int del buffer para ver el código de operacion
 		codOp = dsrlz_codigoOperacion(buffer_recv);
-
-		//02 - X - Y
 
 		//Evaluo el codigo de Operacion para ver que verga quiere
 		switch(codOp)
@@ -268,6 +495,7 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 			paquete = srlz_Pokenest(pokenestEnviar); //Armamos un paquete serializado
 			send_Pokenest(jugador->socket,&paquete); //Enviamos el paquete :D
 			free_paquete(&paquete);//Liberamos el paquete
+			pokenestEnviar = NULL;
 		break;
 		case MOVER: //El entrenador se quiere mover
 			pos = dsrlz_movEntrenador(buffer_recv);
@@ -278,9 +506,19 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 
 		case CAPTURAR: //TODO: FALTA COMPLETAR!!
 			pokenestPedida = dsrlz_Pokenest(buffer_recv);//Identificamos la pokenest pedida
-			//Hay que preguntar si tenemos recursos
-			//Si tenemos recursos, hay que mandarle un mensaje para que copie el archivo!
-			//Si no tenemos recursos hay que bloquearlo!!!
+			opc = tomarDecisionCapturaPokemon(jugador,pokenestPedida);
+
+			if(opc==1) //TODO: Capturamos un Pokemon!
+			{
+				//Hay que avisarle al entrenador que tiene que copiar el .dat del pokemon capturado
+
+			}
+
+			else
+			{
+				//TODO: NO HAY POKEMON, EL ENTRENADOR SE BLOQUEO!
+			}
+
 		break;
 		case FINOBJETIVOS:
 			//TODO:
@@ -293,13 +531,13 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 		free(buffer_recv);
 
 		//pthread_mutex_lock(&mutex_socket);
-
 		pthread_mutex_lock(&mutex_Listos);
 		queue_push(colaListos,(void*)jugador);
 		log_trace(traceLogger, "Termina turno de jugador %c", jugador->entrenador.simbolo);
 		pthread_mutex_unlock(&mutex_Listos);
 		log_info(infoLogger, "Jugador %c entra en Cola Listos", jugador->entrenador.simbolo);
 		loggearColas();
+
 
 		//pthread_mutex_unlock(&mutex_socket);
 
@@ -308,45 +546,51 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 		//pthread_mutex_lock(&mutex_socket);
 	}
 
-	nivel_gui_dibujar(gui_items, mostrar);
+	//nivel_gui_dibujar(gui_items, mostrar);
 
 	}
 }
-//****************************************************************************************************************
+
 
 int main(int argc, char** argv)
 {
-	/*
+
+
 	ParametrosMapa parametros;
+
+	/*
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	*/
 
-	printf("Nombre Mapa: %s --- Dir Pokedex: %s \n",parametros.nombreMapa, parametros.dirPokedex);
-*/
+
+	parametros.dirPokedex = "mnt/pokedex";
+	parametros.nombreMapa = "Mapa1";
+	colaListos = queue_create();
+
+
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
 	log_info(infoLogger, "Se inicia Mapa.");
 
 	//Inicializamos espacio de dibujo
-	nivel_gui_inicializar();
+	//nivel_gui_inicializar();
 
 	gui_items = list_create();
 
 	listaPokenest= list_create();
 	listaPokemon = list_create();
 
+
+	leerTodasLasPokenest(parametros);
+	gui_crearPokenests();
+
 	mdataMapa = leerMetadataMapa();
 
-	mdataPokenest = leerMetadataPokenest();
-	mdataPokemon = leerMetadataPokemon();
 
-	//Agrego a la lista
-	list_add(listaPokenest,&mdataPokenest);
+
 
 	//Agrego a la lista de dibujo
-	pthread_mutex_lock(&mutex_gui_items);
-	CrearCaja(gui_items, mdataPokenest.simbolo, mdataPokenest.posicionX, mdataPokenest.posicionY,6);
-	pthread_mutex_unlock(&mutex_gui_items);
 
 	//**********************************
 
@@ -357,7 +601,7 @@ int main(int argc, char** argv)
 	//FUNCION SERVER
 
 	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
-	fd_set fds_entrenadores;   // conjunto maestro de descriptores de fichero
+	// conjunto maestro de descriptores de fichero
 
 	int fdmax;        // número máximo de descriptores de fichero
 	int listener;     // descriptor de socket a la escucha
@@ -447,12 +691,11 @@ int main(int argc, char** argv)
 				//Si no es el Listener, el entrenador SE DESCONECTÓ!!
 				else
 				{
+
 					valor_recv = recv(i, buffer_recv, tamBuffer_recv, 0);
 
 					if(valor_recv == 0)
 					{
-						//TODO Completar
-
 						pthread_mutex_lock(&mutex_Desconectados);
 						FD_CLR(i,&fds_entrenadores);
 						aux2 = malloc(sizeof(int));
@@ -462,6 +705,12 @@ int main(int argc, char** argv)
 						pthread_mutex_unlock(&mutex_Desconectados);
 						//log_info(infoLogger, "Detectada desconexion de socket %d", i);
 					}
+
+					else
+					{
+						ROBAR = TRUE;
+					}
+
 				}
 			}
 		}
@@ -477,6 +726,7 @@ int main(int argc, char** argv)
 	log_destroy(traceLogger);
 	log_destroy(infoLogger);
 	nivel_gui_terminar();
+
 
 	return 0;
 }

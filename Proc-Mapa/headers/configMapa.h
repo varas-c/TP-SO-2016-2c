@@ -54,17 +54,25 @@ MetadataMapa leerMetadataMapa()         //Lee todos los campos de un archivo Met
 }
 //****************************************************************************************************************
 
-MetadataPokenest leerMetadataPokenest() //Lee todos los campos de un archivo Metadata Pokenest y los guarda en un struct
+MetadataPokenest leerMetadataPokenest(char* ruta, char* nombreArchivo) //Lee todos los campos de un archivo Metadata Pokenest y los guarda en un struct
 {
 	MetadataPokenest mdata;
 	t_config* config; //Estructura
 
 	char* auxiliar;
 
-	//RUTA ABSOLUTA
-	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokenest.config");
-	//RUTA RELATIVA
-	config = config_create("../config/pokenest.config");
+	char* rutaPosta = NULL;
+	rutaPosta = malloc(sizeof(char)*256);
+
+	if(rutaPosta == NULL)
+	{
+		exit(1);
+	}
+
+	strcpy(rutaPosta, ruta);
+	strcat(rutaPosta,nombreArchivo);
+
+	config = config_create(rutaPosta);
 
 	if(config==0)
 	{
@@ -111,15 +119,17 @@ MetadataPokenest leerMetadataPokenest() //Lee todos los campos de un archivo Met
 }
 //****************************************************************************************************************
 
-MetadataPokemon leerMetadataPokemon()   //Lee todos los campos de un archivo Metadata Pokemon y los guarda en un struct
+MetadataPokemon leerMetadataPokemon(char* ruta, char* nombreArchivo)   //Lee todos los campos de un archivo Metadata Pokemon y los guarda en un struct
 {
 	MetadataPokemon mdata;
 	t_config* config; //Estructura
 
-	//RUTA ABSOLUTA
-	//config = config_create("/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/pokemon.config");
-	//RUTA RELATIVA
-	config = config_create("../config/pokemon.config");
+	char* rutaPosta = malloc(sizeof(char)*256);
+
+		strcpy(rutaPosta, ruta);
+		strcat(rutaPosta,nombreArchivo);
+
+		config = config_create(rutaPosta);
 
 	if(config==0)
 	{
@@ -138,8 +148,8 @@ MetadataPokemon leerMetadataPokemon()   //Lee todos los campos de un archivo Met
 ParametrosMapa leerParametrosConsola(char** argv)
 {
 	ParametrosMapa parametros;
-	parametros.nombreMapa = argv[1];
-	parametros.dirPokedex = argv[2];
+	parametros.nombreMapa = argv[2];
+	parametros.dirPokedex = argv[1];
 
 	return parametros;
 }

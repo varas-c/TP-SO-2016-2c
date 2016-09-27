@@ -243,6 +243,7 @@ void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
 
 	if(codigo != POKENEST)
 	{
+		perror("CODIGO DE ERROR - RECV POKENEST");
 		exit(1);
 	}
 

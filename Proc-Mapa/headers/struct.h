@@ -33,6 +33,8 @@ typedef struct   //MetadataPokenest
 	int posicionX;
 	int posicionY;
 	char simbolo;
+	t_queue* colaDePokemon;
+	int cantPokemon;
 }MetadataPokenest;
 //****************************************************************************************************************
 
@@ -54,6 +56,7 @@ typedef struct{  //Entrenador
 
 typedef struct   //Jugador
 {	Entrenador entrenador;
+	t_list* pokemonCapturados;
 	int estado;
 	int socket;
 	int ingreso;
@@ -80,6 +83,14 @@ typedef struct   //PosEntrenador
 	int x;
 	int y;
 }PosEntrenador;
+
+//****************************************************************************************************************
+
+typedef struct
+{
+	t_pokemon* pokemon;
+	int numero;
+}Pokemon;
 
 
 //***************//********!!!!!!!!!!!NEW DE STRUCTS!!!!!!!!!!!!!!//***************//***************
@@ -108,6 +119,7 @@ Jugador new_Jugador(char simbolo, int socket, int ingreso){
 	jugador.socket = socket;
 	jugador.estado = 0;
 	jugador.ingreso = ingreso;
+	jugador.pokemonCapturados = list_create();
 
 	return jugador;
 }
