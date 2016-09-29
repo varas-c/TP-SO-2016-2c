@@ -348,6 +348,48 @@ void manejar_signals(int operacion){
 
 //*****************************************************************************
 
+Paquete recv_capturarPokemon(int fd_server)
+{
+	Paquete paquete;
+	paquete.tam_buffer = sizeof(int)*2+sizeof(char)*200;
+	paquete.buffer = malloc(paquete.tam_buffer);
+
+
+	recv(fd_server,paquete.buffer,paquete.tam_buffer,0);
+
+	return paquete;
+}
+
+int dsrlz_codigoOperacion(void* buffer)
+{
+	int codOp;
+	memcpy(&codOp,buffer,sizeof(int));
+	return codOp;
+}
+
+char* dsrlz_capturarPokemon(Paquete* paquete)
+{
+	int codOp;
+	int lengthPokemonDat;
+	char *pokemonDat;
+
+	codOp = dsrlz_codigoOperacion(paquete->buffer);
+
+	if(codOp != CAPTURA_OK)
+	{
+		perror("dsrlz_capturarPokemon - Codigo de Operacion CAPTURA_OK invalido");
+		exit(1);
+	}
+
+	memcpy(&lengthPokemonDat,paquete->buffer+sizeof(int),sizeof(int));
+
+	pokemonDat = malloc(lengthPokemonDat);
+
+	memcpy(pokemonDat,paquete->buffer+sizeof(int)*2,sizeof(char)*lengthPokemonDat);
+
+	return pokemonDat;
+}
+
 int main(int argc, char** argv)
 {
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
@@ -369,7 +411,7 @@ int main(int argc, char** argv)
 	Nivel nivel = new_nivel();
 	DatosMapa mapa = new_DatosMapa();
 
-	Pokenest pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
+
 
 	int opcion = -1;
 	Entrenador entrenador;
@@ -385,6 +427,9 @@ int main(int argc, char** argv)
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
+	Pokenest pokenest;
+
+
 	while(1)
 	{
 		mapa.nombre = obtenerNombreMapa(mdata.hojaDeViaje,nivel.nivelActual); //Obtenemos el nombre del mapa numero X
@@ -399,11 +444,15 @@ int main(int argc, char** argv)
 		/*A partir de aca, ya nos conectamos al mapa, asi que tenemos que estar dentro de un While Interno hasta que terminamos
 		 * de capturar todos los pokemon, cuando terminamos, salimos del while interno y volvemos al externo.
 		 */
+		pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
 
 		while(nivel.finNivel == 0) //Mientras que no hayamos ganado el nivel
 		{
+
+
 			if(recv_turnoConcedido(fd_server))
 			{
+
 				opcion = evaluar_opciones(entrenador,pokenest);
 
 				switch(opcion)
@@ -423,6 +472,11 @@ int main(int argc, char** argv)
 					case CAPTURAR: //Caso 3: Ya llegamos a una Pokenest. QUEREMOS CAPTURAR
 						paquete = srlz_capturarPokemon(pokenest.simbolo);
 						send_capturarPokemon(&paquete,fd_server);
+						free(paquete.buffer);
+						paquete = recv_capturarPokemon(fd_server);
+						char* pokemonDat = dsrlz_capturarPokemon(&paquete);
+						nivel.numPokenest++;
+						pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
 					break;
 					case FINOBJETIVOS:
 						paquete = srlz_finObjetivos();

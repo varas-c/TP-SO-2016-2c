@@ -41,9 +41,8 @@
 ****************************************************************************************************************/
 
 #define TAMANIO_BUFFER 11
-t_queue* colaListos;
-t_queue* colaBloqueados;
-t_queue* colaDesconectados;
+t_list* colaListos;
+t_list* colaBloqueados;
 
 t_list* gui_items;
 t_list* listaPokemon;
@@ -192,29 +191,6 @@ Jugador *buscarJugadorPorSocket(t_queue* colaListos, int socketBuscado){
 
 //****************************************************************************************************************
 
-int tomarDecisionCapturaPokemon(Jugador* jugador, char pokenestPedida)
-{
-	MetadataPokenest* pokenest;
-	pokenest = buscar_Pokenest(pokenestPedida);
-	Pokemon* pokemon;
-
-	if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
-	{
-		pokemon = queue_pop(pokenest->colaDePokemon);
-		list_add(jugador->pokemonCapturados,pokemon);
-		return 0;
-	}
-
-	else
-	{
-		// TODO: NO HAY MAS POKEMONS! hay que bloquear al entrenador
-		queue_push(colaBloqueados,jugador);
-		return 1;
-	}
-
-
-}
-
 void srlz_datPokemon()
 {
 
@@ -253,8 +229,12 @@ int cantPokemonEnDir(char* ruta)
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {
 	char *pokeDat;
-	pokeDat = malloc(sizeof(char)*50);
-	snprintf(pokeDat, 50, "%s%03d.dat", nombrePoke, numPoke);
+	int long_poke = strlen(nombrePoke);
+	int cantNumeros = 3;
+	char* extension = ".dat";
+	int cantExtension = strlen(extension);
+	pokeDat = malloc(sizeof(char)*(long_poke+cantNumeros+cantExtension+1));
+	snprintf(pokeDat, 50, "%s%03d%s", nombrePoke, numPoke,extension);
 
 	return pokeDat;
 
@@ -411,13 +391,72 @@ void printfLista()
 
 }
 
+void desconectarJugador(Jugador* jugador)
+{
+	BorrarItem(gui_items,jugador->entrenador.simbolo);
+	FD_CLR(jugador->socket,&fds_entrenadores);
+	close(jugador->socket);
+	free(jugador);
+}
+
+void detectarDesconexiones()
+{
+	Jugador* jugador;
+	int tamLista = list_size(colaListos);
+	void* buffer;
+	buffer = malloc(sizeof(int));
+
+	int i=0;
+	for(i=0;i<tamLista;i++)
+	{
+		jugador = list_take(colaListos,i);
+
+		if(recv(jugador->socket,buffer,sizeof(int),MSG_DONTWAIT) == 0)
+		{
+			desconectarJugador(jugador);
+		}
+	}
+
+	free(buffer);
+
+}
 
 //*************************************************************************
+Paquete srlz_capturaOK(Pokemon* pokemon)
+{
+	Paquete paquete;
+	char* pokemonDat;
+	pokemonDat = stringPokemonDat(pokemon->pokemon,pokemon->numero);
+	int tamPokemonDat = strlen(pokemonDat);
 
-void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
-{							//Escribí aca directamente el codigo, en el main ya estan las instrucciones
-	Paquete paquete;		// para ejecutarlo
-	//Hay que sacar a todos los que se fueron y nos avisó el mapa!
+	paquete.tam_buffer = size_CAPTURA_OK+sizeof(char)*tamPokemonDat;
+	paquete.buffer = malloc(paquete.tam_buffer);
+
+	int codOp = CAPTURA_OK;
+
+	memcpy(paquete.buffer,&codOp,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int),&tamPokemonDat,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int)*2,pokemonDat,sizeof(char)*tamPokemonDat);
+
+	free(pokemonDat);
+	return paquete;
+}
+
+
+void send_capturaOK(Jugador* jugador,Pokemon* pokemon)
+{
+	Paquete paquete;
+	paquete = srlz_capturaOK(pokemon);
+
+	send(jugador->socket,paquete.buffer,paquete.tam_buffer,0);
+
+	free(paquete.buffer);
+}
+
+
+void* thread_planificador()
+{
+	Paquete paquete;
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
 	int estado_socket;
@@ -434,39 +473,27 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 
 	PosEntrenador pos;
 
+	MetadataPokenest* pokenest;
+
 	while(1)
 	{
 	usleep(mdataMapa.retardo*1000);
-
-	pthread_mutex_lock(&mutex_Desconectados);
-	while(!queue_is_empty(colaDesconectados))
-	{
-		socket_desconectado = queue_pop(colaDesconectados);
-		pthread_mutex_lock(&mutex_Listos);
-		jugadorDesconectado = buscarJugadorPorSocket(colaListos, *socket_desconectado);
-		BorrarItem(gui_items,jugadorDesconectado->entrenador.simbolo);
-		free(jugadorDesconectado);
-		pthread_mutex_unlock(&mutex_Listos);
-	}
-	pthread_mutex_unlock(&mutex_Desconectados);
+	detectarDesconexiones();
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
 
-	int flag = 0;
-
-	//TODO poner semaforo contador verificando lista vacia
-	if(!queue_is_empty(colaListos))
+	while(!list_is_empty(colaListos))
 	{
-		jugador = queue_pop(colaListos);
-
+		jugador = list_remove(colaListos,0);
 		buffer_recv = malloc(tam_buffer_recv);
-		flag = 1;
-
+		quantum = mdataMapa.quantum;
 
 		log_info(infoLogger, "Jugador %c sale de Listos.",jugador->entrenador.simbolo);
-		loggearColas();
-		//socket_bloqueado = jugador->socket;
+		//loggearColas();
 
+		while(quantum != 0)
+		{
+		usleep(mdataMapa.retardo*1000);
 		//Ya tenemos jugador, ahora le mandamos un turno
 		send_Turno(jugador->socket);
 
@@ -475,11 +502,7 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 
 		if(estado_socket == 0)
 		{
-
-			BorrarItem(gui_items,jugador->entrenador.simbolo);
-			FD_CLR(jugador->socket,&fds_entrenadores);
-			close(jugador->socket);
-			free(jugador);
+			desconectarJugador(jugador);
 		}
 
 		else
@@ -499,25 +522,29 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 			pokenestEnviar = NULL;
 		break;
 		case MOVER: //El entrenador se quiere mover
-			pos = dsrlz_movEntrenador(buffer_recv);
-			//Obtengo las coordenadas X,Y
+			pos = dsrlz_movEntrenador(buffer_recv);//Obtengo las coordenadas X,Y
 			movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
 			MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
 			break;
 
 		case CAPTURAR: //TODO: FALTA COMPLETAR!!
 			pokenestPedida = dsrlz_Pokenest(buffer_recv);//Identificamos la pokenest pedida
-			opc = tomarDecisionCapturaPokemon(jugador,pokenestPedida);
+			//opc = tomarDecisionCapturaPokemon(jugador,pokenestPedida);
+			pokenest = buscar_Pokenest(pokenestPedida);
+			Pokemon* pokemon;
 
-			if(opc==1) //TODO: Capturamos un Pokemon!
+			//HASTA ACA ESTA BIEN!!!
+			if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
 			{
-				//Hay que avisarle al entrenador que tiene que copiar el .dat del pokemon capturado
-
+				pokemon = queue_pop(pokenest->colaDePokemon);
+				list_add(jugador->pokemonCapturados,pokemon);
+				send_capturaOK(jugador,pokemon);
 			}
 
 			else
 			{
-				//TODO: NO HAY POKEMON, EL ENTRENADOR SE BLOQUEO!
+				// NO HAY MAS POKEMONS! hay que bloquear al entrenador
+				queue_push(colaBloqueados,jugador);
 			}
 
 		break;
@@ -529,15 +556,15 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 		}
 		sprintf(mostrar,"Jugador: %i",jugador->socket);
 
-		free(buffer_recv);
+		//free(buffer_recv);
 
 		//pthread_mutex_lock(&mutex_socket);
 		pthread_mutex_lock(&mutex_Listos);
-		queue_push(colaListos,(void*)jugador);
+		list_add(colaListos,(void*)jugador);
 		log_trace(traceLogger, "Termina turno de jugador %c", jugador->entrenador.simbolo);
 		pthread_mutex_unlock(&mutex_Listos);
 		log_info(infoLogger, "Jugador %c entra en Cola Listos", jugador->entrenador.simbolo);
-		loggearColas();
+		//loggearColas();
 
 
 		//pthread_mutex_unlock(&mutex_socket);
@@ -545,6 +572,10 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 		//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
 		//loggearColas();
 		//pthread_mutex_lock(&mutex_socket);
+
+		quantum--;
+		nivel_gui_dibujar(gui_items, mostrar);
+		}
 	}
 
 	nivel_gui_dibujar(gui_items, mostrar);
@@ -610,9 +641,8 @@ int main(int argc, char** argv)
 
 	// bucle principal
 
-	colaListos = queue_create();
-	colaDesconectados = queue_create();
-	colaBloqueados = queue_create();
+	colaListos = list_create();
+	colaBloqueados = list_create();
 
 	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
 
@@ -663,24 +693,26 @@ int main(int argc, char** argv)
 					aux->entrenador = nuevoJugador.entrenador;
 					aux->socket = nuevoJugador.socket;
 					aux->estado = nuevoJugador.estado;
+					aux->pokemonCapturados = nuevoJugador.pokemonCapturados;
 
 					//Creamos el personaje
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
 
 					//Mutua exclusion con el planificador !
 					pthread_mutex_lock(&mutex_Listos);
-					queue_push(colaListos, aux);
+					list_add(colaListos, aux);
 					pthread_mutex_unlock(&mutex_Listos);
 
 					//Loggeamos info
 					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
 					log_info(infoLogger, "Jugador %c entra en Cola Listos", nuevoJugador.entrenador.simbolo);
-					loggearColas();
+					//loggearColas();
 				}
 				//Si no es el Listener, el entrenador SE DESCONECTÓ!!
 				else
 				{
 
+					/*
 					valor_recv = recv(i, buffer_recv, tamBuffer_recv, MSG_PEEK);
 
 					if(valor_recv == 0)
@@ -693,7 +725,8 @@ int main(int argc, char** argv)
 						close(i);
 						pthread_mutex_unlock(&mutex_Desconectados);
 						//log_info(infoLogger, "Detectada desconexion de socket %d", i);
-					}
+
+					}*/
 
 				}
 			}

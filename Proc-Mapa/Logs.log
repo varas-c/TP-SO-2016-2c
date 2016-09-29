@@ -360,3 +360,86 @@
 [INFO] 13:27:17:69 Mapa/(3884:3884): Se inicia Mapa.
 [INFO] 13:28:18:630 Mapa/(4011:4011): Se inicia Mapa.
 [INFO] 13:30:39:560 Mapa/(4159:4159): Se inicia Mapa.
+[INFO] 14:57:45:378 Mapa/(5340:5340): Se inicia Mapa.
+[INFO] 14:59:38:42 Mapa/(5447:5447): Se inicia Mapa.
+[INFO] 15:00:10:218 Mapa/(5518:5518): Se inicia Mapa.
+[INFO] 15:02:04:626 Mapa/(5671:5671): Se inicia Mapa.
+[INFO] 15:02:21:834 Mapa/(5671:5671): Nuevo jugador: %, socket 6
+[INFO] 15:02:21:834 Mapa/(5671:5671): Jugador % entra en Cola Listos
+[INFO] 15:03:04:901 Mapa/(5756:5756): Se inicia Mapa.
+[INFO] 15:03:41:413 Mapa/(5756:5756): Nuevo jugador: %, socket 6
+[INFO] 15:03:41:414 Mapa/(5756:5756): Jugador % entra en Cola Listos
+[INFO] 15:03:56:170 Mapa/(5756:5785): Jugador % sale de Listos.
+[TRACE] 15:04:19:889 Mapa/(5756:5785): Termina turno de jugador %
+[INFO] 15:04:21:337 Mapa/(5756:5785): Jugador % entra en Cola Listos
+[INFO] 17:23:14:688 Mapa/(8975:8975): Se inicia Mapa.
+[INFO] 17:23:46:406 Mapa/(9052:9052): Se inicia Mapa.
+[INFO] 17:24:25:897 Mapa/(9123:9123): Se inicia Mapa.
+[INFO] 17:25:08:41 Mapa/(9123:9123): Nuevo jugador: %, socket 6
+[INFO] 17:25:08:41 Mapa/(9123:9123): Jugador % entra en Cola Listos
+[INFO] 17:25:19:336 Mapa/(9123:9155): Jugador % sale de Listos.
+[TRACE] 17:25:50:586 Mapa/(9123:9155): Termina turno de jugador %
+[INFO] 17:25:53:371 Mapa/(9123:9155): Jugador % entra en Cola Listos
+[INFO] 18:08:17:619 Mapa/(11528:11528): Se inicia Mapa.
+[INFO] 18:08:51:200 Mapa/(11629:11629): Se inicia Mapa.
+[INFO] 18:09:48:539 Mapa/(11693:11693): Se inicia Mapa.
+[INFO] 18:10:14:927 Mapa/(11693:11693): Nuevo jugador: %, socket 6
+[INFO] 18:10:14:928 Mapa/(11693:11693): Jugador % entra en Cola Listos
+[INFO] 18:10:17:193 Mapa/(11693:11726): Jugador % sale de Listos.
+[TRACE] 18:10:26:527 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:10:27:398 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[TRACE] 18:10:33:338 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:10:33:931 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[TRACE] 18:10:44:595 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:10:45:365 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[INFO] 18:10:49:823 Mapa/(11693:11726): Jugador % sale de Listos.
+[TRACE] 18:10:57:772 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:10:58:128 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[TRACE] 18:11:11:69 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:11:12:246 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[TRACE] 18:11:24:847 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:11:25:829 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[INFO] 18:11:32:389 Mapa/(11693:11726): Jugador % sale de Listos.
+[TRACE] 18:11:44:692 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:11:45:392 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[TRACE] 18:11:54:974 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:11:55:388 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[TRACE] 18:12:01:590 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:12:02:65 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[INFO] 18:12:03:715 Mapa/(11693:11726): Jugador % sale de Listos.
+[TRACE] 18:12:21:40 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:12:21:526 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[TRACE] 18:12:27:37 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:12:27:663 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[TRACE] 18:12:32:910 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:12:33:385 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[INFO] 18:12:35:62 Mapa/(11693:11726): Jugador % sale de Listos.
+[TRACE] 18:12:40:0 Mapa/(11693:11726): Termina turno de jugador %
+[INFO] 18:12:41:435 Mapa/(11693:11726): Jugador % entra en Cola Listos
+[INFO] 18:13:27:717 Mapa/(12228:12228): Se inicia Mapa.
+[INFO] 18:13:51:46 Mapa/(12296:12296): Se inicia Mapa.
+[INFO] 18:14:13:870 Mapa/(12296:12296): Nuevo jugador: %, socket 6
+[INFO] 18:14:13:870 Mapa/(12296:12296): Jugador % entra en Cola Listos
+[INFO] 18:14:16:339 Mapa/(12296:12324): Jugador % sale de Listos.
+[TRACE] 18:14:22:696 Mapa/(12296:12324): Termina turno de jugador %
+[INFO] 18:14:23:202 Mapa/(12296:12324): Jugador % entra en Cola Listos
+[TRACE] 18:14:32:119 Mapa/(12296:12324): Termina turno de jugador %
+[INFO] 18:14:32:550 Mapa/(12296:12324): Jugador % entra en Cola Listos
+[INFO] 18:17:46:772 Mapa/(12518:12518): Se inicia Mapa.
+[INFO] 18:18:15:782 Mapa/(12587:12587): Se inicia Mapa.
+[INFO] 18:18:45:623 Mapa/(12587:12587): Nuevo jugador: %, socket 6
+[INFO] 18:18:45:623 Mapa/(12587:12587): Jugador % entra en Cola Listos
+[INFO] 18:18:46:649 Mapa/(12587:12615): Jugador % sale de Listos.
+[TRACE] 18:18:53:761 Mapa/(12587:12615): Termina turno de jugador %
+[INFO] 18:18:54:147 Mapa/(12587:12615): Jugador % entra en Cola Listos
+[TRACE] 18:18:58:713 Mapa/(12587:12615): Termina turno de jugador %
+[INFO] 18:19:00:765 Mapa/(12587:12615): Jugador % entra en Cola Listos
+[INFO] 18:25:00:262 Mapa/(12879:12879): Se inicia Mapa.
+[INFO] 18:25:14:370 Mapa/(12879:12879): Nuevo jugador: %, socket 6
+[INFO] 18:25:14:370 Mapa/(12879:12879): Jugador % entra en Cola Listos
+[INFO] 18:25:17:218 Mapa/(12879:12950): Jugador % sale de Listos.
+[TRACE] 18:25:22:200 Mapa/(12879:12950): Termina turno de jugador %
+[INFO] 18:25:22:625 Mapa/(12879:12950): Jugador % entra en Cola Listos
+[TRACE] 18:25:27:100 Mapa/(12879:12950): Termina turno de jugador %
+[INFO] 18:25:27:573 Mapa/(12879:12950): Jugador % entra en Cola Listos
+[INFO] 18:26:17:870 Mapa/(13102:13102): Se inicia Mapa.

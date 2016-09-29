@@ -21,7 +21,8 @@ enum codigoOperaciones {
 
 
 	SIMBOLO = 10,
-	COORDENADAS = 11
+	COORDENADAS = 11,
+	CAPTURA_OK = 12,
 };
 
 //****************************************************************************************************************
@@ -36,6 +37,7 @@ enum sizeofBuffer
 	size_SIMBOLO = sizeof(int)+sizeof(char),
 	size_FINOBJETIVOS = sizeof(int),
 	size_COORDENADAS = sizeof(int)+sizeof(int)+sizeof(int),
+	size_CAPTURA_OK = sizeof(int)+sizeof(int),
 };
 
 
