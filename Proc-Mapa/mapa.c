@@ -475,10 +475,11 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 
 		if(estado_socket == 0)
 		{
-			jugadorAux = jugador;
-			BorrarItem(gui_items,jugadorAux->entrenador.simbolo);
-			close(jugadorAux->socket);
-			free(jugadorAux);
+
+			BorrarItem(gui_items,jugador->entrenador.simbolo);
+			FD_CLR(jugador->socket,&fds_entrenadores);
+			close(jugador->socket);
+			free(jugador);
 		}
 
 		else
@@ -546,7 +547,7 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 		//pthread_mutex_lock(&mutex_socket);
 	}
 
-	//nivel_gui_dibujar(gui_items, mostrar);
+	nivel_gui_dibujar(gui_items, mostrar);
 
 	}
 }
@@ -574,7 +575,7 @@ int main(int argc, char** argv)
 	log_info(infoLogger, "Se inicia Mapa.");
 
 	//Inicializamos espacio de dibujo
-	//nivel_gui_inicializar();
+	nivel_gui_inicializar();
 
 	gui_items = list_create();
 
@@ -692,7 +693,7 @@ int main(int argc, char** argv)
 				else
 				{
 
-					valor_recv = recv(i, buffer_recv, tamBuffer_recv, 0);
+					valor_recv = recv(i, buffer_recv, tamBuffer_recv, MSG_PEEK);
 
 					if(valor_recv == 0)
 					{
@@ -704,11 +705,6 @@ int main(int argc, char** argv)
 						close(i);
 						pthread_mutex_unlock(&mutex_Desconectados);
 						//log_info(infoLogger, "Detectada desconexion de socket %d", i);
-					}
-
-					else
-					{
-						ROBAR = TRUE;
 					}
 
 				}
