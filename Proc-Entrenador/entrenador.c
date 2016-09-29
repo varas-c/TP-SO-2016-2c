@@ -19,11 +19,15 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include "headers/struct.h"
 #include "headers/socket.h"
 #include "headers/configEntrenador.h"
 #include "headers/send.h"
 #include "headers/serializeEntrenador.h"
+
+
+int vidas_restantes;
 
 char* concatObjetivo(char* ciudad, char* obj)//El calculo es 4 de "obj[" + largociudad + "]" + /n
 {
@@ -326,6 +330,24 @@ Paquete srlz_solicitarPokenest(Pokenest pokenest)
 	return paquete;
 }
 
+//************************************************************************
+
+void manejar_signals(int operacion){
+	switch(operacion){
+	case SIGUSR1:
+		vidas_restantes = vidas_restantes + 1;
+		break;
+	case SIGTERM:
+		vidas_restantes = vidas_restantes - 1;
+		if(vidas_restantes == 0){
+			exit(1);
+		}
+		break;
+	}
+}
+
+//*****************************************************************************
+
 int main(int argc, char** argv)
 {
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
@@ -352,9 +374,11 @@ int main(int argc, char** argv)
 	int opcion = -1;
 	Entrenador entrenador;
 	entrenador = new_Entrenador(mdata);
-
+	vidas_restantes = entrenador.vidas;
 	Paquete paquete;
-
+	//Agregamos las funciones que manejaran las señales enmascaras como SIGTERM Y SIGUSR1.
+	signal(SIGUSR1, manejar_signals);
+	signal(SIGTERM, manejar_signals);
 	/* Este while es un "While Externo", el While externo es para poder avanzar de mapa una vez finalizado
 	  el mapa actual
 	 */

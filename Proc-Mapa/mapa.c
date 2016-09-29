@@ -553,9 +553,203 @@ void* thread_planificador() //ESTE ES EL HILO PLANIFICADOR !!!! :D.
 }
 
 
+int cantPokemonEnDir(char* ruta)
+{
+	struct dirent *archivo = NULL;
+	int cantPokes = 0;
+	DIR* rutaLeer = NULL;
+
+	rutaLeer = opendir(ruta);
+
+	if(rutaLeer == NULL)
+	{
+		perror("cantPokemonEnDir - open(ruta) == NULL");
+		exit(1);
+	}
+
+	while(NULL != (archivo = readdir(rutaLeer)))
+	{
+		if(archivo->d_type == DT_REG && strcmp(archivo->d_name,"metadata") != 0) //Si es un archivo y no es metadata -> es un pokemon!
+		{
+			cantPokes++;
+		}
+	}
+
+	close(rutaLeer);
+
+	return cantPokes;
+}
+
+char* stringPokemonDat(char* nombrePoke, int numPoke)
+{
+	char *pokeDat;
+	pokeDat = malloc(sizeof(char)*50);
+	snprintf(pokeDat, 50, "%s%03d.dat", nombrePoke, numPoke);
+
+	return pokeDat;
+
+}
+
+char* getRutaPokenest(ParametrosMapa parametros)
+{
+	char* rutaPokenest = malloc(sizeof(char)*256);
+	char* Mapas = "/Mapas/";
+	char* Pokenest = "/Pokenest/";
+
+	//Hay que entrar a la ruta de la Pokedex que nos pasaron por parametro (mnt/pokedex)
+	strcpy(rutaPokenest,parametros.dirPokedex);
+
+	//Ahora a "/Mapas/"
+	strcat(rutaPokenest,Mapas); // -- mnt/pokedex/Mapas/
+
+	//Ahora a la carpeta del mapa correspondiente.
+	strcat(rutaPokenest,parametros.nombreMapa); // -- mnt/pokedex/Mapas/--nombreMapa--
+
+	//A la carpeta Pokenest
+	strcat(rutaPokenest,Pokenest); // mnt/pokedex/Mapas/--nombreMapa--/Pokenest/
+
+	//----------------Terminams! :D---------------
+
+	return rutaPokenest;
+}
+
+
+//Para cada Pokenest E
+void leerTodasLasPokenest(ParametrosMapa parametros)
+{
+	char* rutaPokenest;
+	rutaPokenest = getRutaPokenest(parametros);
+
+	MetadataPokenest *pokenest;
+
+	DIR *dpPokemon = NULL;
+	struct dirent *dptrPokemon = NULL;
+
+	char* rutaAux = NULL;
+
+	DIR *dpPokenest = NULL;
+	struct dirent *dptrPokenest = NULL;
+
+	char* pokemonDat = NULL;
+
+	t_pkmn_factory* fabrica = create_pkmn_factory();     //SE CREA LA FABRICA PARA HACER POKEMONES
+
+	dpPokenest = opendir(rutaPokenest); //Abrimos la rutaPokenest (PRUEBA: /mnt/pokedex/Mapas/Mapa1/Pokenest)
+
+	bool MetadataEncontrada = FALSE;
+	int cantPokemonMax = 0;
+	int cantPokemon = 1;
+
+	t_pokemon* pokemonCreado = NULL;
+
+	if(dpPokenest == NULL)
+	{
+	   perror("Error en countDirs - leerTodasLasPokenest() ");
+	   exit(1);
+	}
+
+	//Leemos una a una las carpetas de /mnt/pokedex/Mapas/Mapa1/Pokenest
+	//Carpetas: Charmander, PIkachu, etc
+	while(NULL != (dptrPokenest = readdir(dpPokenest)) )
+	{
+		if(strcmp(dptrPokenest->d_name,".") == 0 || strcmp(dptrPokenest->d_name,"..") == 0)
+		{
+			continue;
+		}
+
+		else
+		{
+
+			//******************************
+			////Encontramos una carpeta dentro de /mnt/pokedex/Mapas/Mapa1/Pokenest
+			//Puede ser Pikachu,Charmande,r etc, son todas carpetas
+
+			//Encontramos una carpeta Pokemon, hay que abrirla y leer todos sus archivos
+			rutaAux = malloc(sizeof(char)*256);
+			strcpy(rutaAux,rutaPokenest); //Copiamos la ruta Pokenest
+			strcat(rutaAux,dptrPokenest->d_name); //Copiamos el nombre de la carpeta que hay que leer
+			strcat(rutaAux,"/");
+
+			//inicializamos las variables para una nueva Pokenest!
+			pokenest = malloc(sizeof(MetadataPokenest));
+			pokenest->colaDePokemon = queue_create();
+
+			//Dentro de la carpeta hay un metadata que hay que leer!
+
+			//Leemos la metadata
+			*pokenest = leerMetadataPokenest(rutaAux,"metadata");
+
+			pokenest->colaDePokemon = queue_create();
+
+			//Ya leimos la Pokenest, ahora hay que leer los archivos pokemon que tienen el nombre DE LA CARPETA solo que son archivos y tienen numero y .dat!
+
+			cantPokemonMax = cantPokemonEnDir(rutaAux); //Aca tenemos la cantidad maxima de PokemonXXX.dat que hay que leer
+			int i;
+
+			for(i=1;i<=cantPokemonMax;i++)
+			{
+				pokemonDat = stringPokemonDat(dptrPokenest->d_name,i);
+				mdataPokemon = leerMetadataPokemon(rutaAux,pokemonDat);
+				pokemonCreado = create_pokemon(fabrica, dptrPokenest->d_name, mdataPokemon.nivel);
+				queue_push(pokenest->colaDePokemon,pokemonCreado);
+			}
+
+			list_add(listaPokenest,pokenest);
+
+		}
+	}
+
+
+
+}
+
+
+void PAPA()
+{
+	t_pokemon* pokemon;
+
+	while(queue_size(colaListos) != 0)
+	{
+		pokemon = queue_pop(colaListos);
+		printf("Pokemon: %s \n",pokemon->species);
+	}
+
+}
+
+
+void printfLista()
+{
+	int cant;
+	cant = list_size(listaPokenest);
+	t_pokemon* pokemon;
+	MetadataPokenest *pokenest;
+	int i=0;
+
+	for(i=0;i<cant;i++)
+	{
+		pokenest = list_get(listaPokenest,i);
+
+		printf("Simbolo: %c \n",pokenest->simbolo);
+
+		while(queue_size(pokenest->colaDePokemon) != 0)
+		{
+			pokemon = queue_pop(pokenest->colaDePokemon);
+			printf("Pokemon: %s \n",pokemon->species);
+		}
+
+		printf("\n \n");
+	}
+
+}
+
+
+
+
+
 int main(int argc, char** argv)
 {
 
+<<<<<<< HEAD
 
 	ParametrosMapa parametros;
 
@@ -570,18 +764,56 @@ int main(int argc, char** argv)
 	colaListos = queue_create();
 
 
+=======
+	/*
+	MetadataPokenest *pokenest;
+	pokenest = malloc(sizeof(MetadataPokenest));
+	pokenest->colaDePokemon = queue_create();
+
+	int i;
+	int *aux;
+	for(i=0;i<10;i++)
+	{
+		aux = malloc(sizeof(int));
+		*aux = i;
+		queue_push(pokenest->colaDePokemon,aux);
+	}
+
+	int tam = queue_size(pokenest->colaDePokemon);
+
+	printf("%i",tam);
+
+	*/
+
+
+	ParametrosMapa parametros;
+
+
+	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+
+
+	//printf("Nombre Mapa: %s --- Dir Pokedex: %s \n",parametros.nombreMapa, parametros.dirPokedex);
+
+	parametros.dirPokedex = "mnt/pokedex";
+	parametros.nombreMapa = "Mapa1";
+	colaListos = queue_create();
+
+
+>>>>>>> 23d721173645006a34459ddae174b6638d72799a
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
 	log_info(infoLogger, "Se inicia Mapa.");
 
 	//Inicializamos espacio de dibujo
-	nivel_gui_inicializar();
+	//nivel_gui_inicializar();
 
 	gui_items = list_create();
 
 	listaPokenest= list_create();
 	listaPokemon = list_create();
 
+<<<<<<< HEAD
 
 	leerTodasLasPokenest(parametros);
 	gui_crearPokenests();
@@ -590,6 +822,22 @@ int main(int argc, char** argv)
 
 
 
+=======
+	//mdataMapa = leerMetadataMapa();
+
+	leerTodasLasPokenest(parametros);
+
+	printfLista();
+
+	//mdataPokenest = leerMetadataPokenest();
+
+
+	//Agrego a la lista
+	//list_add(listaPokenest,&mdataPokenest);
+
+
+/*
+>>>>>>> 23d721173645006a34459ddae174b6638d72799a
 
 	//Agrego a la lista de dibujo
 
@@ -723,6 +971,10 @@ int main(int argc, char** argv)
 	log_destroy(infoLogger);
 	nivel_gui_terminar();
 
+<<<<<<< HEAD
+=======
+	*/
+>>>>>>> 23d721173645006a34459ddae174b6638d72799a
 
 	return 0;
 }

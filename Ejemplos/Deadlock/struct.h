@@ -33,11 +33,6 @@ typedef struct   //MetadataPokenest
 	int posicionX;
 	int posicionY;
 	char simbolo;
-	t_queue* colaDePokemon;
-<<<<<<< HEAD
-	int cantPokemon;
-=======
->>>>>>> 23d721173645006a34459ddae174b6638d72799a
 }MetadataPokenest;
 //****************************************************************************************************************
 
@@ -46,23 +41,23 @@ typedef struct   //MetadataPokemon
 }MetadataPokemon;
 //****************************************************************************************************************
 
-typedef struct{  //Entrenador
+typedef struct{
 	char simbolo;
 	int posx;
 	int posy;
+	char movAnterior;
+	int flagx;
+	int flagy;
 	int destinox;
 	int destinoy;
-	char* pokemons;
+	char* pokemones;
 }Entrenador;
-
 //****************************************************************************************************************
 
 typedef struct   //Jugador
 {	Entrenador entrenador;
-	t_list* pokemonCapturados;
 	int estado;
 	int socket;
-	int ingreso;
 }Jugador;
 //****************************************************************************************************************
 
@@ -71,6 +66,7 @@ typedef struct   //Pokenest
 	int posx;
 	int posy;
 	char simbolo;
+	int cant;
 }Pokenest;
 //****************************************************************************************************************
 
@@ -87,14 +83,6 @@ typedef struct   //PosEntrenador
 	int y;
 }PosEntrenador;
 
-//****************************************************************************************************************
-
-typedef struct
-{
-	t_pokemon* pokemon;
-	int numero;
-}Pokemon;
-
 
 //***************//********!!!!!!!!!!!NEW DE STRUCTS!!!!!!!!!!!!!!//***************//***************
 
@@ -106,23 +94,22 @@ Entrenador new_Entrenador(char simbolo)
     entrenador.posx = 1;
     entrenador.posy = 1;
     entrenador.simbolo = simbolo;
-    entrenador.pokemons = NULL;
-    entrenador.destinox = -1;
-    entrenador.destinoy = -1;
+    entrenador.movAnterior = 'y';
+    entrenador.flagx = FALSE;
+    entrenador.flagy = FALSE;
+    entrenador.pokemones = NULL;
 
     return entrenador;
 }
 //****************************************************************************************************************
 
-Jugador new_Jugador(char simbolo, int socket, int ingreso){
+Jugador new_Jugador(char simbolo, int socket){
 
 	Jugador jugador;
 
 	jugador.entrenador = new_Entrenador(simbolo);
 	jugador.socket = socket;
 	jugador.estado = 0;
-	jugador.ingreso = ingreso;
-	jugador.pokemonCapturados = list_create();
 
 	return jugador;
 }

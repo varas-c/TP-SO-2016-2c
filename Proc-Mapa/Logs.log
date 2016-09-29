@@ -144,6 +144,7 @@
 [INFO] 23:12:29:411 Mapa/(8389:8389): Se inicia Mapa.
 [INFO] 23:14:17:59 Mapa/(8461:8461): Se inicia Mapa.
 [INFO] 23:19:24:253 Mapa/(8577:8577): Se inicia Mapa.
+<<<<<<< HEAD
 [INFO] 18:49:25:251 Mapa/(2484:2484): Se inicia Mapa.
 [INFO] 18:50:16:358 Mapa/(2546:2546): Se inicia Mapa.
 [INFO] 18:50:46:833 Mapa/(2594:2594): Se inicia Mapa.
@@ -345,3 +346,5 @@
 [INFO] 22:33:36:635 Mapa/(4196:4196): Se inicia Mapa.
 [INFO] 22:34:12:933 Mapa/(4268:4268): Se inicia Mapa.
 [INFO] 22:36:30:642 Mapa/(4337:4337): Se inicia Mapa.
+=======
+>>>>>>> 23d721173645006a34459ddae174b6638d72799a
