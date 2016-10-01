@@ -12,20 +12,57 @@
 			FUNCIONES DE LECTURA DE ARCHIVOS
 ****************************************************/
 
-MetadataMapa leerMetadataMapa()         //Lee todos los campos de un archivo Metadata Mapa y los guarda en un struct
+int sizeofString(char* cadena)
+{
+	int size = 0;
+	size = sizeof(char)*strlen(cadena);
+	return size;
+}
+
+char* getRutaMapa(ParametrosMapa parametros)
+{
+	char *ruta;
+
+	char* Mapas = "/Mapas/";
+	char* Metadata = "/metadata";
+	int tamPathPokedex = sizeofString(parametros.dirPokedex);
+	int tamNombreMapa = sizeofString(parametros.nombreMapa);
+	int tamMapas = sizeofString(Mapas);
+	int tamMetadata = sizeofString(Metadata);
+
+
+	int tamCadena = tamPathPokedex + tamMapas + tamNombreMapa + tamMetadata + 1;
+
+	ruta = malloc(tamCadena);
+
+	if(ruta==NULL)
+	{
+		printf("Error - Funcion: %s - Linea: %d - malloc == NULL",__func__,__LINE__);
+		exit(1);
+	}
+
+	sprintf(ruta,"%s%s%s%s",parametros.dirPokedex,Mapas,parametros.nombreMapa,Metadata);
+
+	return ruta;
+}
+
+MetadataMapa leerMetadataMapa(ParametrosMapa parametros)         //Lee todos los campos de un archivo Metadata Mapa y los guarda en un struct
 {
 	MetadataMapa mdata;
 	t_config* config; //Estructura
 	char* auxiliar;
 
+	char* ruta;
+	ruta = getRutaMapa(parametros);
+
 	//RUTA ABSOLUTA
 	//config = config_create("//home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
 	//RUTA RELATIVA
-	config = config_create("../config/mapa.config");
+	config = config_create(ruta);
 
 	if(config==0)
 	{
-		printf("Archivo mapa.config no encontrado\n");
+		printf("Error: Funcion: %s - Linea: %d - metadata no encontrado \n",__func__,__LINE__);
 		exit(20);
 	}
 

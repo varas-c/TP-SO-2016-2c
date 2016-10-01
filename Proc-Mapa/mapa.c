@@ -233,8 +233,9 @@ char* stringPokemonDat(char* nombrePoke, int numPoke)
 	int cantNumeros = 3;
 	char* extension = ".dat";
 	int cantExtension = strlen(extension);
-	pokeDat = malloc(sizeof(char)*(long_poke+cantNumeros+cantExtension+1));
-	snprintf(pokeDat, 50, "%s%03d%s", nombrePoke, numPoke,extension);
+	int cantBytes = long_poke+cantNumeros+cantExtension+1;
+	pokeDat = malloc(sizeof(char)*cantBytes);
+	snprintf(pokeDat, cantBytes, "%s%03d%s", nombrePoke, numPoke,extension);
 
 	return pokeDat;
 
@@ -332,6 +333,7 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 			{
 				pokemon = malloc(sizeof(Pokemon));
 				pokemon->numero = i;
+				pokemon->nombre = dptrPokenest->d_name;
 				pokemonDat = stringPokemonDat(dptrPokenest->d_name,i);
 				mdataPokemon = leerMetadataPokemon(rutaAux,pokemonDat);
 				pokemon->pokemon = create_pokemon(fabrica, dptrPokenest->d_name, mdataPokemon.nivel);
@@ -426,7 +428,7 @@ Paquete srlz_capturaOK(Pokemon* pokemon)
 {
 	Paquete paquete;
 	char* pokemonDat;
-	pokemonDat = stringPokemonDat(pokemon->pokemon,pokemon->numero);
+	pokemonDat = stringPokemonDat(pokemon->nombre,pokemon->numero);
 	int tamPokemonDat = strlen(pokemonDat);
 
 	paquete.tam_buffer = size_CAPTURA_OK+sizeof(char)*tamPokemonDat;
@@ -474,7 +476,6 @@ void* thread_planificador()
 	PosEntrenador pos;
 
 	MetadataPokenest* pokenest;
-
 	while(1)
 	{
 	usleep(mdataMapa.retardo*1000);
@@ -544,7 +545,8 @@ void* thread_planificador()
 			else
 			{
 				// NO HAY MAS POKEMONS! hay que bloquear al entrenador
-				queue_push(colaBloqueados,jugador);
+				jugador->estado = 1;
+				list_add(colaBloqueados,jugador);
 			}
 
 		break;
@@ -559,10 +561,14 @@ void* thread_planificador()
 		//free(buffer_recv);
 
 		//pthread_mutex_lock(&mutex_socket);
-		pthread_mutex_lock(&mutex_Listos);
-		list_add(colaListos,(void*)jugador);
+		if(jugador->estado==0)
+		{
+			pthread_mutex_lock(&mutex_Listos);
+			list_add(colaListos,(void*)jugador);
+			pthread_mutex_unlock(&mutex_Listos);
+		}
+
 		log_trace(traceLogger, "Termina turno de jugador %c", jugador->entrenador.simbolo);
-		pthread_mutex_unlock(&mutex_Listos);
 		log_info(infoLogger, "Jugador %c entra en Cola Listos", jugador->entrenador.simbolo);
 		//loggearColas();
 
@@ -590,8 +596,8 @@ int main(int argc, char** argv)
 	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	parametros.dirPokedex = "mnt/pokedex";
-	parametros.nombreMapa = "Mapa1";
+	parametros.dirPokedex = "/mnt/pokedex";
+	parametros.nombreMapa = "PuebloPaleta";
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
@@ -608,7 +614,7 @@ int main(int argc, char** argv)
 	leerTodasLasPokenest(parametros);
 	gui_crearPokenests();
 
-	mdataMapa = leerMetadataMapa();
+	mdataMapa = leerMetadataMapa(parametros);
 
 
 	//**********************************

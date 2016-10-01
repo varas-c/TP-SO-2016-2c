@@ -8,7 +8,7 @@
 #ifndef HEADERS_CONFIGENTRENADOR_H_
 #define HEADERS_CONFIGENTRENADOR_H_
 
-metadata leerMetadata()//Lee Metadata de un entrenador
+metadata leerMetadata(char* ruta)//Lee Metadata de un entrenador
 {
 	metadata mdata;
 	t_config* config; //Estructura config
@@ -16,12 +16,12 @@ metadata leerMetadata()//Lee Metadata de un entrenador
 	char* auxiliar;
 
 	//Se lee el archivo con config_create y se almacena lo leido en config
-	config = config_create("config/metadata.config");
+	config = config_create(ruta);
 
 	//Si no se pudo abrir el archivo, salimos
 	if (config==NULL)
 	{
-		printf("Archivo metadata.config no encontrado.\n");
+		printf("Error en - Funcion: %s - Linea: %d - Archivo metadata.config no encontrado.\n", __func__,__LINE__);
 		exit(20);
 	}
 
@@ -70,16 +70,44 @@ metadata leerMetadata()//Lee Metadata de un entrenador
 	return mdata;
 }
 
-ConexionEntrenador leerConexionMapa(int mapa)
+char* getRutaMapa(char* pathPokedex, char* nombreMapa)
+{
+	char *ruta;
+
+	char* Mapas = "/Mapas/";
+	char* Metadata = "/metadata";
+	int tamPathPokedex = sizeofString(pathPokedex);
+	int tamNombreMapa = sizeofString(nombreMapa);
+	int tamMapas = sizeofString(Mapas);
+	int tamMetadata = sizeofString(Metadata);
+
+
+	int tamCadena = tamPathPokedex + tamMapas + tamNombreMapa + tamMetadata + 1;
+
+	ruta = malloc(tamCadena);
+
+	if(ruta==NULL)
+	{
+		printf("Error - Funcion: %s - Linea: %d - malloc == NULL",__func__,__LINE__);
+		exit(1);
+	}
+
+	sprintf(ruta,"%s%s%s%s",pathPokedex,Mapas,nombreMapa,Metadata);
+
+	return ruta;
+}
+
+ConexionEntrenador leerConexionMapa(char* pathPokedex, char* nombreMapa)
 {
 	ConexionEntrenador connect;
 	t_config* config; //Estructura
 	char* auxiliar;
-
+	char* rutaMapa;
+	rutaMapa = getRutaMapa(pathPokedex, nombreMapa);
 	//ToDo: Aca debemos leer el mapa.config del mapa que recibimos por parametro
 	//config = config_create("/home/utnso/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
 	//config = config_create("../../Proc-Mapa/config/mapa.config");
-	config = config_create("/home/utnso/TPChar*Mander/tp-2016-2c-Breaking-Bug/Proc-Mapa/config/mapa.config");
+	config = config_create(rutaMapa);
 	if(config==NULL)
 	{
 		printf("Archivo mapa.config no encontrado\n");

@@ -89,6 +89,7 @@ typedef struct   //PosEntrenador
 typedef struct
 {
 	t_pokemon* pokemon;
+	char* nombre;
 	int numero;
 }Pokemon;
 

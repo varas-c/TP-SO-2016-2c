@@ -5,6 +5,7 @@
  *      Author: utnso
  */
 
+#include <dirent.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -383,18 +384,74 @@ char* dsrlz_capturarPokemon(Paquete* paquete)
 
 	memcpy(&lengthPokemonDat,paquete->buffer+sizeof(int),sizeof(int));
 
-	pokemonDat = malloc(lengthPokemonDat);
+	pokemonDat = malloc(sizeof(char)*lengthPokemonDat);
 
 	memcpy(pokemonDat,paquete->buffer+sizeof(int)*2,sizeof(char)*lengthPokemonDat);
 
 	return pokemonDat;
 }
 
+int sizeofString(char* cadena)
+{
+	int size = 0;
+	size = sizeof(char)*strlen(cadena);
+	return size;
+}
+char* getRutaMetadata(ParametrosConsola parametros)
+{
+	char* pathEntrenadores= "Entrenadores";
+	char* pathMetadata = "metadata.config";
+	char* slash = "/";
+
+	int tamPathPokedex =sizeofString(parametros.dirPokedex);
+	int tamNombreEntrenador = sizeofString(parametros.nombreEntrenador);
+	int tamPathEntrenadores = sizeofString(pathEntrenadores);
+	int tamSlash = sizeofString(slash);
+	int tamPathMetadata = sizeofString(pathMetadata);
+
+	// RUTAPOKEDEX + SLASH + ENTRENADORES + SLASH + NOMBREENTRENADOR + SLASH + METADATA
+	int tamCadena = tamPathPokedex + tamSlash + tamPathEntrenadores + tamSlash + tamNombreEntrenador + tamSlash + tamPathMetadata + 1;
+
+	char* rutaALeer = malloc(tamCadena);
+
+	if(rutaALeer == NULL)
+	{
+		perror("funcion: rutaMetadata() - rutaALeer == NULL - Error Malloc()" );
+		exit(1);
+	}
+
+	strcpy(rutaALeer,parametros.dirPokedex);
+	strcat(rutaALeer,slash);
+	strcat(rutaALeer,pathEntrenadores);
+	strcat(rutaALeer,slash);
+	strcat(rutaALeer,parametros.nombreEntrenador);
+	strcat(rutaALeer,slash);
+	strcat(rutaALeer,pathMetadata);
+
+
+	return rutaALeer;
+
+
+
+}
+
+metadata leerMetadataEntrenador(ParametrosConsola parametros)
+{
+	metadata mdata;
+	char* rutaMetadata = getRutaMetadata(parametros);
+	mdata = leerMetadata(rutaMetadata);
+
+	free(rutaMetadata);
+	return mdata;
+
+}
+
 int main(int argc, char** argv)
 {
-	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
 
-	ParametrosConsola parametros;
+
+
+	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 	printf("%s --- %s", parametros.dirPokedex, parametros.nombreEntrenador);
@@ -403,39 +460,40 @@ int main(int argc, char** argv)
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 	*/
 
+	ParametrosConsola parametros;
+	parametros.dirPokedex = "/mnt/pokedex";
+	parametros.nombreEntrenador = "Ash";
+
 	metadata mdata;
-	mdata = leerMetadata();
+	mdata = leerMetadataEntrenador(parametros);
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
 	Nivel nivel = new_nivel();
-	DatosMapa mapa = new_DatosMapa();
-
-
+	DatosMapa mapa;
 
 	int opcion = -1;
 	Entrenador entrenador;
 	entrenador = new_Entrenador(mdata);
 	vidas_restantes = entrenador.vidas;
 	Paquete paquete;
+
 	//Agregamos las funciones que manejaran las señales enmascaras como SIGTERM Y SIGUSR1.
 	signal(SIGUSR1, manejar_signals);
 	signal(SIGTERM, manejar_signals);
-	/* Este while es un "While Externo", el While externo es para poder avanzar de mapa una vez finalizado
-	  el mapa actual
-	 */
+
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
 	Pokenest pokenest;
-
+	char* pokemonDat;
 
 	while(1)
 	{
 		mapa.nombre = obtenerNombreMapa(mdata.hojaDeViaje,nivel.nivelActual); //Obtenemos el nombre del mapa numero X
 
 		ConexionEntrenador connect;
-		connect = leerConexionMapa(mapa.nombre); //Leemos la información del Mapa nombre "LoQueSea"
+		connect = leerConexionMapa(parametros.dirPokedex,mapa.nombre); //Leemos la información del Mapa nombre "LoQueSea"
 
 		//Ahora debemos conectarnos al mapa
 		int fd_server = get_fdServer(connect.ip,connect.puerto);
@@ -474,9 +532,17 @@ int main(int argc, char** argv)
 						send_capturarPokemon(&paquete,fd_server);
 						free(paquete.buffer);
 						paquete = recv_capturarPokemon(fd_server);
-						char* pokemonDat = dsrlz_capturarPokemon(&paquete);
+						pokemonDat = dsrlz_capturarPokemon(&paquete);
+						//fflush(stdout);
+						printf("%s",pokemonDat);
 						nivel.numPokenest++;
 						pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
+
+						if(nivel.numPokenest == 3)
+						{
+							printf("Fin");
+							exit(1);
+						}
 					break;
 					case FINOBJETIVOS:
 						paquete = srlz_finObjetivos();
