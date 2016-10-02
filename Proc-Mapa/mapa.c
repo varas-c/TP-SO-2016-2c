@@ -413,7 +413,7 @@ void detectarDesconexiones()
 	{
 		jugador = list_take(colaListos,i);
 
-		if(recv(jugador->socket,buffer,sizeof(int),MSG_DONTWAIT) == 0)
+		if(recv(jugador->socket,buffer,sizeof(int),MSG_PEEK) == 0)
 		{
 			desconectarJugador(jugador);
 		}
@@ -462,6 +462,31 @@ void enviarOK(int socket)
 	send(socket,a,20,0);
 }
 
+Paquete srlz_MoverOK()
+{
+	Paquete paquete;
+	paquete.tam_buffer = size_MOVER_OK;
+	paquete.buffer = malloc(paquete.tam_buffer);
+
+	int codOp = MOVER_OK;
+
+	memcpy(paquete.buffer,&codOp,sizeof(int));
+
+	return paquete;
+
+}
+
+
+void send_MoverOK(int socket)
+{
+	Paquete paquete;
+	paquete = srlz_MoverOK();
+
+	send(socket,paquete.buffer,paquete.tam_buffer,0);
+
+	free(paquete.buffer);
+}
+
 void* thread_planificador()
 {
 	Paquete paquete;
@@ -475,17 +500,17 @@ void* thread_planificador()
 	int quantum = mdataMapa.quantum;
 	int codOp = -1;
 	char pokenestPedida;
-	MetadataPokenest* pokenestEnviar;
+	MetadataPokenest pokenestEnviar;
 	char* mostrar = malloc(100);
 	int opc;
 
 	PosEntrenador pos;
 
-	MetadataPokenest* pokenest;
+	MetadataPokenest pokenest;
 	while(1)
 	{
 	usleep(mdataMapa.retardo*1000);
-	//detectarDesconexiones();
+	detectarDesconexiones();
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
 
@@ -523,16 +548,13 @@ void* thread_planificador()
 		case POKENEST: //Nos pidieron una pokenest, hay que entregarla:
 			pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
 			pokenestEnviar = buscar_Pokenest(pokenestPedida); //Buscamos la info de la Pokenest pedida
-			paquete = srlz_Pokenest(pokenestEnviar); //Armamos un paquete serializado
-			send_Pokenest(jugador->socket,&paquete); //Enviamos el paquete :D
-			free_paquete(&paquete);//Liberamos el paquete
-			pokenestEnviar = NULL;
+			send_Pokenest(jugador->socket,pokenestEnviar); //Enviamos el paquete :D
 		break;
 		case MOVER: //El entrenador se quiere mover
 			pos = dsrlz_movEntrenador(buffer_recv);//Obtengo las coordenadas X,Y
 			movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
+			send_MoverOK(jugador->socket);
 			MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
-			enviarOK(jugador->socket);
 			break;
 
 		case CAPTURAR: //TODO: FALTA COMPLETAR!!
@@ -542,9 +564,9 @@ void* thread_planificador()
 			Pokemon* pokemon;
 
 			//HASTA ACA ESTA BIEN!!!
-			if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
+			if(queue_size(pokenest.colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
 			{
-				pokemon = queue_pop(pokenest->colaDePokemon);
+				pokemon = queue_pop(pokenest.colaDePokemon);
 				list_add(jugador->pokemonCapturados,pokemon);
 				send_capturaOK(jugador,pokemon);
 			}

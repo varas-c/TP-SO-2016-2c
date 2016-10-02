@@ -1178,3 +1178,8 @@
 [INFO] 21:05:14:561 Mapa/(17116:17125): Jugador 
 [TRACE] 21:05:15:61 Mapa/(17116:17125): Termina turno de jugador 
 [INFO] 21:05:15:61 Mapa/(17116:17125): Jugador 
+[INFO] 09:17:49:131 Mapa/(20370:20370): Se inicia Mapa.
+[INFO] 09:18:00:29 Mapa/(20429:20429): Se inicia Mapa.
+[INFO] 09:18:05:787 Mapa/(20429:20429): Nuevo jugador: #, socket 6
+[INFO] 09:18:05:787 Mapa/(20429:20429): Jugador # entra en Cola Listos
+[INFO] 09:18:06:55 Mapa/(20429:20436): Jugador # sale de Listos.

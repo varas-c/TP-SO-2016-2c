@@ -11,6 +11,7 @@
 
 void send_solicitarPokenest(Paquete* paquete, int fd_server)
 {
+
 	send(fd_server, paquete->buffer, paquete->tam_buffer,0);
 }
 //****************************************//****************************************

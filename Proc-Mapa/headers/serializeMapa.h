@@ -23,6 +23,7 @@ enum codigoOperaciones {
 	SIMBOLO = 10,
 	COORDENADAS = 11,
 	CAPTURA_OK = 12,
+	MOVER_OK = 13,
 };
 
 //****************************************************************************************************************
@@ -38,6 +39,7 @@ enum sizeofBuffer
 	size_FINOBJETIVOS = sizeof(int),
 	size_COORDENADAS = sizeof(int)+sizeof(int)+sizeof(int),
 	size_CAPTURA_OK = sizeof(int)+sizeof(int),
+	size_MOVER_OK = sizeof(int),
 };
 
 
@@ -53,7 +55,7 @@ char dsrlz_Pokenest(void* buffer)
 }
 //****************************************************************************************************************
 
-Paquete srlz_Pokenest(MetadataPokenest *pokenest)
+Paquete srlz_Pokenest(MetadataPokenest pokenest)
 {
 	Paquete paquete;
 	paquete.buffer = malloc(size_POKENEST_response);
@@ -70,13 +72,13 @@ Paquete srlz_Pokenest(MetadataPokenest *pokenest)
 	memcpy(paquete.buffer,&codigo,size[0]);
 
 	//Copiamos el simbolo
-	memcpy(paquete.buffer + size[0], &(pokenest->simbolo),size[1]);
+	memcpy(paquete.buffer + size[0], &(pokenest.simbolo),size[1]);
 
 	//Copiamos la coordenada en X
-	memcpy(paquete.buffer+size[0]+size[1],&(pokenest->posicionX),size[2]);
+	memcpy(paquete.buffer+size[0]+size[1],&(pokenest.posicionX),size[2]);
 
 	//Copiamos la coordenada en Y
-	memcpy(paquete.buffer+size[0]+size[1]+size[2],&(pokenest->posicionY),size[3]);
+	memcpy(paquete.buffer+size[0]+size[1]+size[2],&(pokenest.posicionY),size[3]);
 
 	return paquete;
 }

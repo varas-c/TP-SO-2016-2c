@@ -446,11 +446,29 @@ metadata leerMetadataEntrenador(ParametrosConsola parametros)
 
 }
 
-void recibirOK(int fdServer)
+int dsrlz_MoverOK(void* buffer)
 {
+	int codOp = 0;
+	memcpy(&codOp,buffer,sizeof(int));
+	return codOp;
+}
 
-	char* buffer = malloc(50);
-	recv(fdServer,buffer,50,0);
+
+void recv_MoverOK(int fdServer)
+{
+	Paquete paquete;
+	paquete.tam_buffer = size_MOVER_OK;
+	paquete.buffer = malloc(paquete.tam_buffer);
+
+	recv(fdServer,paquete.buffer,paquete.tam_buffer,0);
+
+	int codigoOperacion = dsrlz_MoverOK(paquete.buffer);
+
+	if(codigoOperacion!=MOVER_OK)
+	{
+		printf("Exit(1) - Func %s - Linea: %d - Codigo MOVER_OK invalido",__func__,__LINE__);
+		exit(1);
+	}
 
 }
 
@@ -528,7 +546,7 @@ int main(int argc, char** argv)
 						mover_entrenador(&entrenador);
 						paquete = srlz_movEntrenador(entrenador);
 						send_movEntrenador(&paquete,fd_server);
-						recibirOK(fd_server);
+						recv_MoverOK(fd_server);
 					break;
 					case CAPTURAR: //Caso 3: Ya llegamos a una Pokenest. QUEREMOS CAPTURAR
 						paquete = srlz_capturarPokemon(pokenest.simbolo);
