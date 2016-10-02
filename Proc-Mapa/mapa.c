@@ -411,7 +411,7 @@ void detectarDesconexiones()
 	int i=0;
 	for(i=0;i<tamLista;i++)
 	{
-		jugador = list_take(colaListos,i);
+		jugador = (Jugador*) list_take(colaListos,i);
 
 		if(recv(jugador->socket,buffer,sizeof(int),MSG_PEEK) == 0)
 		{
@@ -505,13 +505,15 @@ void* thread_planificador()
 	MetadataPokenest pokenest;
 	while(1)
 	{
+	nivel_gui_dibujar(gui_items, mostrar);
 	usleep(mdataMapa.retardo*1000);
-	detectarDesconexiones();
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
 
 	while(!list_is_empty(colaListos))
 	{
+		detectarDesconexiones();
+
 		jugador = list_remove(colaListos,0);
 		buffer_recv = malloc(tam_buffer_recv);
 		quantum = mdataMapa.quantum;
@@ -609,8 +611,6 @@ void* thread_planificador()
 		}
 	}
 
-	nivel_gui_dibujar(gui_items, mostrar);
-
 	}
 }
 
@@ -649,7 +649,6 @@ int main(int argc, char** argv)
 
 	//**********************************
 	//FUNCION SERVE
-
 
 	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
 	// conjunto maestro de descriptores de fichero
