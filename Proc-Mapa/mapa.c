@@ -489,20 +489,16 @@ void send_MoverOK(int socket)
 
 void* thread_planificador()
 {
-	Paquete paquete;
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
 	int estado_socket;
 	Jugador *jugador;
-	Jugador *jugadorAux;
-	int* socket_desconectado;
-	Jugador *jugadorDesconectado;
+
 	int quantum = mdataMapa.quantum;
 	int codOp = -1;
 	char pokenestPedida;
 	MetadataPokenest pokenestEnviar;
 	char* mostrar = malloc(100);
-	int opc;
 
 	PosEntrenador pos;
 
@@ -660,8 +656,7 @@ int main(int argc, char** argv)
 
 	int fdmax;        // número máximo de descriptores de fichero
 	int listener;     // descriptor de socket a la escucha
-	void* buf;
-	int nbytes;
+
 	int i, j;
 	FD_ZERO(&fds_entrenadores);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);
@@ -681,10 +676,6 @@ int main(int argc, char** argv)
 
 	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
 
-	int valor_recv;
-	void *buffer_recv;
-	int tamBuffer_recv = 10;
-	buffer_recv = malloc(tamBuffer_recv);
 
 	pthread_t hiloPlanificador;
 	int valorHilo = -1;
@@ -699,12 +690,10 @@ int main(int argc, char** argv)
 
 	Jugador nuevoJugador;
 	Jugador *aux;
-	int *aux2;
 	int newfd;
 	char simboloEntrenador;
 
 	for (;;) {
-		//getch();
 		read_fds = fds_entrenadores; // cópialo
 
 		//Buscamos los sockets que quieren realizar algo con Select
@@ -743,27 +732,7 @@ int main(int argc, char** argv)
 					log_info(infoLogger, "Jugador %c entra en Cola Listos", nuevoJugador.entrenador.simbolo);
 					//loggearColas();
 				}
-				//Si no es el Listener, el entrenador SE DESCONECTÓ!!
-				else
-				{
 
-					/*
-					valor_recv = recv(i, buffer_recv, tamBuffer_recv, MSG_PEEK);
-
-					if(valor_recv == 0)
-					{
-						pthread_mutex_lock(&mutex_Desconectados);
-						FD_CLR(i,&fds_entrenadores);
-						aux2 = malloc(sizeof(int));
-						*aux2 = i;
-						queue_push(colaDesconectados,aux2);
-						close(i);
-						pthread_mutex_unlock(&mutex_Desconectados);
-						//log_info(infoLogger, "Detectada desconexion de socket %d", i);
-
-					}*/
-
-				}
 			}
 		}
 	}
