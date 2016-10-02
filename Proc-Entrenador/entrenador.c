@@ -446,10 +446,16 @@ metadata leerMetadataEntrenador(ParametrosConsola parametros)
 
 }
 
-int main(int argc, char** argv)
+void recibirOK(int fdServer)
 {
 
+	char* buffer = malloc(50);
+	recv(fdServer,buffer,50,0);
 
+}
+
+int main(int argc, char** argv)
+{
 
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
@@ -507,10 +513,6 @@ int main(int argc, char** argv)
 		while(nivel.finNivel == 0) //Mientras que no hayamos ganado el nivel
 		{
 
-
-			if(recv_turnoConcedido(fd_server))
-			{
-
 				opcion = evaluar_opciones(entrenador,pokenest);
 
 				switch(opcion)
@@ -526,22 +528,26 @@ int main(int argc, char** argv)
 						mover_entrenador(&entrenador);
 						paquete = srlz_movEntrenador(entrenador);
 						send_movEntrenador(&paquete,fd_server);
+						recibirOK(fd_server);
 					break;
 					case CAPTURAR: //Caso 3: Ya llegamos a una Pokenest. QUEREMOS CAPTURAR
 						paquete = srlz_capturarPokemon(pokenest.simbolo);
 						send_capturarPokemon(&paquete,fd_server);
-						free(paquete.buffer);
 						paquete = recv_capturarPokemon(fd_server);
 						pokemonDat = dsrlz_capturarPokemon(&paquete);
 						//fflush(stdout);
-						printf("%s",pokemonDat);
+						printf("%s \n",pokemonDat);
 						nivel.numPokenest++;
-						pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
+
 
 						if(nivel.numPokenest == 3)
 						{
-							printf("Fin");
+							printf("Fin\n");
 							exit(1);
+						}
+						else
+						{
+							pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
 						}
 					break;
 					case FINOBJETIVOS:
@@ -550,8 +556,7 @@ int main(int argc, char** argv)
 					break;
 				}
 
-				//free(paquete.buffer);
-		}
+				free(paquete.buffer);
 		//FUERA DEL WHILE INTERNO
 		//Una vez que salimos del While interno, quiere decir que terminamos el mapa y hay que pasar a otro
 		//Antes, el entrenador tiene que dirigirse a la Pokedex y copiar la respectiva medalla del mapa

@@ -562,3 +562,619 @@
 [INFO] 22:09:34:35 Mapa/(11185:11212): Jugador # entra en Cola Listos
 [TRACE] 22:09:39:21 Mapa/(11185:11212): Termina turno de jugador #
 [INFO] 22:09:39:635 Mapa/(11185:11212): Jugador # entra en Cola Listos
+[INFO] 18:40:30:601 Mapa/(12876:12876): Se inicia Mapa.
+[INFO] 18:40:51:528 Mapa/(12942:12942): Se inicia Mapa.
+[INFO] 18:41:01:638 Mapa/(12997:12997): Se inicia Mapa.
+[INFO] 18:41:23:764 Mapa/(12997:12997): Nuevo jugador: #, socket 6
+[INFO] 18:41:23:764 Mapa/(12997:12997): Jugador # entra en Cola Listos
+[INFO] 18:41:25:852 Mapa/(12997:13024): Jugador # sale de Listos.
+[TRACE] 18:41:37:56 Mapa/(12997:13024): Termina turno de jugador #
+[INFO] 18:41:37:507 Mapa/(12997:13024): Jugador # entra en Cola Listos
+[TRACE] 18:41:47:445 Mapa/(12997:13024): Termina turno de jugador #
+[INFO] 18:41:47:913 Mapa/(12997:13024): Jugador # entra en Cola Listos
+[INFO] 18:44:12:485 Mapa/(13174:13174): Se inicia Mapa.
+[INFO] 18:44:49:567 Mapa/(13174:13174): Nuevo jugador: #, socket 6
+[INFO] 18:44:49:567 Mapa/(13174:13174): Jugador # entra en Cola Listos
+[INFO] 18:44:55:387 Mapa/(13174:13203): Jugador # sale de Listos.
+[TRACE] 18:45:14:840 Mapa/(13174:13203): Termina turno de jugador #
+[INFO] 18:45:15:330 Mapa/(13174:13203): Jugador # entra en Cola Listos
+[TRACE] 18:45:31:297 Mapa/(13174:13203): Termina turno de jugador #
+[INFO] 18:45:31:791 Mapa/(13174:13203): Jugador # entra en Cola Listos
+[INFO] 18:47:36:934 Mapa/(13481:13481): Se inicia Mapa.
+[INFO] 18:47:55:271 Mapa/(13558:13558): Se inicia Mapa.
+[INFO] 18:48:09:398 Mapa/(13558:13558): Nuevo jugador: #, socket 6
+[INFO] 18:48:09:398 Mapa/(13558:13558): Jugador # entra en Cola Listos
+[INFO] 18:48:27:443 Mapa/(13558:13585): Jugador # sale de Listos.
+[TRACE] 18:48:40:99 Mapa/(13558:13585): Termina turno de jugador #
+[INFO] 18:48:40:550 Mapa/(13558:13585): Jugador # entra en Cola Listos
+[TRACE] 18:48:46:12 Mapa/(13558:13585): Termina turno de jugador #
+[INFO] 18:48:46:293 Mapa/(13558:13585): Jugador # entra en Cola Listos
+[INFO] 18:52:33:749 Mapa/(13729:13729): Se inicia Mapa.
+[INFO] 18:52:56:993 Mapa/(13771:13771): Se inicia Mapa.
+[INFO] 18:53:37:426 Mapa/(13771:13771): Nuevo jugador: #, socket 6
+[INFO] 18:53:37:426 Mapa/(13771:13771): Jugador # entra en Cola Listos
+[INFO] 18:53:40:48 Mapa/(13771:13780): Jugador # sale de Listos.
+[TRACE] 18:54:03:940 Mapa/(13771:13780): Termina turno de jugador #
+[INFO] 18:54:04:448 Mapa/(13771:13780): Jugador # entra en Cola Listos
+[TRACE] 18:54:23:521 Mapa/(13771:13780): Termina turno de jugador #
+[INFO] 18:54:24:59 Mapa/(13771:13780): Jugador # entra en Cola Listos
+[INFO] 18:55:45:406 Mapa/(13887:13887): Se inicia Mapa.
+[INFO] 18:55:56:596 Mapa/(13924:13924): Se inicia Mapa.
+[INFO] 18:56:07:483 Mapa/(13924:13924): Nuevo jugador: #, socket 6
+[INFO] 18:56:07:483 Mapa/(13924:13924): Jugador # entra en Cola Listos
+[INFO] 18:56:10:415 Mapa/(13924:13929): Jugador # sale de Listos.
+[TRACE] 18:56:16:115 Mapa/(13924:13929): Termina turno de jugador #
+[INFO] 18:56:16:269 Mapa/(13924:13929): Jugador # entra en Cola Listos
+[TRACE] 18:56:20:828 Mapa/(13924:13929): Termina turno de jugador #
+[INFO] 18:56:21:146 Mapa/(13924:13929): Jugador # entra en Cola Listos
+[INFO] 20:39:38:652 Mapa/(16352:16352): Se inicia Mapa.
+[INFO] 20:39:48:431 Mapa/(16352:16352): Nuevo jugador: #, socket 6
+[INFO] 20:39:48:431 Mapa/(16352:16352): Jugador # entra en Cola Listos
+[INFO] 20:39:48:579 Mapa/(16352:16359): Jugador # sale de Listos.
+[TRACE] 20:39:49:80 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:49:80 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:49:580 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:49:580 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:50:81 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:50:81 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[INFO] 20:39:50:81 Mapa/(16352:16359): Jugador # sale de Listos.
+[TRACE] 20:39:50:581 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:50:581 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:51:81 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:51:81 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:51:582 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:51:582 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[INFO] 20:39:51:582 Mapa/(16352:16359): Jugador # sale de Listos.
+[TRACE] 20:39:52:83 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:52:83 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:52:583 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:52:583 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:53:84 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:53:84 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[INFO] 20:39:53:84 Mapa/(16352:16359): Jugador # sale de Listos.
+[TRACE] 20:39:53:584 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:53:584 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:54:85 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:54:85 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:54:585 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:54:585 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[INFO] 20:39:54:585 Mapa/(16352:16359): Jugador # sale de Listos.
+[TRACE] 20:39:55:86 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:55:86 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:55:586 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:55:586 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[TRACE] 20:39:56:87 Mapa/(16352:16359): Termina turno de jugador #
+[INFO] 20:39:56:87 Mapa/(16352:16359): Jugador # entra en Cola Listos
+[INFO] 20:39:56:87 Mapa/(16352:16359): Jugador # sale de Listos.
+[INFO] 20:40:24:683 Mapa/(16433:16433): Se inicia Mapa.
+[INFO] 20:40:35:174 Mapa/(16433:16433): Nuevo jugador: #, socket 6
+[INFO] 20:40:35:174 Mapa/(16433:16433): Jugador # entra en Cola Listos
+[INFO] 20:40:35:208 Mapa/(16433:16443): Jugador # sale de Listos.
+[TRACE] 20:40:35:709 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:35:709 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:36:209 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:36:209 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:36:709 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:36:709 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[INFO] 20:40:36:709 Mapa/(16433:16443): Jugador # sale de Listos.
+[TRACE] 20:40:37:209 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:37:209 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:37:711 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:37:711 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:38:211 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:38:211 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[INFO] 20:40:38:211 Mapa/(16433:16443): Jugador # sale de Listos.
+[TRACE] 20:40:38:711 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:38:711 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:39:212 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:39:212 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:39:712 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:39:712 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[INFO] 20:40:39:712 Mapa/(16433:16443): Jugador # sale de Listos.
+[TRACE] 20:40:40:213 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:40:213 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:40:714 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:40:714 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:41:214 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:41:214 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[INFO] 20:40:41:214 Mapa/(16433:16443): Jugador # sale de Listos.
+[TRACE] 20:40:41:715 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:41:715 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:42:216 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:42:216 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:42:717 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:42:717 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[INFO] 20:40:42:717 Mapa/(16433:16443): Jugador # sale de Listos.
+[TRACE] 20:40:43:217 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:43:217 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[TRACE] 20:40:43:718 Mapa/(16433:16443): Termina turno de jugador #
+[INFO] 20:40:43:718 Mapa/(16433:16443): Jugador # entra en Cola Listos
+[INFO] 20:42:34:375 Mapa/(16483:16483): Se inicia Mapa.
+[INFO] 20:42:37:122 Mapa/(16483:16483): Nuevo jugador: #, socket 6
+[INFO] 20:42:37:122 Mapa/(16483:16483): Jugador # entra en Cola Listos
+[INFO] 20:42:37:393 Mapa/(16483:16490): Jugador # sale de Listos.
+[TRACE] 20:42:37:893 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:37:893 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:38:394 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:38:394 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:38:894 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:38:894 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[INFO] 20:42:38:894 Mapa/(16483:16490): Jugador # sale de Listos.
+[TRACE] 20:42:39:395 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:39:395 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:39:895 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:39:895 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:40:395 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:40:395 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[INFO] 20:42:40:395 Mapa/(16483:16490): Jugador # sale de Listos.
+[TRACE] 20:42:40:896 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:40:896 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:41:396 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:41:396 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:41:897 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:41:897 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[INFO] 20:42:41:897 Mapa/(16483:16490): Jugador # sale de Listos.
+[TRACE] 20:42:42:397 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:42:397 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:42:898 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:42:898 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:43:398 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:43:398 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[INFO] 20:42:43:398 Mapa/(16483:16490): Jugador # sale de Listos.
+[TRACE] 20:42:43:899 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:43:899 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:44:399 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:44:399 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:44:899 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:44:899 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[INFO] 20:42:44:899 Mapa/(16483:16490): Jugador # sale de Listos.
+[TRACE] 20:42:45:400 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:45:400 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[TRACE] 20:42:45:900 Mapa/(16483:16490): Termina turno de jugador #
+[INFO] 20:42:45:900 Mapa/(16483:16490): Jugador # entra en Cola Listos
+[INFO] 20:54:12:438 Mapa/(16953:16953): Se inicia Mapa.
+[INFO] 20:54:21:800 Mapa/(16993:16993): Se inicia Mapa.
+[INFO] 20:54:30:428 Mapa/(16993:16993): Nuevo jugador: #, socket 6
+[INFO] 20:54:30:428 Mapa/(16993:16993): Jugador # entra en Cola Listos
+[INFO] 20:54:30:818 Mapa/(16993:17005): Jugador # sale de Listos.
+[TRACE] 20:54:31:318 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:31:318 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:31:819 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:31:819 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:32:319 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:32:319 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[INFO] 20:54:32:319 Mapa/(16993:17005): Jugador # sale de Listos.
+[TRACE] 20:54:32:820 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:32:820 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:33:320 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:33:320 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:33:821 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:33:821 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[INFO] 20:54:33:821 Mapa/(16993:17005): Jugador # sale de Listos.
+[TRACE] 20:54:34:321 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:34:321 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:34:822 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:34:822 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:35:322 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:35:322 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[INFO] 20:54:35:322 Mapa/(16993:17005): Jugador # sale de Listos.
+[TRACE] 20:54:35:823 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:35:823 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:36:324 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:36:324 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:36:824 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:36:824 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[INFO] 20:54:36:824 Mapa/(16993:17005): Jugador # sale de Listos.
+[TRACE] 20:54:37:324 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:37:324 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:37:825 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:37:825 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:38:325 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:38:325 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[INFO] 20:54:38:325 Mapa/(16993:17005): Jugador # sale de Listos.
+[TRACE] 20:54:38:825 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:38:825 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[TRACE] 20:54:39:326 Mapa/(16993:17005): Termina turno de jugador #
+[INFO] 20:54:39:326 Mapa/(16993:17005): Jugador # entra en Cola Listos
+[INFO] 20:59:21:285 Mapa/(17116:17116): Se inicia Mapa.
+[INFO] 20:59:24:892 Mapa/(17116:17116): Nuevo jugador: #, socket 6
+[INFO] 20:59:24:892 Mapa/(17116:17116): Jugador # entra en Cola Listos
+[INFO] 20:59:25:290 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 20:59:25:790 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:25:790 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:26:291 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:26:291 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:26:791 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:26:791 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 20:59:26:791 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 20:59:27:291 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:27:291 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:27:792 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:27:792 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:28:292 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:28:292 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 20:59:28:292 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 20:59:28:793 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:28:793 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:29:293 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:29:293 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:29:793 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:29:793 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 20:59:29:793 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 20:59:30:294 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:30:294 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:30:795 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:30:795 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:31:295 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:31:295 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 20:59:31:295 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 20:59:31:796 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:31:796 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:32:296 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:32:296 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:32:796 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:32:796 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 20:59:32:796 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 20:59:33:296 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:33:296 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 20:59:33:797 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 20:59:33:797 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:46:24 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:46:24 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:02:46:24 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:02:46:524 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:46:524 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:47:25 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:47:25 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:47:525 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:47:525 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:02:47:525 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:02:48:26 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:48:26 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:48:526 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:48:526 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:49:26 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:49:26 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:02:49:26 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:02:49:526 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:49:526 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:50:27 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:50:27 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:50:527 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:50:527 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:02:50:527 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:02:51:28 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:51:28 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:51:528 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:51:528 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:52:29 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:52:29 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:02:52:29 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:02:52:529 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:52:529 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:53:30 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:53:30 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:02:53:530 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:02:53:530 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:02:53:530 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:03:15:853 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:15:853 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:16:353 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:16:353 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:16:854 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:16:854 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:03:16:854 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:03:17:354 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:17:354 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:17:855 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:17:855 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:18:355 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:18:355 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:03:18:355 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:03:18:855 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:18:855 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:19:355 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:19:355 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:19:856 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:19:856 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:03:19:856 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:03:20:356 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:20:356 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:20:856 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:20:857 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:21:357 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:21:357 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:03:21:357 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:03:21:858 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:21:858 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:22:358 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:22:358 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:22:859 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:22:859 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:03:22:859 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:03:23:359 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:23:359 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:23:860 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:23:860 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:24:360 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:24:360 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:03:24:360 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:03:24:860 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:24:860 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:25:361 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:25:361 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:03:25:861 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:03:25:862 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[INFO] 21:03:25:862 Mapa/(17116:17125): Jugador # sale de Listos.
+[TRACE] 21:04:17:22 Mapa/(17116:17125): Termina turno de jugador #
+[INFO] 21:04:17:22 Mapa/(17116:17125): Jugador # entra en Cola Listos
+[TRACE] 21:04:17:523 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:17:523 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:18:23 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:18:23 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:18:23 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:18:524 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:18:524 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:19:24 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:19:25 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:19:525 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:19:525 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:19:525 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:20:25 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:20:25 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:20:526 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:20:526 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:21:26 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:21:26 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:21:26 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:21:526 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:21:526 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:22:26 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:22:27 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:22:527 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:22:527 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:22:527 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:23:27 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:23:27 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:23:527 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:23:527 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:24:28 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:24:28 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:24:28 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:24:528 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:24:528 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:25:28 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:25:28 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:25:529 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:25:529 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:25:529 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:26:30 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:26:30 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:26:530 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:26:530 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:27:30 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:27:30 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:27:30 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:27:531 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:27:531 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:28:31 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:28:31 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:28:531 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:28:531 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:28:531 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:29:31 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:29:31 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:29:531 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:29:531 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:30:32 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:30:32 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:30:32 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:30:532 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:30:532 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:31:32 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:31:32 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:31:532 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:31:532 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:31:533 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:32:33 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:32:33 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:32:533 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:32:533 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:33:33 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:33:33 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:33:33 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:33:533 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:33:533 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:34:34 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:34:34 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:34:534 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:34:534 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:34:534 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:35:34 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:35:34 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:35:535 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:35:535 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:36:35 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:36:35 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:36:35 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:36:535 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:36:536 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:37:36 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:37:36 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:37:536 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:37:536 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:37:536 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:38:36 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:38:36 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:38:536 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:38:536 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:39:36 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:39:37 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:39:37 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:39:537 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:39:537 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:40:37 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:40:37 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:40:537 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:40:537 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:40:537 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:41:38 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:41:38 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:41:538 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:41:538 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:42:39 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:42:39 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:42:39 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:42:539 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:42:539 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:43:39 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:43:39 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:43:539 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:43:539 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:43:540 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:44:40 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:44:40 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:44:540 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:44:540 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:45:40 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:45:40 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:45:40 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:45:540 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:45:540 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:46:41 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:46:41 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:46:541 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:46:541 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:46:541 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:47:41 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:47:41 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:47:541 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:47:541 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:48:42 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:48:43 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:48:43 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:48:543 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:48:543 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:49:43 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:49:43 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:49:543 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:49:543 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:49:543 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:50:44 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:50:44 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:50:544 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:50:544 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:51:44 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:51:44 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:51:44 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:51:544 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:51:544 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:52:45 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:52:45 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:52:545 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:52:545 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:52:545 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:53:45 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:53:45 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:53:545 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:53:545 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:54:46 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:54:46 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:54:46 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:54:546 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:54:546 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:55:47 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:55:47 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:55:547 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:55:547 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:55:547 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:56:47 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:56:47 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:56:547 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:56:547 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:57:49 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:57:49 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:57:49 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:57:550 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:57:550 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:58:50 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:58:50 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:58:550 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:58:550 Mapa/(17116:17125): Jugador 
+[INFO] 21:04:58:550 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:59:51 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:59:51 Mapa/(17116:17125): Jugador 
+[TRACE] 21:04:59:551 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:04:59:551 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:00:51 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:00:51 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:00:51 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:00:552 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:00:552 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:01:52 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:01:52 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:01:553 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:01:553 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:01:553 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:02:53 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:02:53 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:02:553 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:02:553 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:03:53 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:03:53 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:03:53 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:03:554 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:03:554 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:04:54 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:04:54 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:04:554 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:04:554 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:04:554 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:05:54 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:05:54 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:05:554 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:05:554 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:06:55 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:06:55 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:06:55 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:06:555 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:06:555 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:07:55 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:07:55 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:07:555 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:07:555 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:07:555 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:08:56 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:08:56 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:08:556 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:08:556 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:09:56 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:09:56 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:09:56 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:09:556 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:09:556 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:10:56 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:10:56 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:10:557 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:10:557 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:10:557 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:11:57 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:11:57 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:11:557 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:11:557 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:12:57 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:12:57 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:12:57 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:12:558 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:12:558 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:13:59 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:13:59 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:13:559 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:13:559 Mapa/(17116:17125): Jugador 
+[INFO] 21:05:13:559 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:14:60 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:14:60 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:14:561 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:14:561 Mapa/(17116:17125): Jugador 
+[TRACE] 21:05:15:61 Mapa/(17116:17125): Termina turno de jugador 
+[INFO] 21:05:15:61 Mapa/(17116:17125): Jugador 

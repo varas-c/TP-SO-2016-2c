@@ -429,7 +429,7 @@ Paquete srlz_capturaOK(Pokemon* pokemon)
 	Paquete paquete;
 	char* pokemonDat;
 	pokemonDat = stringPokemonDat(pokemon->nombre,pokemon->numero);
-	int tamPokemonDat = strlen(pokemonDat);
+	int tamPokemonDat = strlen(pokemonDat)+1;
 
 	paquete.tam_buffer = size_CAPTURA_OK+sizeof(char)*tamPokemonDat;
 	paquete.buffer = malloc(paquete.tam_buffer);
@@ -455,6 +455,12 @@ void send_capturaOK(Jugador* jugador,Pokemon* pokemon)
 	free(paquete.buffer);
 }
 
+void enviarOK(int socket)
+{
+	char* a = malloc(20);
+	a = "hola";
+	send(socket,a,20,0);
+}
 
 void* thread_planificador()
 {
@@ -479,7 +485,7 @@ void* thread_planificador()
 	while(1)
 	{
 	usleep(mdataMapa.retardo*1000);
-	detectarDesconexiones();
+	//detectarDesconexiones();
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
 
@@ -496,7 +502,7 @@ void* thread_planificador()
 		{
 		usleep(mdataMapa.retardo*1000);
 		//Ya tenemos jugador, ahora le mandamos un turno
-		send_Turno(jugador->socket);
+		//send_Turno(jugador->socket);
 
 		//Ya mandamos el turno, ahora recibimos el pedido del entrenador
 		estado_socket = recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
@@ -526,6 +532,7 @@ void* thread_planificador()
 			pos = dsrlz_movEntrenador(buffer_recv);//Obtengo las coordenadas X,Y
 			movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
 			MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
+			enviarOK(jugador->socket);
 			break;
 
 		case CAPTURAR: //TODO: FALTA COMPLETAR!!
