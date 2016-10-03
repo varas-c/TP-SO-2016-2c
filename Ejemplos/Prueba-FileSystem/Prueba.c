@@ -14,11 +14,11 @@
 #include <fuse.h>
 #include <sys/mman.h>
 #include <commons/bitarray.h>
+#include <commons/string.h>
 
-#define BLOQUE_NULO -1
+#define BLOQUE_NULO 0xFFFFFFFF
+#define DIRECTORIO_NULO 0xFFFF
 
-//TODO Confirmar si los directorios ocupan bloques.
-//TODO Preguntar sobre ela dirección 0xFFFF.
 
 /* TAMAÑOS ESTRUCTURAS [BLOQUES]: (F= tamaño filesystem)
  *
@@ -42,13 +42,14 @@ int tamanioAdmin;
 
 //**** PROTOTIPOS ****
 void marcarBloque(osada_block_pointer, uint8_t);
-void guardarDato(osada_block, osada_block_pointer);
+void guardarDato(osada_block, int);
 osada_block_pointer* obtenerPtroBloque(int);
 int buscarIndice(unsigned char*, int);
 osada_block_pointer* obtenerPrimerBloque(int);
 void borrarArchivo(int);
 int* obtenerBloques(int, int*);
 void barrer();
+int obtenerArchivo(char*);
 
 
 void marcarBloque(osada_block_pointer bloque, uint8_t valor)
@@ -61,20 +62,22 @@ void marcarBloque(osada_block_pointer bloque, uint8_t valor)
 		bitarray_clean_bit(&bitmap, bloque);
 }
 
-void guardarDato(osada_block dato, osada_block_pointer bloque) //Podría agregarse la búsqueda de un bloque libre
+void guardarDato(osada_block dato, int bloque) //Podría agregarse la búsqueda de un bloque libre
 {
-	memcpy(inicioDatos[bloque-tamanioAdmin], dato, OSADA_BLOCK_SIZE);
+	memset(inicioDatos[bloque], 0, OSADA_BLOCK_SIZE);
+	memcpy(inicioDatos[bloque], dato, OSADA_BLOCK_SIZE);
+	marcarBloque(bloque+tamanioAdmin, 1);
 }
 
 osada_block_pointer* obtenerPtroBloque(int indice)
 {
-	return inicioDatos+indice-tamanioAsig;
+	return inicioDatos+indice;
 }
 
 int buscarIndice(unsigned char* archivo, int dirPadre) //Para ignorar dirPadre, asignarle un negativo.
 {
 	int i;
-	for (i=0;i<2047;i++)
+	for (i=0;i<2048;i++)
 	{
 		if (!strcmp(tablaArchivos[i].fname, archivo)) //Recordar que strcmp devuelve 0 si son iguales
 			if (dirPadre < 0 || tablaArchivos[i].parent_directory == dirPadre)
@@ -126,13 +129,13 @@ int* obtenerBloques(int indice, int* size) //Devuelve en orden los índices de l
 			tamanio++;
 			while(tablaAsignaciones[array[i]]!=BLOQUE_NULO)
 			{
-				tamanio++;
-				array=realloc(array, sizeof(array)+sizeof(int));
+				array=realloc(array, tamanio*sizeof(int)+sizeof(int));
 				if (array==NULL) //Verificacion de realloc
 				{
 					*size=-1;
 					return NULL;
 				}
+				tamanio++;
 				array[i+1]=tablaAsignaciones[array[i]];
 				i++;
 			}
@@ -140,6 +143,31 @@ int* obtenerBloques(int indice, int* size) //Devuelve en orden los índices de l
 			return array;
 		}
 	}
+}
+
+int obtenerArchivo(char* path)
+{
+	int i = 0;
+	while(path[i]!=0 && path[i]=='/') //Verifico esto porque string_split rompe si son todas '/'
+		i++;
+	if (i==strlen(path))
+		return-1;
+	char** directorios=NULL;
+	int dirAnterior=DIRECTORIO_NULO;
+	directorios = string_split(path, "/"); //Crea una subcadena cada vez que encuentra una '/'
+
+	while(directorios[i]!=NULL)
+	{
+		dirAnterior = buscarIndice(directorios[i], dirAnterior);
+		if (dirAnterior<0)
+			return -1;
+		i++;
+	}
+
+	if (i==0)
+		return -1;
+	else
+		return dirAnterior;
 }
 
 void barrer()
@@ -150,7 +178,8 @@ void barrer()
 	for(i=0;i<2048;i++)
 	{
 		if (tablaArchivos[i].state!=REGULAR && tablaArchivos[i].state!=DIRECTORY)
-			tablaArchivos[i].state=DELETED;
+			//tablaArchivos[i].state=DELETED
+			1;
 		else
 		{
 			printf("Nombre: %s\nTipo: %d\nTamanio:%d\n", tablaArchivos[i].fname, tablaArchivos[i].state, tablaArchivos[i].file_size);
@@ -159,12 +188,28 @@ void barrer()
 			int* bloques;
 			bloques= obtenerBloques(i, &size);
 			int j;
-			for(j=0;j<size;printf("%d (dato: %s)-> ", bloques[j], obtenerPtroBloque(bloques[j])), j++);
 			if (bloques!=NULL)
+			{
+				//Para realizar el challenge. SACAR EL FWRITE DEL FOR SI NO SE USA!!!
+				FILE* archivoLeido;
+				char* challenge= malloc(28);
+				strcpy(challenge, "Challenge/\0");
+				archivoLeido= fopen(strcat(challenge, tablaArchivos[i].fname), "wb");
+				for(j=0;j<size;j++)
+				{
+					//printf("%d (primeros 10 bytes: %.*s)-> ", bloques[j], 10, obtenerPtroBloque(bloques[j]));
+					if ((size==j+1) && (tablaArchivos[i].file_size % 64 > 0))
+						fwrite(inicioDatos[bloques[j]], tablaArchivos[i].file_size % 64, 1, archivoLeido);
+					else
+						fwrite(inicioDatos[bloques[j]], 64, 1, archivoLeido);
+				}
+				free(challenge);
 				free(bloques);
+				fclose(archivoLeido);
+			}
 			printf("\n");
-			if (tablaArchivos[i].parent_directory!=0xFFFF)
-				printf("Esta adentro de: %s\n", tablaArchivos[tablaArchivos[i].parent_directory].fname);
+			if (tablaArchivos[i].parent_directory!=DIRECTORIO_NULO)
+				printf("Esta adentro de: %.*s\n", 17, tablaArchivos[tablaArchivos[i].parent_directory].fname);
 			printf("-------------\n");
 
 		}
@@ -173,26 +218,12 @@ void barrer()
 
 int main()
 {
-/*	FILE* fileSystem = NULL;
-	fileSystem = fopen("/home/utnso/workspace/Prueba-FileSystem/prueba.bin", "rw");
-
-	osada_header header;
-	fread(&header, sizeof(header), 1, fileSystem);
-
-	int tamanioBitmap = header.bitmap_blocks * OSADA_BLOCK_SIZE;
-	uint8_t bitmap[tamanioBitmap];
-	fread(&bitmap, sizeof(bitmap), 1, fileSystem);
-
-	osada_file tablaArchivos[2048];
-	fread(&tablaArchivos, sizeof(tablaArchivos), 1, fileSystem);
-
-	osada_block_pointer tablaAsignaciones[header.data_blocks];
-	fread(&tablaAsignaciones, sizeof(tablaAsignaciones), 1, fileSystem);
-
-	fclose(fileSystem);
-*/
-
-	int fd_fileSystem = open("../prueba.bin", O_RDWR);
+	int fd_fileSystem = open("../challenge.bin", O_RDWR);
+	if (fd_fileSystem==-1)
+	{
+		printf("Archivo de file system no encontrado.\n");
+		exit(0);
+	}
 	struct stat fsStat;
 	fstat(fd_fileSystem, &fsStat);
 
@@ -204,11 +235,11 @@ int main()
 	bitmap.bitarray+=OSADA_BLOCK_SIZE;
 	bitmap.mode=MSB_FIRST;
 
-	uint8_t* aux = header + OSADA_BLOCK_SIZE + bitmap.size;
+	uint8_t* aux = header;
+	aux+= OSADA_BLOCK_SIZE + bitmap.size;
 	tablaArchivos = (osada_file*)aux;
 
-
-	aux += header->allocations_table_offset*OSADA_BLOCK_SIZE;
+	aux+= 2048*sizeof(osada_file);
 	tablaAsignaciones = aux;
 	tamanioAsig = header->fs_blocks - header->allocations_table_offset - header->data_blocks; //En bloques
 
@@ -216,44 +247,18 @@ int main()
 	inicioDatos= aux;
 
 	tamanioAdmin = header->fs_blocks - header->data_blocks;
-	marcarBloque(tamanioAdmin+2, 1);
-	marcarBloque(tamanioAdmin+5, 1);
 
 	//TODO Borrar cuando ya no sea necesario. (Muestra el bitmap)
 	int j=0;
 	for (j=0;j<bitmap.size;j++)
 	{
-		if (bitmap.bitarray[j]== -1) printf ("11111111 ");
-		else if (bitmap.bitarray[j] == 0) printf("00000000 ");
-		else printf("%d", bitmap.bitarray[j]);
+		printf("%d", bitmap.bitarray[j]);
 		if (!((j+1)%4)) printf (" ");
 		if (!((j+1)%8)) printf ("\n");
 
 	}
 
-//TODO Borrar cuando ya no sea necesario. Lote de pruebas.
-	tablaArchivos[0].state=DIRECTORY;
-	memcpy(tablaArchivos[0].fname, "datos\0", 6);
-	tablaArchivos[0].parent_directory=0xFFFF;
-	tablaArchivos[0].first_block = BLOQUE_NULO;
-	tablaArchivos[2].state=REGULAR;
-	memcpy(tablaArchivos[2].fname, "archivo1\0", 9);
-	tablaArchivos[2].parent_directory=0;
-	tablaArchivos[2].first_block = tamanioAsig+2;
-	tablaAsignaciones[tamanioAsig]=BLOQUE_NULO;
-	tablaAsignaciones[tamanioAsig+2]=tamanioAsig+5;
-	tablaAsignaciones[tamanioAsig+5]=BLOQUE_NULO;
-	tablaArchivos[10].state=DIRECTORY;
-	memcpy(tablaArchivos[10].fname, "Subcarpeta\0", 11);
-	tablaArchivos[10].parent_directory=0xFFFF;
-	tablaArchivos[10].first_block = BLOQUE_NULO;
-	tablaAsignaciones[tamanioAsig+15]=BLOQUE_NULO;
-
-	guardarDato("Ma que buonna dona!\0", tamanioAdmin+2);
-	memset(inicioDatos[5], 66, OSADA_BLOCK_SIZE);
-
 	barrer();
-
 	munmap(header, fsStat.st_size);
 	close(fd_fileSystem);
 

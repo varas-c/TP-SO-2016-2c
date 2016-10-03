@@ -38,3 +38,6 @@
 #Eclipse Files
 .metadata/
 RemoteSystemsTempFiles/
+
+#File System Files
+.bin
