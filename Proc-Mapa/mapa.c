@@ -435,7 +435,15 @@ void detectarDesconexiones2(){
 		jugador = (Jugador*) list_get(colaListos,i);
 		pthread_mutex_unlock(&mutex_Listos);
 		int retval = getsockopt(jugador->socket, SOL_SOCKET, SO_ERROR, &error, &len);
-		if(retval != 0){
+
+		if(retval != 0){ //No detecta desconexiones
+			jugador = list_remove(colaListos,i);
+			desconectarJugador(jugador);
+		}
+
+		if(error != 0)
+		{
+			jugador = list_remove(colaListos,i);
 			desconectarJugador(jugador);
 		}
 	}
@@ -531,19 +539,21 @@ void* thread_planificador()
 	while(!list_is_empty(colaListos))
 	{
 		detectarDesconexiones2();
+
+		if(!list_is_empty(colaListos))
+		{
 		pthread_mutex_lock(&mutex_Listos);
 		jugador = list_remove(colaListos,0);
 		pthread_mutex_unlock(&mutex_Listos);
 
 		buffer_recv = malloc(tam_buffer_recv);
-		quantum = mdataMapa.quantum;
+		quantum = 0;
 
 		//log_info(infoLogger, "Jugador %c sale de Listos.",jugador->entrenador.simbolo);
 		//loggearColas();
 
 		while(quantum > 0)
 		{
-
 			usleep(mdataMapa.retardo*1000);
 			//Ya tenemos jugador, ahora le mandamos un turno
 			//send_Turno(jugador->socket);
@@ -639,6 +649,8 @@ void* thread_planificador()
 		}
 
 		jugador=NULL;
+
+		}
 	}
 
 	}
@@ -659,7 +671,7 @@ int main(int argc, char** argv)
 	log_info(infoLogger, "Se inicia Mapa.");
 
 	//Inicializamos espacio de dibujo
-	nivel_gui_inicializar();
+	//nivel_gui_inicializar();
 
 	gui_items = list_create();
 	listaPokenest= list_create();
