@@ -423,6 +423,24 @@ void detectarDesconexiones()
 
 }
 
+void detectarDesconexiones2(){
+	Jugador* jugador;
+	int tamLista = list_size(colaListos);
+	int i=0;
+	int error = 0;
+	socklen_t len = sizeof(error);
+	for(i=0;i<tamLista;i++){
+		error = 0;
+		pthread_mutex_lock(&mutex_Listos);
+		jugador = (Jugador*) list_get(colaListos,i);
+		pthread_mutex_unlock(&mutex_Listos);
+		int retval = getsockopt(jugador->socket, SOL_SOCKET, SO_ERROR, &error, &len);
+		if(retval != 0){
+			desconectarJugador(jugador);
+		}
+	}
+}
+
 //*************************************************************************
 Paquete srlz_capturaOK(Pokemon* pokemon)
 {
@@ -512,7 +530,7 @@ void* thread_planificador()
 
 	while(!list_is_empty(colaListos))
 	{
-		//detectarDesconexiones();
+		detectarDesconexiones2();
 		pthread_mutex_lock(&mutex_Listos);
 		jugador = list_remove(colaListos,0);
 		pthread_mutex_unlock(&mutex_Listos);
@@ -641,7 +659,7 @@ int main(int argc, char** argv)
 	log_info(infoLogger, "Se inicia Mapa.");
 
 	//Inicializamos espacio de dibujo
-	//nivel_gui_inicializar();
+	nivel_gui_inicializar();
 
 	gui_items = list_create();
 	listaPokenest= list_create();
