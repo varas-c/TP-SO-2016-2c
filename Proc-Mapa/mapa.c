@@ -154,38 +154,6 @@ void send_Turno(int socket)
 }
 //****************************************************************************************************************
 
-Jugador *buscarJugadorPorSocket(t_queue* colaListos, int socketBuscado){
-
-	t_queue* cola_auxiliar = queue_create();
-	Jugador *auxiliar, *auxiliar2, *encontrado;
-	int tamanio = queue_size(colaListos);
-	int tamanio2;
-
-	while(tamanio > 0){
-		auxiliar = queue_pop(colaListos);
-		if(auxiliar->socket != socketBuscado){
-			queue_push(cola_auxiliar, auxiliar);
-		}
-
-		else{
-			encontrado = auxiliar;
-		}
-
-		tamanio = tamanio-1;
-
-		}
-
-		tamanio2 = queue_size(cola_auxiliar);
-		while(tamanio2 > 0)
-		{
-			auxiliar2 = malloc(sizeof(Jugador));
-			auxiliar2 = queue_pop(cola_auxiliar);
-			queue_push(colaListos, auxiliar2);
-			tamanio2 = tamanio2 - 1;
-		}
-
-	return encontrado;
-}
 
 //****************************************************************************************************************
 
@@ -513,6 +481,51 @@ void send_MoverOK(int socket)
 	free(paquete.buffer);
 }
 
+Jugador* buscarJugadorSocket(int socket)
+{
+
+	bool _find_Player_Socket(Jugador* jugador)
+	{
+		return jugador->socket == socket;
+	}
+
+
+	Jugador* jugadorEncontrado = (Jugador*) list_find(colaListos,(void*)_find_Player_Socket);
+	return jugadorEncontrado;
+
+}
+
+Jugador* getRemove_JugadorPorSocket(int socket)
+{
+	Jugador* jugador;
+
+	bool _find_player_(Jugador* jugador)
+	{
+		return jugador->socket == socket;
+	}
+
+	jugador =(Jugador*) list_remove_by_condition(colaListos,(void*)_find_player_);
+
+	return jugador;
+}
+
+void detectarDesconexiones3()
+{
+	int* socketDesconectar = NULL;
+	int tamCola = queue_size(colaDesconectados);
+	int i;
+	Jugador* jugadorDesconectar;
+
+	for(i=0;i<tamCola;i++)
+	{
+		socketDesconectar = queue_pop(colaDesconectados);
+		jugadorDesconectar = getRemove_JugadorPorSocket(*socketDesconectar);
+		desconectarJugador(jugadorDesconectar);
+		free(socketDesconectar);
+	}
+
+}
+
 void* thread_planificador()
 {
 	void* buffer_recv;
@@ -538,7 +551,7 @@ void* thread_planificador()
 
 	while(!list_is_empty(colaListos))
 	{
-		detectarDesconexiones2();
+		detectarDesconexiones3();
 
 		if(!list_is_empty(colaListos))
 		{
