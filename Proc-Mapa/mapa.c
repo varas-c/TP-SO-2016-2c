@@ -411,7 +411,7 @@ void detectarDesconexiones()
 	int i=0;
 	for(i=0;i<tamLista;i++)
 	{
-		jugador = (Jugador*) list_take(colaListos,i);
+		jugador = (Jugador*) list_get(colaListos,i);
 
 		if(recv(jugador->socket,buffer,sizeof(int),MSG_PEEK) == 0)
 		{
@@ -505,110 +505,122 @@ void* thread_planificador()
 	MetadataPokenest pokenest;
 	while(1)
 	{
-	nivel_gui_dibujar(gui_items, mostrar);
+	nivel_gui_dibujar(gui_items, "No hay jugadores");
 	usleep(mdataMapa.retardo*1000);
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
 
 	while(!list_is_empty(colaListos))
 	{
-		detectarDesconexiones();
-
+		//detectarDesconexiones();
+		pthread_mutex_lock(&mutex_Listos);
 		jugador = list_remove(colaListos,0);
+		pthread_mutex_unlock(&mutex_Listos);
+
 		buffer_recv = malloc(tam_buffer_recv);
 		quantum = mdataMapa.quantum;
 
-		log_info(infoLogger, "Jugador %c sale de Listos.",jugador->entrenador.simbolo);
+		//log_info(infoLogger, "Jugador %c sale de Listos.",jugador->entrenador.simbolo);
 		//loggearColas();
 
-		while(quantum != 0)
+		while(quantum > 0)
 		{
-		usleep(mdataMapa.retardo*1000);
-		//Ya tenemos jugador, ahora le mandamos un turno
-		//send_Turno(jugador->socket);
 
-		//Ya mandamos el turno, ahora recibimos el pedido del entrenador
-		estado_socket = recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
+			usleep(mdataMapa.retardo*1000);
+			//Ya tenemos jugador, ahora le mandamos un turno
+			//send_Turno(jugador->socket);
+			//Ya mandamos el turno, ahora recibimos el pedido del entrenador
 
-		if(estado_socket == 0)
-		{
-			desconectarJugador(jugador);
-		}
 
-		else
-		{
-		//Tomamos el primer int del buffer para ver el código de operacion
-		codOp = dsrlz_codigoOperacion(buffer_recv);
+			estado_socket = recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
-		//Evaluo el codigo de Operacion para ver que verga quiere
-		switch(codOp)
-		{
-		case POKENEST: //Nos pidieron una pokenest, hay que entregarla:
-			pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
-			pokenestEnviar = buscar_Pokenest(pokenestPedida); //Buscamos la info de la Pokenest pedida
-			send_Pokenest(jugador->socket,pokenestEnviar); //Enviamos el paquete :D
-		break;
-		case MOVER: //El entrenador se quiere mover
-			pos = dsrlz_movEntrenador(buffer_recv);//Obtengo las coordenadas X,Y
-			movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
-			send_MoverOK(jugador->socket);
-			MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
-			break;
-
-		case CAPTURAR: //TODO: FALTA COMPLETAR!!
-			pokenestPedida = dsrlz_Pokenest(buffer_recv);//Identificamos la pokenest pedida
-			//opc = tomarDecisionCapturaPokemon(jugador,pokenestPedida);
-			pokenest = buscar_Pokenest(pokenestPedida);
-			Pokemon* pokemon;
-
-			//HASTA ACA ESTA BIEN!!!
-			if(queue_size(pokenest.colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
+			if(estado_socket == 0)
 			{
-				pokemon = queue_pop(pokenest.colaDePokemon);
-				list_add(jugador->pokemonCapturados,pokemon);
-				send_capturaOK(jugador,pokemon);
+				desconectarJugador(jugador);
 			}
 
 			else
 			{
-				// NO HAY MAS POKEMONS! hay que bloquear al entrenador
-				jugador->estado = 1;
-				list_add(colaBloqueados,jugador);
-			}
+				//Tomamos el primer int del buffer para ver el código de operacion
+				codOp = dsrlz_codigoOperacion(buffer_recv);
 
-		break;
-		case FINOBJETIVOS:
-			//TODO:
-			break;
+				//Evaluo el codigo de Operacion para ver que verga quiere
+				switch(codOp)
+				{
+				case POKENEST: //Nos pidieron una pokenest, hay que entregarla:
+					pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
+					pokenestEnviar = buscar_Pokenest(pokenestPedida); //Buscamos la info de la Pokenest pedida
+					send_Pokenest(jugador->socket,pokenestEnviar); //Enviamos el paquete :D
+				break;
+				case MOVER: //El entrenador se quiere mover
+					pos = dsrlz_movEntrenador(buffer_recv);//Obtengo las coordenadas X,Y
+					movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
+					send_MoverOK(jugador->socket);
+					MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
+					break;
 
-		}
-		}
-		sprintf(mostrar,"Jugador: %i",jugador->socket);
+				case CAPTURAR: //TODO: FALTA COMPLETAR!!
+					pokenestPedida = dsrlz_Pokenest(buffer_recv);//Identificamos la pokenest pedida
+					//opc = tomarDecisionCapturaPokemon(jugador,pokenestPedida);
+					pokenest = buscar_Pokenest(pokenestPedida);
+					Pokemon* pokemon;
 
-		//free(buffer_recv);
+					//HASTA ACA ESTA BIEN!!!
+					if(queue_size(pokenest.colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
+					{
+						pokemon = queue_pop(pokenest.colaDePokemon);
+						list_add(jugador->pokemonCapturados,pokemon);
+						send_capturaOK(jugador,pokemon);
+						quantum=0;
+					}
 
-		//pthread_mutex_lock(&mutex_socket);
+					else
+					{
+						// NO HAY MAS POKEMONS! hay que bloquear al entrenador
+						jugador->estado = 1;
+						list_add(colaBloqueados,jugador);
+						quantum=0;
+					}
+
+				break;
+				case FINOBJETIVOS:
+					//TODO:
+					break;
+
+				} //FIN SWITCH
+
+			}//FIN ELSE
+			int tam = list_size(colaListos);
+			sprintf(mostrar,"Quantum: %i -- Jugador: %i --TamLista: %i",quantum,jugador->socket,tam);
+
+			//free(buffer_recv);
+
+
+			//log_trace(traceLogger, "Termina turno de jugador %c", jugador->entrenador.simbolo);
+			//log_info(infoLogger, "Jugador %c entra en Cola Listos", jugador->entrenador.simbolo);
+			//loggearColas();
+
+
+			//pthread_mutex_unlock(&mutex_socket);
+
+			//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
+			//loggearColas();
+			//pthread_mutex_lock(&mutex_socket);
+
+			quantum--;
+			nivel_gui_dibujar(gui_items, mostrar);
+
+		}//FIN WHILE
+
 		if(jugador->estado==0)
 		{
 			pthread_mutex_lock(&mutex_Listos);
 			list_add(colaListos,(void*)jugador);
 			pthread_mutex_unlock(&mutex_Listos);
+			quantum = 0;
 		}
 
-		log_trace(traceLogger, "Termina turno de jugador %c", jugador->entrenador.simbolo);
-		log_info(infoLogger, "Jugador %c entra en Cola Listos", jugador->entrenador.simbolo);
-		//loggearColas();
-
-
-		//pthread_mutex_unlock(&mutex_socket);
-
-		//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
-		//loggearColas();
-		//pthread_mutex_lock(&mutex_socket);
-
-		quantum--;
-		nivel_gui_dibujar(gui_items, mostrar);
-		}
+		jugador=NULL;
 	}
 
 	}
@@ -629,7 +641,7 @@ int main(int argc, char** argv)
 	log_info(infoLogger, "Se inicia Mapa.");
 
 	//Inicializamos espacio de dibujo
-	nivel_gui_inicializar();
+	//nivel_gui_inicializar();
 
 	gui_items = list_create();
 	listaPokenest= list_create();

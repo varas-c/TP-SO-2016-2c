@@ -474,19 +474,14 @@ void recv_MoverOK(int fdServer)
 
 int main(int argc, char** argv)
 {
+	ParametrosConsola parametros;
+	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
-	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola
+
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
-	printf("%s --- %s", parametros.dirPokedex, parametros.nombreEntrenador);
-	destruct_ParametrosConsola(&parametros);//Liberamos los parametros
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
-	*/
-
-	ParametrosConsola parametros;
-	parametros.dirPokedex = "/mnt/pokedex";
-	parametros.nombreEntrenador = "Ash";
 
 	metadata mdata;
 	mdata = leerMetadataEntrenador(parametros);
@@ -561,6 +556,7 @@ int main(int argc, char** argv)
 						if(nivel.numPokenest == 3)
 						{
 							printf("Fin\n");
+							close(fd_server);
 							exit(1);
 						}
 						else

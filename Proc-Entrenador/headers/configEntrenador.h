@@ -133,11 +133,8 @@ ParametrosConsola leerParametrosConsola(char** parametros)  //Lee los parametros
 {															//y los guarda en un struct
 	ParametrosConsola p;
 
-	p.nombreEntrenador = malloc(strlen(parametros[1])+1); //Reservamos memoria
-	p.dirPokedex = malloc(strlen(parametros[2])+1);
-
-	strcat(p.nombreEntrenador,parametros[1]); //guardamos
-	strcat(p.dirPokedex,parametros[2]);
+	p.dirPokedex = strdup(parametros[1]);
+	p.nombreEntrenador = strdup(parametros[2]);
 
 	return p;
 }
