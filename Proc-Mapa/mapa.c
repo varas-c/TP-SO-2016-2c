@@ -43,6 +43,7 @@
 #define TAMANIO_BUFFER 11
 t_list* colaListos;
 t_list* colaBloqueados;
+t_queue* colaDesconectados;
 
 t_list* gui_items;
 t_list* listaPokemon;
@@ -689,7 +690,7 @@ int main(int argc, char** argv)
 	gui_items = list_create();
 	listaPokenest= list_create();
 	listaPokemon = list_create();
-
+	colaDesconectados = queue_create();
 
 	leerTodasLasPokenest(parametros);
 	gui_crearPokenests();
@@ -744,6 +745,10 @@ int main(int argc, char** argv)
 
 	Jugador nuevoJugador;
 	Jugador *aux;
+	int *aux2;
+	int tambuffer;
+	tambuffer = sizeof(int);
+	void* buffer = malloc(sizeof(int));
 	int newfd;
 	char simboloEntrenador;
 
@@ -785,6 +790,17 @@ int main(int argc, char** argv)
 					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
 					log_info(infoLogger, "Jugador %c entra en Cola Listos", nuevoJugador.entrenador.simbolo);
 					//loggearColas();
+				}else{
+					buffer = malloc(sizeof(int));
+					if(recv(i,buffer,tambuffer,MSG_PEEK) == 0)
+							{
+							pthread_mutex_lock(&mutex_Desconectados);
+							aux2 = malloc(sizeof(int));
+							*aux2 = i;
+							queue_push(colaDesconectados,aux2);
+							pthread_mutex_unlock(&mutex_Desconectados);
+							}
+					free(buffer);
 				}
 
 			}
