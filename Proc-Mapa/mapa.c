@@ -515,13 +515,20 @@ void detectarDesconexiones3()
 	int* socketDesconectar = NULL;
 	int tamCola = queue_size(colaDesconectados);
 	int i;
-	Jugador* jugadorDesconectar;
+	Jugador* jugadorDesconectar = NULL;
 
 	for(i=0;i<tamCola;i++)
 	{
+		pthread_mutex_lock(&mutex_Desconectados);
 		socketDesconectar = queue_pop(colaDesconectados);
+		pthread_mutex_unlock(&mutex_Desconectados);
+
 		jugadorDesconectar = getRemove_JugadorPorSocket(*socketDesconectar);
+
+		if(jugadorDesconectar != NULL)
+		{
 		desconectarJugador(jugadorDesconectar);
+		}
 		free(socketDesconectar);
 	}
 
@@ -794,9 +801,9 @@ int main(int argc, char** argv)
 					buffer = malloc(sizeof(int));
 					if(recv(i,buffer,tambuffer,MSG_PEEK) == 0)
 							{
-							pthread_mutex_lock(&mutex_Desconectados);
 							aux2 = malloc(sizeof(int));
 							*aux2 = i;
+							pthread_mutex_lock(&mutex_Desconectados);
 							queue_push(colaDesconectados,aux2);
 							pthread_mutex_unlock(&mutex_Desconectados);
 							}
