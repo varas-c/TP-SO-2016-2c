@@ -536,6 +536,9 @@ void detectarDesconexiones3()
 
 void* thread_planificador()
 {
+
+	nivel_gui_inicializar();
+
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
 	int estado_socket;
@@ -559,7 +562,7 @@ void* thread_planificador()
 
 	while(!list_is_empty(colaListos))
 	{
-		detectarDesconexiones3();
+		//detectarDesconexiones3();
 
 		if(!list_is_empty(colaListos))
 		{
@@ -568,7 +571,7 @@ void* thread_planificador()
 		pthread_mutex_unlock(&mutex_Listos);
 
 		buffer_recv = malloc(tam_buffer_recv);
-		quantum = 0;
+		quantum = mdataMapa.quantum;
 
 		//log_info(infoLogger, "Jugador %c sale de Listos.",jugador->entrenador.simbolo);
 		//loggearColas();
@@ -692,7 +695,6 @@ int main(int argc, char** argv)
 	log_info(infoLogger, "Se inicia Mapa.");
 
 	//Inicializamos espacio de dibujo
-	//nivel_gui_inicializar();
 
 	gui_items = list_create();
 	listaPokenest= list_create();
