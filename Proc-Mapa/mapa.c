@@ -35,7 +35,6 @@
 #include "headers/pokenest.h"
 #include "headers/entrenador.h"
 
-
 /****************************************************************************************************************
 			VARIABLES GLOBALES
 ****************************************************************************************************************/
@@ -630,29 +629,27 @@ int main(int argc, char** argv)
 {
 	ParametrosMapa parametros;
 
-	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
 	parametros.dirPokedex = "/mnt/pokedex";
-	parametros.nombreMapa = "PuebloPaleta";
+	//parametros.nombreMapa = "PuebloLavanda";
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
 	log_info(infoLogger, "Se inicia Mapa.");
 
 	//Inicializamos espacio de dibujo
-	//nivel_gui_inicializar();
+	nivel_gui_inicializar();
 
 	gui_items = list_create();
 	listaPokenest= list_create();
 	listaPokemon = list_create();
 
-
 	leerTodasLasPokenest(parametros);
 	gui_crearPokenests();
 
 	mdataMapa = leerMetadataMapa(parametros);
-
 
 	//**********************************
 
