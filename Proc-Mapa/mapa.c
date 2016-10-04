@@ -15,6 +15,7 @@
 #include <curses.h>
 #include <math.h>
 #include <ctype.h>
+#include <errno.h>
 #include <nivel.h>
 #include <commons/log.h>
 #include <commons/collections/queue.h>
@@ -393,7 +394,7 @@ void detectarDesconexiones()
 
 }
 
-void detectarDesconexiones2(){
+void detectarDesconexiones2(){		//LA REVANCHA
 	Jugador* jugador;
 	int tamLista = list_size(colaListos);
 	int i=0;
@@ -517,7 +518,7 @@ Jugador* getRemove_JugadorPorSocket(int socket)
 	return jugador;
 }
 
-void detectarDesconexiones3()
+void detectarDesconexiones3()	//LA VENGANZA
 {
 	int* socketDesconectar = NULL;
 	int tamCola = queue_size(colaDesconectados);
@@ -542,7 +543,26 @@ void detectarDesconexiones3()
 
 }
 
+void detectarDesconexiones4()	//EL ULTIMATUM
+{
+	Jugador* jugador;
+		int tamLista = list_size(colaListos);
+		int i=0;
+		void* buffer;
+		buffer = malloc(sizeof(int));
+		for(i=0;i<tamLista;i++){
+			pthread_mutex_lock(&mutex_Listos);
+			jugador = (Jugador*) list_get(colaListos,i);
+			pthread_mutex_unlock(&mutex_Listos);
+			getpeername(i, buffer,sizeof(int));
+			if(errno == ENOTCONN){
+				jugador = list_remove(colaListos,i);
+				desconectarJugador(jugador);
+				errno = 0;
 
+			}
+		}
+}
 
 void* thread_planificador()
 {
@@ -573,7 +593,7 @@ void* thread_planificador()
 
 	while(!list_is_empty(colaListos))
 	{
-		//detectarDesconexiones3();
+		detectarDesconexiones4();
 
 		if(!list_is_empty(colaListos))
 		{
@@ -710,7 +730,6 @@ int main(int argc, char** argv)
 	nivel_gui_inicializar();
 
 	gui_items = list_create();
-
 	listaPokenest= list_create();
 	listaPokemon = list_create();
 
@@ -814,7 +833,8 @@ int main(int argc, char** argv)
 					log_info(infoLogger, "Jugador %c entra en Cola Listos", nuevoJugador.entrenador.simbolo);
 					//loggearColas();
 
-				}else{
+				}
+				/*else{
 					buffer = malloc(sizeof(int));
 					if(recv(i,buffer,tambuffer,MSG_PEEK) == 0)
 							{
@@ -828,7 +848,7 @@ int main(int argc, char** argv)
 							}
 
 					free(buffer);
-				}
+				}*/
 
 			}
 		}
