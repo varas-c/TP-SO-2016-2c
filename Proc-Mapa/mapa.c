@@ -592,13 +592,16 @@ void detectarDesconexiones5()
 
 }
 
-void verificarConexion(Jugador* jugador,int retval,int* quantum)
+int verificarConexion(Jugador* jugador,int retval,int* quantum)
 {
 	if(retval < 0)
 	{
 		desconectarJugador(jugador);
 		*quantum = 0;
+		return 1;
 	}
+
+	return 0;
 }
 
 
@@ -607,7 +610,7 @@ void verificarConexion(Jugador* jugador,int retval,int* quantum)
 void* thread_planificador()
 {
 
-	//nivel_gui_inicializar();
+	nivel_gui_inicializar();
 
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
@@ -638,7 +641,7 @@ void* thread_planificador()
 
 	while(!list_is_empty(colaListos))
 	{
-		detectarDesconexiones4();
+		//detectarDesconexiones4();
 		if(!list_is_empty(colaListos))
 		{
 
@@ -681,14 +684,14 @@ void* thread_planificador()
 					pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
 					pokenestEnviar = buscar_Pokenest(pokenestPedida); //Buscamos la info de la Pokenest pedida
 					retval = send_Pokenest(jugador->socket,pokenestEnviar); //Enviamos el paquete :D
-					verificarConexion(jugador,retval,&quantum);
+					flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
 				break;
 				case MOVER: //El entrenador se quiere mover
 					pos = dsrlz_movEntrenador(buffer_recv);//Obtengo las coordenadas X,Y
 					movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
 					retval = send_MoverOK(jugador->socket);
 					MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
-					verificarConexion(jugador,retval,&quantum);
+					flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
 					break;
 
 				case CAPTURAR: //TODO: FALTA COMPLETAR!!
@@ -701,9 +704,19 @@ void* thread_planificador()
 					if(queue_size(pokenest.colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
 					{
 						pokemon = queue_pop(pokenest.colaDePokemon);
-						list_add(jugador->pokemonCapturados,pokemon);
 						retval = send_capturaOK(jugador,pokemon);
-						verificarConexion(jugador,retval,&quantum);
+						flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
+
+						if(flag_DESCONECTADO == FALSE)
+						{
+							list_add(jugador->pokemonCapturados,pokemon);
+						}
+
+						else
+						{
+							queue_push(pokenest.colaDePokemon,pokemon);
+						}
+
 						quantum=0;
 					}
 
@@ -748,7 +761,7 @@ void* thread_planificador()
 
 		}//FIN WHILE
 
-		if(flag_DESCONECTADO != TRUE)
+		if(flag_DESCONECTADO == FALSE)
 		{
 		if(jugador->estado==0)
 		{
@@ -762,6 +775,9 @@ void* thread_planificador()
 		jugador=NULL;
 
 		}
+
+
+		flag_DESCONECTADO = FALSE;
 	}
 
 	}
@@ -774,13 +790,14 @@ int main(int argc, char** argv)
 
 	ParametrosMapa parametros;
 
-	/*
+
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
-	*/
 
+	/*
 	parametros.dirPokedex = "/mnt/pokedex";
 	parametros.nombreMapa = "PuebloPaleta";
+	*/
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);

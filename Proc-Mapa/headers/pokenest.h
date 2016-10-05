@@ -27,22 +27,11 @@ int send_Pokenest(int socket,MetadataPokenest pokenestEnviar)
 {
 	Paquete paquete;
 	paquete = srlz_Pokenest(pokenestEnviar); //Armamos un paquete serializado
-	int tam = 0;
+	int retval = 0;
 
-	close(socket);
-	tam = send(socket,paquete.buffer,paquete.tam_buffer,0);
+	retval = send(socket,paquete.buffer,paquete.tam_buffer,0);
 
-	if(errno == ENOTCONN)
-	{
-		exit(1);
-	}
-
-	if(errno == ECONNRESET)
-	{
-		exit(1);
-	}
-
-	return tam;
+	return retval;
 }
 
 #endif /* HEADERS_POKENEST_H_ */

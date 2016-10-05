@@ -28,6 +28,9 @@
 #include "headers/serializeEntrenador.h"
 
 
+
+
+int fd_server;
 int vidas_restantes;
 
 char* concatObjetivo(char* ciudad, char* obj)//El calculo es 4 de "obj[" + largociudad + "]" + /n
@@ -347,6 +350,20 @@ void manejar_signals(int operacion){
 	}
 }
 
+
+void sigHandler_endProcess(int signal)
+{
+	switch(signal)
+	{
+	case SIGINT || SIGTERM || SIGHUP:
+		close(fd_server);
+		printf("Atrapando %i ", signal);
+		exit(1);
+		break;
+
+	}
+}
+
 //*****************************************************************************
 
 Paquete recv_capturarPokemon(int fd_server)
@@ -477,9 +494,13 @@ int main(int argc, char** argv)
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
-
+	/*
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
+	*/
+
+	parametros.dirPokedex = "/mnt/pokedex";
+	parametros.nombreEntrenador = "Ash";
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
@@ -501,6 +522,9 @@ int main(int argc, char** argv)
 	signal(SIGUSR1, manejar_signals);
 	signal(SIGTERM, manejar_signals);
 
+	signal(SIGINT,sigHandler_endProcess);
+	signal(SIGHUP,sigHandler_endProcess);
+	signal(SIGTERM,sigHandler_endProcess);
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
@@ -515,14 +539,14 @@ int main(int argc, char** argv)
 		connect = leerConexionMapa(parametros.dirPokedex,mapa.nombre); //Leemos la información del Mapa nombre "LoQueSea"
 
 		//Ahora debemos conectarnos al mapa
-		int fd_server = get_fdServer(connect.ip,connect.puerto);
+		fd_server = get_fdServer(connect.ip,connect.puerto);
 		send_simboloEntrenador(mdata.simbolo, fd_server);
 
 		/*A partir de aca, ya nos conectamos al mapa, asi que tenemos que estar dentro de un While Interno hasta que terminamos
 		 * de capturar todos los pokemon, cuando terminamos, salimos del while interno y volvemos al externo.
 		 */
+		nivel.finNivel = 0;
 		pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
-
 		while(nivel.finNivel == 0) //Mientras que no hayamos ganado el nivel
 		{
 
@@ -531,10 +555,9 @@ int main(int argc, char** argv)
 				switch(opcion)
 				{
 					case POKENEST://Caso 1: QUEREMOS UNA POKENEST!
+
 						paquete = srlz_solicitarPokenest(pokenest);
 						send_solicitarPokenest(&paquete,fd_server);
-						close(fd_server);
-						exit(1);
 						recv_solicitarPokenest(&pokenest, fd_server);
 						calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
 						//send_coordenadas(entrenador);
@@ -559,7 +582,9 @@ int main(int argc, char** argv)
 						{
 							printf("Fin\n");
 							close(fd_server);
-							exit(1);
+							nivel.finNivel = 1;
+							nivel.nivelActual++;
+							nivel.numPokenest = 0;
 						}
 						else
 						{
