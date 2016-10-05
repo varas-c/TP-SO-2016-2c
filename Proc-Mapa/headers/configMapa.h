@@ -81,9 +81,8 @@ MetadataMapa leerMetadataMapa(ParametrosMapa parametros)         //Lee todos los
 	mdata.ip = malloc(strlen(auxiliar)+1);
 	strcpy(mdata.ip, auxiliar);
 
-	auxiliar = config_get_string_value(config,"Puerto");
-	mdata.puerto = malloc(strlen(auxiliar)+1);
-	strcpy(mdata.puerto, auxiliar);
+
+	mdata.puerto = config_get_int_value(config,"Puerto");
 
 	config_destroy(config);
 

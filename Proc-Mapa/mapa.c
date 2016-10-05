@@ -23,6 +23,7 @@
 #include <commons/collections/list.h>
 #include <dirent.h>
 #include <pkmn/battle.h>
+#include <semaphore.h>
 
 
 /****************************************************************************************************************
@@ -60,13 +61,15 @@ pthread_mutex_t mutex_Listos = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Bloqueados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Desconectados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
+sem_t semaforo_SincroSelect;
+
+
 
 int cant_jugadores = 0;
 fd_set fds_entrenadores;
 
 #include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
 
-bool ROBAR = FALSE;
 
 /****************************************************************************************************************
 			FUNCIONES DE LECTURA DE PARAMETROS POR CONSOLA (LOS QUE SE RECIBEN POR **ARGV)
@@ -443,14 +446,17 @@ Paquete srlz_capturaOK(Pokemon* pokemon)
 }
 
 
-void send_capturaOK(Jugador* jugador,Pokemon* pokemon)
+int send_capturaOK(Jugador* jugador,Pokemon* pokemon)
 {
 	Paquete paquete;
 	paquete = srlz_capturaOK(pokemon);
+	int retval;
 
-	send(jugador->socket,paquete.buffer,paquete.tam_buffer,0);
+	retval = send(jugador->socket,paquete.buffer,paquete.tam_buffer,0);
 
 	free(paquete.buffer);
+
+	return retval;
 }
 
 
@@ -478,14 +484,17 @@ Paquete srlz_MoverOK()
 
 
 
-void send_MoverOK(int socket)
+int send_MoverOK(int socket)
 {
 	Paquete paquete;
 	paquete = srlz_MoverOK();
 
-	send(socket,paquete.buffer,paquete.tam_buffer,0);
+	int retval;
+	retval = send(socket,paquete.buffer,paquete.tam_buffer,0);
 
 	free(paquete.buffer);
+
+	return retval;
 }
 
 
@@ -549,25 +558,56 @@ void detectarDesconexiones4()	//EL ULTIMATUM
 		int tamLista = list_size(colaListos);
 		int i=0;
 		void* buffer;
+		struct sockaddr mysock;
+		socklen_t addrlen = sizeof(mysock);
+
 		buffer = malloc(sizeof(int));
 		for(i=0;i<tamLista;i++){
 			pthread_mutex_lock(&mutex_Listos);
 			jugador = (Jugador*) list_get(colaListos,i);
 			pthread_mutex_unlock(&mutex_Listos);
-			getpeername(i, buffer,sizeof(int));
-			if(errno == ENOTCONN){
+			int cantbytes = getpeername(jugador->socket, &mysock,&addrlen);
+
+			if(cantbytes){
 				jugador = list_remove(colaListos,i);
 				desconectarJugador(jugador);
-				errno = 0;
 
 			}
+
+			if(errno == ENOTCONN)
+			{
+				jugador = list_remove(colaListos,i);
+				desconectarJugador(jugador);
+			}
+
+
 		}
+
+		//free(addrlen);
 }
+
+
+void detectarDesconexiones5()
+{
+
+}
+
+void verificarConexion(Jugador* jugador,int retval,int* quantum)
+{
+	if(retval < 0)
+	{
+		desconectarJugador(jugador);
+		*quantum = 0;
+	}
+}
+
+
+
 
 void* thread_planificador()
 {
 
-	nivel_gui_inicializar();
+	//nivel_gui_inicializar();
 
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
@@ -584,19 +624,24 @@ void* thread_planificador()
 	PosEntrenador pos;
 
 	MetadataPokenest pokenest;
+	bool flag_DESCONECTADO = FALSE;
+
 	while(1)
 	{
+
 	nivel_gui_dibujar(gui_items, "No hay jugadores");
 	usleep(mdataMapa.retardo*1000);
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
 
+	int retval = 0;
+
 	while(!list_is_empty(colaListos))
 	{
 		detectarDesconexiones4();
-
 		if(!list_is_empty(colaListos))
 		{
+
 		pthread_mutex_lock(&mutex_Listos);
 		jugador = list_remove(colaListos,0);
 		pthread_mutex_unlock(&mutex_Listos);
@@ -617,9 +662,11 @@ void* thread_planificador()
 
 			estado_socket = recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
-			if(estado_socket == 0)
+			if(estado_socket <= 0)
 			{
 				desconectarJugador(jugador);
+				quantum = 0;
+				flag_DESCONECTADO = TRUE;
 			}
 
 			else
@@ -633,14 +680,15 @@ void* thread_planificador()
 				case POKENEST: //Nos pidieron una pokenest, hay que entregarla:
 					pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
 					pokenestEnviar = buscar_Pokenest(pokenestPedida); //Buscamos la info de la Pokenest pedida
-					send_Pokenest(jugador->socket,pokenestEnviar); //Enviamos el paquete :D
+					retval = send_Pokenest(jugador->socket,pokenestEnviar); //Enviamos el paquete :D
+					verificarConexion(jugador,retval,&quantum);
 				break;
-
 				case MOVER: //El entrenador se quiere mover
 					pos = dsrlz_movEntrenador(buffer_recv);//Obtengo las coordenadas X,Y
 					movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
-					send_MoverOK(jugador->socket);
+					retval = send_MoverOK(jugador->socket);
 					MoverPersonaje(gui_items, jugador->entrenador.simbolo, jugador->entrenador.posx, jugador->entrenador.posy);
+					verificarConexion(jugador,retval,&quantum);
 					break;
 
 				case CAPTURAR: //TODO: FALTA COMPLETAR!!
@@ -654,7 +702,8 @@ void* thread_planificador()
 					{
 						pokemon = queue_pop(pokenest.colaDePokemon);
 						list_add(jugador->pokemonCapturados,pokemon);
-						send_capturaOK(jugador,pokemon);
+						retval = send_capturaOK(jugador,pokemon);
+						verificarConexion(jugador,retval,&quantum);
 						quantum=0;
 					}
 
@@ -667,13 +716,17 @@ void* thread_planificador()
 					}
 
 				break;
-				case FINOBJETIVOS:
-					//TODO:
+				case 0:
+					desconectarJugador(jugador);
+					quantum = 0;
 					break;
 
 				} //FIN SWITCH
 
 			}//FIN ELSE
+
+
+
 			int tam = list_size(colaListos);
 			sprintf(mostrar,"Quantum: %i -- Jugador: %i --TamLista: %i",quantum,jugador->socket,tam);
 
@@ -695,12 +748,15 @@ void* thread_planificador()
 
 		}//FIN WHILE
 
+		if(flag_DESCONECTADO != TRUE)
+		{
 		if(jugador->estado==0)
 		{
 			pthread_mutex_lock(&mutex_Listos);
 			list_add(colaListos,(void*)jugador);
 			pthread_mutex_unlock(&mutex_Listos);
 			quantum = 0;
+		}
 		}
 
 		jugador=NULL;
@@ -713,21 +769,23 @@ void* thread_planificador()
 
 int main(int argc, char** argv)
 {
+
+	sem_init(&semaforo_SincroSelect,0,0);
+
 	ParametrosMapa parametros;
 
+	/*
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	*/
 
 	parametros.dirPokedex = "/mnt/pokedex";
-	//parametros.nombreMapa = "PuebloLavanda";
+	parametros.nombreMapa = "PuebloPaleta";
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
 	log_info(infoLogger, "Se inicia Mapa.");
 
-	//Inicializamos espacio de dibujo
-
-	nivel_gui_inicializar();
 
 	gui_items = list_create();
 	listaPokenest= list_create();
@@ -757,7 +815,7 @@ int main(int argc, char** argv)
 	FD_ZERO(&fds_entrenadores);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);
 
-	listener = socket_startListener(atoi(mdataMapa.puerto));
+	listener = socket_startListener(mdataMapa.puerto);
 
 	// añadir listener al conjunto maestro
 	FD_SET(listener, &fds_entrenadores);
@@ -790,7 +848,7 @@ int main(int argc, char** argv)
 	int *aux2;
 	int tambuffer;
 	tambuffer = sizeof(int);
-	void* buffer = malloc(sizeof(int));
+	void* buffer;
 	int newfd;
 	char simboloEntrenador;
 
@@ -832,26 +890,15 @@ int main(int argc, char** argv)
 					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
 					log_info(infoLogger, "Jugador %c entra en Cola Listos", nuevoJugador.entrenador.simbolo);
 					//loggearColas();
-
 				}
-				/*else{
-					buffer = malloc(sizeof(int));
-					if(recv(i,buffer,tambuffer,MSG_PEEK) == 0)
-							{
-							aux2 = malloc(sizeof(int));
-							*aux2 = i;
-
-							pthread_mutex_lock(&mutex_Desconectados);
-							queue_push(colaDesconectados,aux2);
-							pthread_mutex_unlock(&mutex_Desconectados);
-
-							}
-
-					free(buffer);
-				}*/
 
 			}
 		}
+
+
+		sem_post(&semaforo_SincroSelect);
+
+
 	}
 
 	//TODO IMPORTANTE: anticipar la cancelacion del programa y ejecutar esto.

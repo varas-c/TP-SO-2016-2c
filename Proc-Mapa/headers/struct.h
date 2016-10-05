@@ -16,7 +16,7 @@ typedef struct    //MetadataMapa
 	int quantum;
 	int retardo;
 	char* ip;
-	char* puerto;
+	int puerto;
 }MetadataMapa;
 //****************************************************************************************************************
 

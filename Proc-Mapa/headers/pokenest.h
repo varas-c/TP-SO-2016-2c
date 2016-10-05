@@ -23,12 +23,26 @@ MetadataPokenest buscar_Pokenest(char simbolo)
 }
 //****************************************************************************************************************
 
-void send_Pokenest(int socket,MetadataPokenest pokenestEnviar)
+int send_Pokenest(int socket,MetadataPokenest pokenestEnviar)
 {
 	Paquete paquete;
 	paquete = srlz_Pokenest(pokenestEnviar); //Armamos un paquete serializado
+	int tam = 0;
 
-	send(socket,paquete.buffer,paquete.tam_buffer,0);
+	close(socket);
+	tam = send(socket,paquete.buffer,paquete.tam_buffer,0);
+
+	if(errno == ENOTCONN)
+	{
+		exit(1);
+	}
+
+	if(errno == ECONNRESET)
+	{
+		exit(1);
+	}
+
+	return tam;
 }
 
 #endif /* HEADERS_POKENEST_H_ */

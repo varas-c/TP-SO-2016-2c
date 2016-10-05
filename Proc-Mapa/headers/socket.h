@@ -82,11 +82,13 @@ int socket_addNewConection(int listener, fd_set *master, int *fdmax)
 	}
 
 	else {
+		/*
 		FD_SET(newfd, master); // añadir al conjunto maestro
 
 		if (newfd > *fdmax) {    // actualizar el máximo
 			*fdmax = newfd;
 		}
+		*/
 	//printf("selectserver: new connection from %s on ""socket %d\n", inet_ntoa(remoteaddr.sin_addr),newfd);
 	}
 	return newfd;

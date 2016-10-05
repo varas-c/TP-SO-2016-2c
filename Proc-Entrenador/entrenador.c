@@ -533,6 +533,8 @@ int main(int argc, char** argv)
 					case POKENEST://Caso 1: QUEREMOS UNA POKENEST!
 						paquete = srlz_solicitarPokenest(pokenest);
 						send_solicitarPokenest(&paquete,fd_server);
+						close(fd_server);
+						exit(1);
 						recv_solicitarPokenest(&pokenest, fd_server);
 						calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
 						//send_coordenadas(entrenador);
