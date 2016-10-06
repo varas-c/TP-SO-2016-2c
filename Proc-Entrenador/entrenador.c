@@ -59,11 +59,6 @@ void mostrarObjetivos (char **a)//Muestra los objetivos de un mapa
 	printf("\n");
 }
 
-char getNumObjetivo(int numero, char** objetivos)
-{
-	return objetivos[numero];
-
-}
 //******************************************
 
 int cantidadDeViajes(char** hojaDeViaje)//Cuenta la cantidad de viajes en una hoja de Viaje
@@ -495,18 +490,35 @@ void recv_MoverOK(int fdServer)
 
 }
 
+int getCantObjetivos(char** objetivos)
+{
+	int cantObjetivos=-1;
+	int index = 0;
+
+	while(objetivos[index] != '\0')
+	{
+			cantObjetivos++;
+			index++;
+	}
+
+	return cantObjetivos;
+
+
+}
+
 int main(int argc, char** argv)
 {
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
-	/*
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
-	*/
 
+
+	/*
 	parametros.dirPokedex = "/mnt/pokedex";
 	parametros.nombreEntrenador = "Ash";
+	*/
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
@@ -553,6 +565,8 @@ int main(int argc, char** argv)
 		 * de capturar todos los pokemon, cuando terminamos, salimos del while interno y volvemos al externo.
 		 */
 		nivel.finNivel = 0;
+		nivel.cantObjetivos = getCantObjetivos(mdata.objetivos[nivel.nivelActual]);
+
 		pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
 		while(nivel.finNivel == 0) //Mientras que no hayamos ganado el nivel
 		{
@@ -585,7 +599,7 @@ int main(int argc, char** argv)
 						nivel.numPokenest++;
 
 
-						if(getNumObjetivo(nivel.numPokenest,mdata.hojaDeViaje[nivel.nivelActual]) == '\0')
+						if(nivel.cantObjetivos <= nivel.numPokenest)
 						{
 							printf("Fin Nivel\n");
 							close(fd_server);
