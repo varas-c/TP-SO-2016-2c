@@ -596,7 +596,7 @@ int main(int argc, char** argv)
 						pokemonDat = dsrlz_capturarPokemon(&paquete);
 						//fflush(stdout);
 						printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
-						nivel.numPokenest++;
+
 
 
 						if(nivel.cantObjetivos <= nivel.numPokenest)
@@ -609,8 +609,13 @@ int main(int argc, char** argv)
 						}
 						else
 						{
+							nivel.numPokenest++;
 							pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
 						}
+
+
+
+
 					break;
 					case FINOBJETIVOS:
 						paquete = srlz_finObjetivos();

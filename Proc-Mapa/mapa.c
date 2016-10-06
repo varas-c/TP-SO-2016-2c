@@ -710,6 +710,7 @@ void* thread_planificador()
 						if(flag_DESCONECTADO == FALSE)
 						{
 							list_add(jugador->pokemonCapturados,pokemon);
+							restarRecurso(gui_items,pokenest.simbolo);
 						}
 
 						else
