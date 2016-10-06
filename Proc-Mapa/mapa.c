@@ -65,10 +65,10 @@ sem_t semaforo_SincroSelect;
 
 
 
-int cant_jugadores = 0;
+int global_cantJugadores = 0;
 fd_set fds_entrenadores;
 
-#include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
+//#include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
 
 
 /****************************************************************************************************************
@@ -631,7 +631,7 @@ void* thread_planificador()
 
 	while(1)
 	{
-
+	nivel_gui_dibujar(gui_items,"                                                    ");
 	nivel_gui_dibujar(gui_items, "No hay jugadores");
 	usleep(mdataMapa.retardo*1000);
 
@@ -742,7 +742,8 @@ void* thread_planificador()
 
 
 			int tam = list_size(colaListos);
-			sprintf(mostrar,"Quantum: %i -- Jugador: %i --TamLista: %i",quantum,jugador->socket,tam);
+
+			sprintf(mostrar,"Quantum: %i -- Jugador: %i --TamLista: %i",quantum,jugador->numero,tam);
 
 			//free(buffer_recv);
 
@@ -779,6 +780,8 @@ void* thread_planificador()
 
 
 		flag_DESCONECTADO = FALSE;
+
+
 	}
 
 	}
@@ -887,14 +890,15 @@ int main(int argc, char** argv)
 					//SE ACEPTA UN NUEVO ENTRENADOR
 					newfd = socket_addNewConection(listener,&fds_entrenadores,&fdmax);
 					simboloEntrenador = recv_simboloEntrenador(newfd);
-					cant_jugadores++;
-					nuevoJugador = new_Jugador(simboloEntrenador,newfd, cant_jugadores);
+					global_cantJugadores++;
+					nuevoJugador = new_Jugador(simboloEntrenador,newfd, global_cantJugadores);
 
 					aux = malloc(sizeof(Jugador)); //NO HACERLE FREE !!!!!!!!! LIBERAR CON EL PUNTERO PUSHEADO A LA COLA DE LISTOS
 					aux->entrenador = nuevoJugador.entrenador;
 					aux->socket = nuevoJugador.socket;
 					aux->estado = nuevoJugador.estado;
 					aux->pokemonCapturados = nuevoJugador.pokemonCapturados;
+					aux->numero = global_cantJugadores;
 
 					//Creamos el personaje
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);

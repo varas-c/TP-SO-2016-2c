@@ -59,7 +59,7 @@ typedef struct   //Jugador
 	t_list* pokemonCapturados;
 	int estado;
 	int socket;
-	int ingreso;
+	int numero;
 }Jugador;
 //****************************************************************************************************************
 
@@ -112,14 +112,14 @@ Entrenador new_Entrenador(char simbolo)
 }
 //****************************************************************************************************************
 
-Jugador new_Jugador(char simbolo, int socket, int ingreso){
+Jugador new_Jugador(char simbolo, int socket, int numero){
 
 	Jugador jugador;
 
 	jugador.entrenador = new_Entrenador(simbolo);
 	jugador.socket = socket;
 	jugador.estado = 0;
-	jugador.ingreso = ingreso;
+	jugador.numero = numero;
 	jugador.pokemonCapturados = list_create();
 
 	return jugador;
