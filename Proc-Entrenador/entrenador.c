@@ -27,9 +27,6 @@
 #include "headers/send.h"
 #include "headers/serializeEntrenador.h"
 
-
-
-
 int fd_server;
 int vidas_restantes;
 
@@ -42,7 +39,6 @@ char* concatObjetivo(char* ciudad, char* obj)//El calculo es 4 de "obj[" + largo
 	strcat(obj,"]");
 
 	return obj;
-
 }
 //******************************************
 
