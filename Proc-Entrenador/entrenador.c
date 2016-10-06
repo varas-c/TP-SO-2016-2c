@@ -58,6 +58,12 @@ void mostrarObjetivos (char **a)//Muestra los objetivos de un mapa
 	}
 	printf("\n");
 }
+
+char getNumObjetivo(int numero, char** objetivos)
+{
+	return objetivos[numero];
+
+}
 //******************************************
 
 int cantidadDeViajes(char** hojaDeViaje)//Cuenta la cantidad de viajes en una hoja de Viaje
@@ -355,7 +361,7 @@ void sigHandler_endProcess(int signal)
 {
 	switch(signal)
 	{
-	case SIGINT || SIGTERM || SIGHUP:
+	case SIGINT || SIGHUP:
 		close(fd_server);
 		printf("Atrapando %i ", signal);
 		exit(1);
@@ -401,7 +407,7 @@ char* dsrlz_capturarPokemon(Paquete* paquete)
 
 	memcpy(&lengthPokemonDat,paquete->buffer+sizeof(int),sizeof(int));
 
-	pokemonDat = malloc(sizeof(char)*lengthPokemonDat);
+	pokemonDat = malloc(sizeof(char)*lengthPokemonDat+1);
 
 	memcpy(pokemonDat,paquete->buffer+sizeof(int)*2,sizeof(char)*lengthPokemonDat);
 
@@ -507,6 +513,7 @@ int main(int argc, char** argv)
 	metadata mdata;
 	mdata = leerMetadataEntrenador(parametros);
 
+
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
 	Nivel nivel = new_nivel();
@@ -524,12 +531,12 @@ int main(int argc, char** argv)
 
 	signal(SIGINT,sigHandler_endProcess);
 	signal(SIGHUP,sigHandler_endProcess);
-	signal(SIGTERM,sigHandler_endProcess);
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
 	Pokenest pokenest;
 	char* pokemonDat;
+	char pokenestSiguiente;
 
 	while(1)
 	{
@@ -574,13 +581,13 @@ int main(int argc, char** argv)
 						paquete = recv_capturarPokemon(fd_server);
 						pokemonDat = dsrlz_capturarPokemon(&paquete);
 						//fflush(stdout);
-						printf("%s \n",pokemonDat);
+						printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
 						nivel.numPokenest++;
 
 
-						if(nivel.numPokenest == 3)
+						if(getNumObjetivo(nivel.numPokenest,mdata.hojaDeViaje[nivel.nivelActual]) == '\0')
 						{
-							printf("Fin\n");
+							printf("Fin Nivel\n");
 							close(fd_server);
 							nivel.finNivel = 1;
 							nivel.nivelActual++;
@@ -597,7 +604,7 @@ int main(int argc, char** argv)
 					break;
 				}
 
-				free(paquete.buffer);
+				//free(paquete.buffer);
 		//FUERA DEL WHILE INTERNO
 		//Una vez que salimos del While interno, quiere decir que terminamos el mapa y hay que pasar a otro
 		//Antes, el entrenador tiene que dirigirse a la Pokedex y copiar la respectiva medalla del mapa

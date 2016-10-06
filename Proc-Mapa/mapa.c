@@ -260,7 +260,7 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 
 	if(dpPokenest == NULL)
 	{
-	   perror("Error en countDirs - leerTodasLasPokenest() ");
+	   printf("Error -- Funcion: %s - Linea: %d ",__func__,__LINE__);
 	   exit(1);
 	}
 
@@ -305,8 +305,8 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 			{
 				pokemon = malloc(sizeof(Pokemon));
 				pokemon->numero = i;
-				pokemon->nombre = dptrPokenest->d_name;
-				pokemonDat = stringPokemonDat(dptrPokenest->d_name,i);
+				pokemon->nombre = strdup(dptrPokenest->d_name);
+				pokemonDat = stringPokemonDat(pokemon->nombre,i);
 				mdataPokemon = leerMetadataPokemon(rutaAux,pokemonDat);
 				pokemon->pokemon = create_pokemon(fabrica, dptrPokenest->d_name, mdataPokemon.nivel);
 				queue_push(pokenest->colaDePokemon,pokemon);
