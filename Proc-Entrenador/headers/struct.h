@@ -74,6 +74,7 @@ typedef struct //Nivel
 	int finNivel;
 	int nivelActual;
 	int numPokenest;
+	int cantObjetivos;
 }Nivel;
 
 //***************//********!!!!!!!!!!!NEW DE STRUCTS!!!!!!!!!!!!!!//***************//***************
