@@ -56,6 +56,7 @@ int buscarIndice(unsigned char*, int);
 int obtenerPrimerBloque(int);
 int obtenerBloqueSgte(int);
 int encontrarBloqueLibre();
+int liberarBloque(int, uint8_t);
 void borrarArchivo(int);
 int* obtenerBloques(int, int*);
 int obtenerArchivo(char*);
@@ -216,16 +217,41 @@ int encontrarBloqueLibre()
 		return -1;
 }
 
+int liberarBloque(int bloque, uint8_t eliminarEnlace)
+{
+	if (bloque<0)
+		return -1;
+
+	if (eliminarEnlace)
+	{
+		int i;
+
+		for(i=0;i<header->data_blocks, i>=0;i++)
+		{
+			if (tablaAsignaciones[i]==bloque)
+			{
+				printf("Bloque vale: %d. El bloque que lo contiene es %d.\n\n", bloque, i);
+				tablaAsignaciones[i]=tablaAsignaciones[bloque];
+				i=-2;
+			}
+		}
+	}
+	marcarBloque(bloque, 0);
+
+	return 1;
+}
+
 int reservarNuevoBloque(int bloqueAnterior)
 {
 	int nuevoBloque=encontrarBloqueLibre();
 	if (nuevoBloque<0)
 		return -1;
-	else
-	{
-		marcarBloque(nuevoBloque, 1);
+
+	marcarBloque(nuevoBloque, 1);
+	if (bloqueAnterior>=0)
 		tablaAsignaciones[bloqueAnterior]=nuevoBloque;
-	}
+
+	tablaAsignaciones[nuevoBloque]=BLOQUE_NULO;
 	return nuevoBloque;
 }
 
@@ -256,8 +282,21 @@ int actualizar(int archivo, void* nuevosDatos, int cantidadBytes, int offset)
 		return 0;
 
 	int nroBloques = tablaArchivos[archivo].file_size / OSADA_BLOCK_SIZE + ((tablaArchivos[archivo].file_size % OSADA_BLOCK_SIZE)>0);
+	int bloqueInicial = 0;
 
-	if (guardarDesdeBloque(offset/(nroBloques*OSADA_BLOCK_SIZE), nuevosDatos, cantidadBytes, offset))
+	if(nroBloques==0)
+	{
+		bloqueInicial = reservarNuevoBloque(-1);
+		if (bloqueInicial<0)
+			return 0;
+		tablaArchivos[archivo].first_block = bloqueInicial;
+	}
+
+	int* bloques = obtenerBloques(archivo, &bloqueInicial); //Uso bloqueInicial porque no me sirve la cantidad
+	bloqueInicial = nroBloques==0 ? 0 : offset/(nroBloques*OSADA_BLOCK_SIZE);
+
+
+	if (guardarDesdeBloque(bloques[bloqueInicial], nuevosDatos, cantidadBytes, offset))
 	{
 		if (cantidadBytes + offset > tablaArchivos[archivo].file_size)
 			tablaArchivos[archivo].file_size = cantidadBytes + offset;
@@ -353,13 +392,41 @@ static int osada_read(const char *path, char *buf, size_t size, off_t offset,
 	return size;
 }
 
+int osada_truncate(const char * path, off_t size) //Truncate debe estar para que write funcione
+{
+	int archivo = obtenerArchivo(path);
+	if (archivo<0)
+		return -ENOENT;
+	else
+	{
+
+		int cantidad=0;
+		int* bloques = obtenerBloques(archivo, &cantidad);
+		int bloquesNecesarios = size/OSADA_BLOCK_SIZE + ((size%OSADA_BLOCK_SIZE)>0);
+		for(;cantidad>bloquesNecesarios; cantidad--)
+		{
+			if (cantidad>1)
+				liberarBloque(bloques[cantidad-1], 1);
+			else
+			{
+				tablaArchivos[archivo].first_block = BLOQUE_NULO;
+				liberarBloque(bloques[cantidad-1], 0);
+			}
+		}
+
+		tablaArchivos[archivo].file_size = size;
+	}
+
+	return 0;
+}
+
 static int osada_write(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi) {
 
 	int archivo = obtenerArchivo(path);
-	printf("\n\n\n\nEntra a Write\n\n\n\n");
+
 	if (!actualizar(archivo, buf, size, offset))
-			return 0;
+		return 0;
 
 	return size;
 }
@@ -368,6 +435,7 @@ static struct fuse_operations osada_oper = {
 		.getattr = osada_getattr,
 		.readdir = osada_readdir,
 		.read = osada_read,
+		.truncate = osada_truncate,
 		.write = osada_write,
 };
 
