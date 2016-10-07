@@ -1,0 +1,1 @@
+TestEntrenadores.d: ../TestEntrenadores.c
