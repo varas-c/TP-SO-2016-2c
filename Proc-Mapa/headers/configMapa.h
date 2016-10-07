@@ -184,8 +184,8 @@ MetadataPokemon leerMetadataPokemon(char* ruta, char* nombreArchivo)   //Lee tod
 ParametrosMapa leerParametrosConsola(char** argv)
 {
 	ParametrosMapa parametros;
-	parametros.nombreMapa = argv[2];
-	parametros.dirPokedex = argv[1];
+	parametros.nombreMapa = strdup(argv[2]);
+	parametros.dirPokedex = strdup(argv[1]);
 
 	return parametros;
 }

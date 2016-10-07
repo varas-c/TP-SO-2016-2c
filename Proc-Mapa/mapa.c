@@ -67,6 +67,7 @@ sem_t semaforo_SincroSelect;
 
 int global_cantJugadores = 0;
 fd_set fds_entrenadores;
+ParametrosMapa parametros;
 
 //#include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
 
@@ -622,7 +623,7 @@ void* thread_planificador()
 
 	char pokenestPedida;
 	MetadataPokenest pokenestEnviar;
-	char* mostrar = malloc(100);
+	char* mostrar = malloc(sizeof(char)*256);
 
 	PosEntrenador pos;
 
@@ -631,8 +632,9 @@ void* thread_planificador()
 
 	while(1)
 	{
-	nivel_gui_dibujar(gui_items,"                                                    ");
-	nivel_gui_dibujar(gui_items, "No hay jugadores");
+	nivel_gui_dibujar(gui_items,"                                                           ");
+	sprintf(mostrar,"Mapa: %s -- No hay jugadores",parametros.nombreMapa);
+	nivel_gui_dibujar(gui_items, mostrar);
 	usleep(mdataMapa.retardo*1000);
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
@@ -743,7 +745,7 @@ void* thread_planificador()
 
 			int tam = list_size(colaListos);
 
-			sprintf(mostrar,"Quantum: %i -- Jugador: %i --TamLista: %i",quantum,jugador->numero,tam);
+			sprintf(mostrar,"Mapa: %s - Quantum: %i - Jugador: %i - TamLista: %i",parametros.nombreMapa,quantum,jugador->numero,tam);
 
 			//free(buffer_recv);
 
@@ -791,9 +793,6 @@ int main(int argc, char** argv)
 {
 
 	sem_init(&semaforo_SincroSelect,0,0);
-
-	ParametrosMapa parametros;
-
 
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola

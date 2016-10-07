@@ -17,6 +17,7 @@ typedef struct    //MetadataMapa
 	int retardo;
 	char* ip;
 	int puerto;
+	char* nombre;
 }MetadataMapa;
 //****************************************************************************************************************
 
