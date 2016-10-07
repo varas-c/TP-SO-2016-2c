@@ -93,4 +93,60 @@ Paquete srlz_finObjetivos()
 }
 
 
+Paquete srlz_solicitarPokenest(Pokenest pokenest)
+{
+	Paquete paquete;
+	paquete.buffer = malloc(size_POKENEST_request);
+	paquete.tam_buffer = size_POKENEST_request;
+
+	int codigo = POKENEST;
+
+	//Copiamos primero el codigo, despues el simbolo de la Pokenest
+	memcpy(paquete.buffer,&codigo,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int),&(pokenest.simbolo),sizeof(char));
+
+	return paquete;
+}
+
+//************************************************************************
+
+int dsrlz_codigoOperacion(void* buffer)
+{
+	int codOp;
+	memcpy(&codOp,buffer,sizeof(int));
+	return codOp;
+}
+
+char* dsrlz_capturarPokemon(Paquete* paquete)
+{
+	int codOp;
+	int lengthPokemonDat;
+	char *pokemonDat;
+
+	codOp = dsrlz_codigoOperacion(paquete->buffer);
+
+	if(codOp != CAPTURA_OK)
+	{
+		perror("dsrlz_capturarPokemon - Codigo de Operacion CAPTURA_OK invalido");
+		exit(1);
+	}
+
+	memcpy(&lengthPokemonDat,paquete->buffer+sizeof(int),sizeof(int));
+
+	pokemonDat = malloc(sizeof(char)*lengthPokemonDat+1);
+
+	memcpy(pokemonDat,paquete->buffer+sizeof(int)*2,sizeof(char)*lengthPokemonDat);
+
+	return pokemonDat;
+}
+
+int dsrlz_MoverOK(void* buffer)
+{
+	int codOp = 0;
+	memcpy(&codOp,buffer,sizeof(int));
+	return codOp;
+}
+
+
+
 #endif /* HEADERS_SERIALIZEENTRENADOR_H_ */

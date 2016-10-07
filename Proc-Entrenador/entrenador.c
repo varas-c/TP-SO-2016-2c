@@ -26,7 +26,7 @@
 #include "headers/configEntrenador.h"
 #include "headers/send.h"
 #include "headers/serializeEntrenador.h"
-
+#include "headers/pokenest.h"
 int fd_server;
 int vidas_restantes;
 
@@ -190,23 +190,6 @@ int recv_turnoConcedido(int fd_server)
 	return 0;
 }
 //****************************************
-
-int faltaPokenest(Pokenest pokenest)//Si la pokenest tiene posx y posy = -1 es porque no tenemos datos,hay que leer
-{
-	return pokenest.posx == -1 || pokenest.posy == -1;
-}
-//****************************************//****************************************
-
-int llegueAPokenest(const Entrenador entrenador, const Pokenest pokenest)
-{
-	if(entrenador.posx == pokenest.posx && entrenador.posy == pokenest.posy)
-	{
-		return 1;
-	}
-	return 0;
-}
-//****************************************//****************************************
-
 int evaluar_opciones(Entrenador entrenador, Pokenest pokenest)
 {
 	/*Accion numero 1
@@ -228,110 +211,7 @@ int evaluar_opciones(Entrenador entrenador, Pokenest pokenest)
 }
 //****************************************//****************************************
 
-void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
-{
-	int valor_recv;
-	int codigo;
-	int tam_buffer = size_POKENEST_response;
 
-	char* buffer = malloc(tam_buffer);
-
-	valor_recv = recv(fd_server, buffer, tam_buffer, 0);// Se almacena el mensaje recibido en BUFFER
-
-	if(valor_recv == -1)  {
-		perror("Error recv"); //Hubo fallo, chau programa.
-		exit(1);
-	}
-
-	//Verificamos que el codigo sea correcto
-	memcpy(&codigo,buffer,sizeof(int));
-
-	if(codigo != POKENEST)
-	{
-		perror("CODIGO DE ERROR - RECV POKENEST");
-		exit(1);
-	}
-
-	char simboloAux;
-
-	memcpy(&simboloAux,buffer+sizeof(int),sizeof(char));
-
-	if(pokenest->simbolo != simboloAux)
-	{
-		exit(1);
-	}
-
-	memcpy(&(pokenest->posx),buffer+sizeof(int)+sizeof(char),sizeof(int));
-	memcpy(&(pokenest->posy),buffer+sizeof(int)+sizeof(char)+sizeof(int),sizeof(int));
-
-	free(buffer);
-}
-
-void calcular_coordenadas(Entrenador* entrenador, int x, int y)
-{
-	//Pregunto por X
-
-	if(x > entrenador->posx)
-	{
-		entrenador ->destinox = x - entrenador->posx;
-	}
-
-	if(entrenador->posx == x)
-	{
-		entrenador ->destinox = 0;
-	}
-
-	if(x < entrenador->posx)
-	{
-		entrenador->destinox = x - entrenador->posx;
-	}
-
-	//Pregunto por y
-
-	if(y > entrenador->posy)
-	{
-		entrenador ->destinoy = y - entrenador->posy;
-	}
-
-	if(entrenador->posy == y)
-	{
-		entrenador ->destinoy = 0;
-	}
-
-	if(y < entrenador->posy)
-	{
-		entrenador->destinoy = y - entrenador->posy;
-	}
-}
-
-
-
-
-//*********************************
-//********************************
-
-void send_coordenadas(Entrenador entrenador)
-{
-
-}
-
-
-Paquete srlz_solicitarPokenest(Pokenest pokenest)
-{
-	Paquete paquete;
-	paquete.buffer = malloc(size_POKENEST_request);
-	paquete.tam_buffer = size_POKENEST_request;
-
-	int codigo = POKENEST;
-
-	//Copiamos primero el codigo, despues el simbolo de la Pokenest
-	memcpy(paquete.buffer,&codigo,sizeof(int));
-	memcpy(paquete.buffer+sizeof(int),&(pokenest.simbolo),sizeof(char));
-
-	return paquete;
-}
-
-//************************************************************************
 
 void manejar_signals(int operacion){
 	switch(operacion){
@@ -374,100 +254,12 @@ Paquete recv_capturarPokemon(int fd_server)
 
 	return paquete;
 }
-
-int dsrlz_codigoOperacion(void* buffer)
-{
-	int codOp;
-	memcpy(&codOp,buffer,sizeof(int));
-	return codOp;
-}
-
-char* dsrlz_capturarPokemon(Paquete* paquete)
-{
-	int codOp;
-	int lengthPokemonDat;
-	char *pokemonDat;
-
-	codOp = dsrlz_codigoOperacion(paquete->buffer);
-
-	if(codOp != CAPTURA_OK)
-	{
-		perror("dsrlz_capturarPokemon - Codigo de Operacion CAPTURA_OK invalido");
-		exit(1);
-	}
-
-	memcpy(&lengthPokemonDat,paquete->buffer+sizeof(int),sizeof(int));
-
-	pokemonDat = malloc(sizeof(char)*lengthPokemonDat+1);
-
-	memcpy(pokemonDat,paquete->buffer+sizeof(int)*2,sizeof(char)*lengthPokemonDat);
-
-	return pokemonDat;
-}
-
 int sizeofString(char* cadena)
 {
 	int size = 0;
 	size = sizeof(char)*strlen(cadena);
 	return size;
 }
-char* getRutaMetadata(ParametrosConsola parametros)
-{
-	char* pathEntrenadores= "Entrenadores";
-	char* pathMetadata = "metadata.config";
-	char* slash = "/";
-
-	int tamPathPokedex =sizeofString(parametros.dirPokedex);
-	int tamNombreEntrenador = sizeofString(parametros.nombreEntrenador);
-	int tamPathEntrenadores = sizeofString(pathEntrenadores);
-	int tamSlash = sizeofString(slash);
-	int tamPathMetadata = sizeofString(pathMetadata);
-
-	// RUTAPOKEDEX + SLASH + ENTRENADORES + SLASH + NOMBREENTRENADOR + SLASH + METADATA
-	int tamCadena = tamPathPokedex + tamSlash + tamPathEntrenadores + tamSlash + tamNombreEntrenador + tamSlash + tamPathMetadata + 1;
-
-	char* rutaALeer = malloc(tamCadena);
-
-	if(rutaALeer == NULL)
-	{
-		perror("funcion: rutaMetadata() - rutaALeer == NULL - Error Malloc()" );
-		exit(1);
-	}
-
-	strcpy(rutaALeer,parametros.dirPokedex);
-	strcat(rutaALeer,slash);
-	strcat(rutaALeer,pathEntrenadores);
-	strcat(rutaALeer,slash);
-	strcat(rutaALeer,parametros.nombreEntrenador);
-	strcat(rutaALeer,slash);
-	strcat(rutaALeer,pathMetadata);
-
-
-	return rutaALeer;
-
-
-
-}
-
-metadata leerMetadataEntrenador(ParametrosConsola parametros)
-{
-	metadata mdata;
-	char* rutaMetadata = getRutaMetadata(parametros);
-	mdata = leerMetadata(rutaMetadata);
-
-	free(rutaMetadata);
-	return mdata;
-
-}
-
-int dsrlz_MoverOK(void* buffer)
-{
-	int codOp = 0;
-	memcpy(&codOp,buffer,sizeof(int));
-	return codOp;
-}
-
-
 void recv_MoverOK(int fdServer)
 {
 	Paquete paquete;

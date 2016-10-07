@@ -162,5 +162,54 @@ char* obtenerNombreMapa(char** hojaDeViaje, int numeroMapa)
 	char *a = strdup(hojaDeViaje[numeroMapa]);
 	return a;
 }
+char* getRutaMetadata(ParametrosConsola parametros)
+{
+	char* pathEntrenadores= "Entrenadores";
+	char* pathMetadata = "metadata.config";
+	char* slash = "/";
+
+	int tamPathPokedex =sizeofString(parametros.dirPokedex);
+	int tamNombreEntrenador = sizeofString(parametros.nombreEntrenador);
+	int tamPathEntrenadores = sizeofString(pathEntrenadores);
+	int tamSlash = sizeofString(slash);
+	int tamPathMetadata = sizeofString(pathMetadata);
+
+	// RUTAPOKEDEX + SLASH + ENTRENADORES + SLASH + NOMBREENTRENADOR + SLASH + METADATA
+	int tamCadena = tamPathPokedex + tamSlash + tamPathEntrenadores + tamSlash + tamNombreEntrenador + tamSlash + tamPathMetadata + 1;
+
+	char* rutaALeer = malloc(tamCadena);
+
+	if(rutaALeer == NULL)
+	{
+		perror("funcion: rutaMetadata() - rutaALeer == NULL - Error Malloc()" );
+		exit(1);
+	}
+
+	strcpy(rutaALeer,parametros.dirPokedex);
+	strcat(rutaALeer,slash);
+	strcat(rutaALeer,pathEntrenadores);
+	strcat(rutaALeer,slash);
+	strcat(rutaALeer,parametros.nombreEntrenador);
+	strcat(rutaALeer,slash);
+	strcat(rutaALeer,pathMetadata);
+
+
+	return rutaALeer;
+
+
+
+}
+
+metadata leerMetadataEntrenador(ParametrosConsola parametros)
+{
+	metadata mdata;
+	char* rutaMetadata = getRutaMetadata(parametros);
+	mdata = leerMetadata(rutaMetadata);
+
+	free(rutaMetadata);
+	return mdata;
+
+}
+
 
 #endif /* HEADERS_CONFIGENTRENADOR_H_ */
