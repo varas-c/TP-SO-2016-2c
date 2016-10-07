@@ -27,72 +27,385 @@
 #include <stddef.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include "headers/osada.h"
+#include <commons/bitarray.h>
+#include <commons/string.h>
 
-#define DEFAULT_FILE_CONTENT "Hello World!\n"
-#define DEFAULT_FILE_NAME "Archivo"
-#define DEFAULT_FILE_PATH "/" DEFAULT_FILE_NAME
+#define BLOQUE_NULO 0xFFFFFFFF
+#define DIRECTORIO_NULO 0xFFFF
 
-//Se llama cada vez que se tiene que mostrar un archivo en un directorio, para conocer sus atributos.
-static int prueba_getattr(const char *path, struct stat *stbuf) {
-	/* Esta implementacion le da el tipo archivo simple a cualquier archivo que se encuentre en
-	 * el directorio raíz del punto de montaje y se llame "Archivo". A cualquier otra cosa, le da un
-	 * tipo directorio.*/
-	int res = 0;
-	memset(stbuf, 0, sizeof(struct stat));
-	//Si path es igual a "/" nos estan pidiendo los atributos del punto de montaje
-	if (strcmp(path, "/") == 0) {
-		/* stat contendrá todas las características asociadas al archivo recibido, entre otras:
-		 * mode: tipo del archivo. IFDIR es para directorio e IFREG es para archivo simple.
-		 * nlink: número de hardlinks (ver descripción más abajo).
-		 * Ni idea para qué sirve | número. Sé que | es un OR binario, pero no cuál es la utilidad en estos casos.*/
-		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 2;
-	} else if (strcmp(path, DEFAULT_FILE_PATH) == 0) {
-		stbuf->st_mode = S_IFREG | 0444;
-		stbuf->st_nlink = 1;
-		stbuf->st_size = strlen(DEFAULT_FILE_CONTENT); //Tamaño del archivo en bytes.
-	} else {
-		stbuf->st_mode = S_IFDIR;
-		stbuf->st_nlink = 2;
-	}
 
-	if (strcmp(path, "") == 0)
-		res = -ENOENT; //Error que indica archivo no encontrado.
-	return res;
+//**** VARIABLES GLOBALES ****
+osada_header* header;
+t_bitarray bitmap;
+osada_file* tablaArchivos;
+osada_block_pointer* tablaAsignaciones;
+int tamanioAsig;
+osada_block* inicioDatos;
+int tamanioAdmin;
+
+//**** PROTOTIPOS ****
+void marcarBloque(osada_block_pointer, uint8_t);
+void guardarBloque(osada_block, int);
+osada_block_pointer* obtenerPtroBloque(int);
+int buscarIndice(unsigned char*, int);
+int obtenerPrimerBloque(int);
+int obtenerBloqueSgte(int);
+int encontrarBloqueLibre();
+void borrarArchivo(int);
+int* obtenerBloques(int, int*);
+int obtenerArchivo(char*);
+unsigned char* concatenarBloques(int*, int);
+int reservarNuevoBloque(int);
+int guardarDesdeBloque(int, void*, int, int);
+int actualizar(int, void*, int, int);
+
+
+void marcarBloque(osada_block_pointer bloque, uint8_t valor)
+{
+	if (valor)
+		bitarray_set_bit(&bitmap, bloque+tamanioAdmin);
+	else
+		bitarray_clean_bit(&bitmap, bloque+tamanioAdmin);
 }
 
-//Se invoca cada vez que se quieran conocer los archivos dentro de un directorio.
-static int prueba_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
-	/* Esta implementación impone 2 archivos por directorio, uno llamado Archivo y otro Subcarpeta. El tipo
-	 * de cada uno se determina llamando a getattr (1 vez para cada uno).*/
-	(void) offset;
-	(void) fi;
-	//if (strcmp(path, "/") != 0)
-		//return -ENOENT;
-	/* "." y ".." son entradas válidas, la primera es una referencia al directorio donde estamos parados
-	* y la segunda indica el directorio padre. Éstos son hardlinks. Según tengo entendido, un hardlink es un
-	* atributo obligatorio en un archivo. Si se fijan más arriba, un directorio tiene 2, "." y "..", y un
-	* archivo simple tiene 1, que aparentemente es ".".
-	* Después está el filler. No sé como carajo funciona, pero parece que completa buf con la cadena
-	* segundo parámetro. El resto, creo que van por defecto en esos valores. Habría que investigarlo más.*/
-	filler(buf, ".", NULL, 0);
-	filler(buf, "..", NULL, 0);
-	filler(buf, DEFAULT_FILE_NAME, NULL, 0);
-	filler(buf, "Subcarpeta", NULL, 0);
+void guardarBloque(osada_block dato, int bloque) //Podría agregarse la búsqueda de un bloque libre
+{
+	memset(inicioDatos[bloque], 0, OSADA_BLOCK_SIZE);
+	memcpy(inicioDatos[bloque], dato, OSADA_BLOCK_SIZE);
+	marcarBloque(bloque, 1);
+}
+
+osada_block_pointer* obtenerPtroBloque(int indice)
+{
+	return inicioDatos+indice;
+}
+
+int buscarIndice(unsigned char* archivo, int dirPadre) //Para ignorar dirPadre, asignarle un negativo.
+{
+	int i;
+	for (i=0;i<2048;i++)
+	{
+		if (!strcmp(tablaArchivos[i].fname, archivo)) //Recordar que strcmp devuelve 0 si son iguales
+			if (dirPadre < 0 || tablaArchivos[i].parent_directory == dirPadre)
+				return i;
+	}
+	return -1;
+}
+
+int obtenerPrimerBloque(int indice)
+{
+	if (indice<0 || indice>=2048)
+		return -1;
+	else
+		return tablaAsignaciones[tablaArchivos[indice].first_block];
+}
+
+int obtenerBloqueSgte(int bloqueActual)
+{
+	if (bloqueActual<0)
+		return -1;
+	else
+		return tablaAsignaciones[bloqueActual];
+}
+
+void borrarArchivo(int indice)
+{
+	tablaArchivos[indice].state=DELETED;
+	int tamanio=0;
+	int* bloques=obtenerBloques(indice, &tamanio);
+	tamanio--;
+	for(;tamanio>0;tamanio--)
+		marcarBloque(bloques[tamanio], 0);
+}
+
+int* obtenerBloques(int indice, int* size) //Devuelve en orden los índices de los bloques que conforman el archivo.
+{
+	int* array;
+	int tamanio=0;
+	if (indice<0)
+	{
+		*size=-1;
+		return NULL;
+	}
+	else
+	{
+		if (tablaArchivos[indice].first_block==BLOQUE_NULO)
+		{
+			*size=0;
+			return NULL;
+		}
+		else
+		{
+			array=malloc(sizeof(int));
+			if (array==NULL) return NULL; //Verificacion de malloc
+			array[0]=tablaArchivos[indice].first_block;
+			int i = 0;
+			tamanio++;
+			while(tablaAsignaciones[array[i]]!=BLOQUE_NULO)
+			{
+				array=realloc(array, tamanio*sizeof(int)+sizeof(int));
+				if (array==NULL) //Verificacion de realloc
+				{
+					*size=-1;
+					return NULL;
+				}
+				tamanio++;
+				array[i+1]=tablaAsignaciones[array[i]];
+				i++;
+			}
+			(*size)=tamanio;
+			return array;
+		}
+	}
+}
+
+int obtenerArchivo(char* path)
+{
+	int i = 0;
+	while(path[i]!=0 && path[i]=='/')
+		i++;
+	if (i==strlen(path))
+		return-1;
+	else
+		i = 0;
+	char** directorios=NULL;
+	int dirActual=DIRECTORIO_NULO;
+	directorios = string_split(path, "/");
+
+	while(directorios[i]!=NULL)
+	{
+		dirActual = buscarIndice(directorios[i], dirActual);
+		if (dirActual<0)
+			return -1;
+		i++;
+	}
+
+	if (!i)
+		return -1;
+	else
+		return dirActual;
+}
+
+unsigned char* concatenarBloques(int* indicesBloques, int arraySize)
+{
+	unsigned char* contenido;
+	int i;
+
+	contenido = malloc(OSADA_BLOCK_SIZE*arraySize);
+	memset(contenido, 0, arraySize*OSADA_BLOCK_SIZE);
+
+	for(i=0; i<arraySize;i++)
+		memcpy(contenido+(i*OSADA_BLOCK_SIZE), inicioDatos[indicesBloques[i]], OSADA_BLOCK_SIZE);
+
+	return contenido;
+}
+
+int encontrarBloqueLibre()
+{
+	int i;
+	for(i = tamanioAdmin; bitarray_test_bit(&bitmap, i) && i<header->fs_blocks;i++);
+
+	if (i<header->fs_blocks)
+		return i-tamanioAdmin;
+	else
+		return -1;
+}
+
+int reservarNuevoBloque(int bloqueAnterior)
+{
+	int nuevoBloque=encontrarBloqueLibre();
+	if (nuevoBloque<0)
+		return -1;
+	else
+	{
+		marcarBloque(nuevoBloque, 1);
+		tablaAsignaciones[bloqueAnterior]=nuevoBloque;
+	}
+	return nuevoBloque;
+}
+
+int guardarDesdeBloque(int bloqueActual, void* datos, int cantBytes, int offset)
+{
+	osada_block bloqueAux;
+	memcpy(bloqueAux, inicioDatos[bloqueActual], OSADA_BLOCK_SIZE);
+	int bytesCopiados= cantBytes>OSADA_BLOCK_SIZE ? OSADA_BLOCK_SIZE-offset : cantBytes;
+	memcpy(bloqueAux+offset, datos, bytesCopiados);
+	int bloqueSgte;
+
+	if (cantBytes!=bytesCopiados)
+	{
+		if ((bloqueSgte = obtenerBloqueSgte(bloqueActual))==BLOQUE_NULO)
+			if ((bloqueSgte = reservarNuevoBloque(bloqueActual))<0)
+				return 0;
+
+		if(!guardarDesdeBloque(bloqueSgte, datos+bytesCopiados, cantBytes-bytesCopiados, 0))
+			return 0;
+	}
+	guardarBloque(bloqueAux, bloqueActual);
+	return 1;
+}
+
+int actualizar(int archivo, void* nuevosDatos, int cantidadBytes, int offset)
+{
+	if (tablaArchivos[archivo].state != REGULAR || tablaArchivos[archivo].file_size < offset)
+		return 0;
+
+	int nroBloques = tablaArchivos[archivo].file_size / OSADA_BLOCK_SIZE + ((tablaArchivos[archivo].file_size % OSADA_BLOCK_SIZE)>0);
+
+	if (guardarDesdeBloque(offset/(nroBloques*OSADA_BLOCK_SIZE), nuevosDatos, cantidadBytes, offset))
+	{
+		if (cantidadBytes + offset > tablaArchivos[archivo].file_size)
+			tablaArchivos[archivo].file_size = cantidadBytes + offset;
+	}
+	else
+		return 0;
+
+	return 1;
+}
+
+
+static int osada_getattr(const char *path, struct stat *stbuf) {
+
+	int res = 0;
+	memset(stbuf, 0, sizeof(struct stat));
+
+	if (strcmp(path, "/") == 0)
+	{
+		stbuf->st_mode = S_IFDIR | 0777;
+		stbuf->st_nlink = 2;
+	}
+	else
+	{
+		if ((res = obtenerArchivo(path))<0)
+			return -ENOENT;
+		else
+		{
+			if (tablaArchivos[res].state == DIRECTORY)
+			{
+				stbuf->st_mode = S_IFDIR | 0777;
+				stbuf->st_nlink = 2;
+			}
+			else if (tablaArchivos[res].state == REGULAR)
+			{
+				stbuf->st_mode = S_IFREG | 0777;
+				stbuf->st_nlink = 1;
+				stbuf->st_size = (__off_t)tablaArchivos[res].file_size;
+			}
+			else
+				return -ENOENT;
+		}
+	}
+
 	return 0;
 }
 
-//Éstas son las operaciones del filesystem que FUSE va a "wrappear". Para el tp hay que agregar más.
-static struct fuse_operations prueba_oper = {
-		.getattr = prueba_getattr,
-		.readdir = prueba_readdir,
+
+static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
+
+	int res=0;
+
+	if (strcmp(path, "/") == 0)
+	{
+		int i;
+		for (i=0;i<2048;i++)
+		{
+			if (tablaArchivos[i].state != DELETED && tablaArchivos[i].parent_directory == DIRECTORIO_NULO)
+				filler(buf, tablaArchivos[i].fname, NULL, 0);
+		}
+	}
+	else if ((res=obtenerArchivo(path))<0)
+		return -ENOENT;
+	else if (tablaArchivos[res].state == DELETED)
+		return -ENOENT;
+	else
+	{
+		filler(buf, ".", NULL, 0);
+		filler(buf, "..", NULL, 0);
+		int i;
+		for (i=0;i<2048;i++)
+		{
+			if (tablaArchivos[i].state != DELETED && tablaArchivos[i].parent_directory == res)
+
+				filler(buf, tablaArchivos[i].fname, NULL, 0);
+		}
+	}
+	return 0;
+}
+
+static int osada_read(const char *path, char *buf, size_t size, off_t offset,
+		struct fuse_file_info *fi) {
+
+	int archivo = obtenerArchivo(path);
+	int cantidad = 0;
+	int *bloques = obtenerBloques(archivo, &cantidad);
+	unsigned char* contenidoArchivo;
+
+	contenidoArchivo=concatenarBloques(bloques, cantidad);
+	memcpy(buf, contenidoArchivo+offset, size);
+	free(contenidoArchivo);
+	if (cantidad>0)
+		free(bloques);
+	return size;
+}
+
+static int osada_write(const char *path, char *buf, size_t size, off_t offset,
+		struct fuse_file_info *fi) {
+
+	int archivo = obtenerArchivo(path);
+	printf("\n\n\n\nEntra a Write\n\n\n\n");
+	if (!actualizar(archivo, buf, size, offset))
+			return 0;
+
+	return size;
+}
+
+static struct fuse_operations osada_oper = {
+		.getattr = osada_getattr,
+		.readdir = osada_readdir,
+		.read = osada_read,
+		.write = osada_write,
 };
+
 
 int main(int argc, char *argv[])
 {
+	int fd_fileSystem = open("../basic.bin", O_RDWR);
+	if (fd_fileSystem==-1)
+	{
+		printf("Archivo de file system no encontrado.\n");
+		exit(0);
+	}
+	struct stat fsStat;
+	fstat(fd_fileSystem, &fsStat);
+
+	header= mmap(0, fsStat.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd_fileSystem, 0);
+
+
+	bitmap.size = header->bitmap_blocks * OSADA_BLOCK_SIZE;
+	bitmap.bitarray=header;
+	bitmap.bitarray+=OSADA_BLOCK_SIZE;
+	bitmap.mode=MSB_FIRST;
+
+	uint8_t* aux = header;
+	aux+= OSADA_BLOCK_SIZE + bitmap.size;
+	tablaArchivos = (osada_file*)aux;
+
+	aux+= 2048*sizeof(osada_file);
+	tablaAsignaciones = aux;
+	tamanioAsig = header->fs_blocks - header->allocations_table_offset - header->data_blocks; //En bloques
+
+	aux += tamanioAsig*OSADA_BLOCK_SIZE;
+	inicioDatos= aux;
+
+	tamanioAdmin = header->fs_blocks - header->data_blocks;
 
 	//El núcleo de FUSE. En teoría hay que invocarlo y olvidarse.
-	return fuse_main(argc, argv, &prueba_oper, NULL);
+	return fuse_main(argc, argv, &osada_oper, NULL);
 
 	return 0;
 }
