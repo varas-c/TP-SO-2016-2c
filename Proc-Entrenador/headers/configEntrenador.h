@@ -69,6 +69,7 @@ metadata leerMetadata(char* ruta)//Lee Metadata de un entrenador
 	config_destroy(config);
 	return mdata;
 }
+//******************************************
 
 char* getRutaMapa(char* pathPokedex, char* nombreMapa)
 {
@@ -96,6 +97,7 @@ char* getRutaMapa(char* pathPokedex, char* nombreMapa)
 
 	return ruta;
 }
+//******************************************
 
 ConexionEntrenador leerConexionMapa(char* pathPokedex, char* nombreMapa)
 {
@@ -128,6 +130,7 @@ ConexionEntrenador leerConexionMapa(char* pathPokedex, char* nombreMapa)
 	config_destroy(config);
 	return connect;
 }
+//******************************************
 
 ParametrosConsola leerParametrosConsola(char** parametros)  //Lee los parametros por consola
 {															//y los guarda en un struct
@@ -162,6 +165,8 @@ char* obtenerNombreMapa(char** hojaDeViaje, int numeroMapa)
 	char *a = strdup(hojaDeViaje[numeroMapa]);
 	return a;
 }
+//******************************************
+
 char* getRutaMetadata(ParametrosConsola parametros)
 {
 	char* pathEntrenadores= "Entrenadores";
@@ -199,6 +204,7 @@ char* getRutaMetadata(ParametrosConsola parametros)
 
 
 }
+//******************************************
 
 metadata leerMetadataEntrenador(ParametrosConsola parametros)
 {
@@ -210,6 +216,96 @@ metadata leerMetadataEntrenador(ParametrosConsola parametros)
 	return mdata;
 
 }
+//******************************************
+
+char* concatObjetivo(char* ciudad, char* obj)//El calculo es 4 de "obj[" + largociudad + "]" + /n
+{
+	obj = malloc(4*sizeof(char)+strlen(ciudad)*sizeof(char)+2);
+
+	strcat(obj,"obj[");
+	strcat(obj,ciudad);
+	strcat(obj,"]");
+
+	return obj;
+}
+//******************************************
+
+void mostrarObjetivos (char **a)//Muestra los objetivos de un mapa
+{
+	int cantViajes=0;
+
+	printf("Objetivos Mapa: ");
+	while(a[cantViajes] != '\0')
+	{
+			printf("%s",a[cantViajes]);
+			cantViajes++;
+	}
+	printf("\n");
+}
+
+//******************************************
+
+int cantidadDeViajes(char** hojaDeViaje)//Cuenta la cantidad de viajes en una hoja de Viaje
+{
+	int cantViajes=0;
+
+	while(hojaDeViaje[cantViajes] != '\0')
+	{
+			cantViajes++;
+	}
+
+	return cantViajes;
+}
+//******************************************
+
+int getCantObjetivos(char** objetivos)
+{
+	int cantObjetivos=-1;
+	int index = 0;
+
+	while(objetivos[index] != '\0')
+	{
+			cantObjetivos++;
+			index++;
+	}
+
+	return cantObjetivos;
+
+
+}
+
+int evaluar_opciones(Entrenador entrenador, Pokenest pokenest)
+{
+	/*Accion numero 1
+	Solicitar al mapa la ubicación de la PokeNest del próximo Pokémon que desea obtener, en caso de aún no conocerla.
+	Necesitamos una estructura Pokenest que guarde la ubicación de la misma
+	*/
+
+	if(faltaPokenest(pokenest))
+	{
+		return 1; //Tengo que pedirle la Pokenest al server
+	}
+	if(llegueAPokenest(entrenador,pokenest))
+	{
+		return 3; //Tengo que atrapar un Pokemon
+	}
+	return 2; //Tengo que caminar
+
+	//ToDo falta la opcion de notificar fin de objetivos!
+}
+
+Paquete recv_capturarPokemon(int fd_server)
+{
+	Paquete paquete;
+	paquete.tam_buffer = sizeof(int)*2+sizeof(char)*200;
+	paquete.buffer = malloc(paquete.tam_buffer);
+
+
+	recv(fd_server,paquete.buffer,paquete.tam_buffer,0);
+
+	return paquete;
+}
+
 
 
 #endif /* HEADERS_CONFIGENTRENADOR_H_ */

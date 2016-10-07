@@ -18,6 +18,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+
+int fd_server;
+int vidas_restantes;
+
 int get_fdServer(char* numero_IP, char* numero_Puerto)
 {
 			struct addrinfo hints;			// Estructuras de libreria para guardar info de conexion
@@ -61,8 +65,35 @@ int get_fdServer(char* numero_IP, char* numero_Puerto)
 
 			return serverSocket;
 }
+//******************************************
 
+void manejar_signals(int operacion){
+	switch(operacion){
+	case SIGUSR1:
+		vidas_restantes = vidas_restantes + 1;
+		break;
+	case SIGTERM:
+		vidas_restantes = vidas_restantes - 1;
+		if(vidas_restantes == 0){
+			exit(1);
+		}
+		break;
+	}
+}
+//******************************************
 
+void sigHandler_endProcess(int signal)
+{
+	switch(signal)
+	{
+	case SIGINT || SIGHUP:
+		close(fd_server);
+		printf("Atrapando %i ", signal);
+		exit(1);
+		break;
+
+	}
+}
 
 //---------------------------------------
 //-----------------------------

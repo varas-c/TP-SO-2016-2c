@@ -774,7 +774,7 @@ void* thread_planificador()
 		}
 		}
 
-		jugador=NULL;
+	//	jugador=NULL;
 
 		}
 

@@ -38,7 +38,7 @@ enum sizeofBuffer
 	size_CAPTURA_OK = sizeof(int)+sizeof(int),
 	size_MOVER_OK = sizeof(int),
 };
-
+//******************************************
 
 Paquete srlz_movEntrenador(Entrenador entrenador)
 {
@@ -53,6 +53,7 @@ Paquete srlz_movEntrenador(Entrenador entrenador)
 	memcpy(paquete.buffer+sizeof(int)*2,&(entrenador.posy),sizeof(int));
 	return paquete;
 }
+//******************************************
 
 Paquete srlz_simboloEntrenador(char simbolo)
 {
@@ -65,6 +66,7 @@ Paquete srlz_simboloEntrenador(char simbolo)
 	memcpy(paquete.buffer+sizeof(int),&simbolo,sizeof(char));
 	return paquete;
 }
+//******************************************
 
 Paquete srlz_capturarPokemon(char simbolo)
 {
@@ -78,6 +80,7 @@ Paquete srlz_capturarPokemon(char simbolo)
 	memcpy(paquete.buffer+sizeof(int),&simbolo,sizeof(char));
 	return paquete;
 }
+//******************************************
 
 Paquete srlz_finObjetivos()
 {
@@ -91,7 +94,7 @@ Paquete srlz_finObjetivos()
 
 	return paquete;
 }
-
+//******************************************
 
 Paquete srlz_solicitarPokenest(Pokenest pokenest)
 {
@@ -116,6 +119,7 @@ int dsrlz_codigoOperacion(void* buffer)
 	memcpy(&codOp,buffer,sizeof(int));
 	return codOp;
 }
+//******************************************
 
 char* dsrlz_capturarPokemon(Paquete* paquete)
 {
@@ -139,6 +143,7 @@ char* dsrlz_capturarPokemon(Paquete* paquete)
 
 	return pokemonDat;
 }
+//******************************************
 
 int dsrlz_MoverOK(void* buffer)
 {

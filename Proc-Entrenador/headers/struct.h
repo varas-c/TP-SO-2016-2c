@@ -121,5 +121,15 @@ Entrenador new_Entrenador(metadata mdata)
     entrenador.reintentos = mdata.reintentos;
     return entrenador;
 }
+//********************
+//*** FUNCIONES BOLUDAS
+//*************
+
+int sizeofString(char* cadena)
+{
+	int size = 0;
+	size = sizeof(char)*strlen(cadena);
+	return size;
+}
 
 #endif /* HEADERS_STRUCT_H_ */

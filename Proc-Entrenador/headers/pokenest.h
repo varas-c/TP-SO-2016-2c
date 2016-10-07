@@ -102,14 +102,82 @@ void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 }
 
 //*********************************
-//********************************
-
-void send_coordenadas(Entrenador entrenador)
+void mover_entrenador(Entrenador *entrenador)//Si flagx=false then mover en X otherwise mover en Y
 {
+	int move = 0;
 
+	if(entrenador->destinox != 0 && entrenador->movAnterior == 'y' && move == 0)
+	{
+		if(entrenador->destinox < 0 ) //Me muevo hacia atras en X
+		{
+			entrenador->posx -=1;
+			entrenador->destinox += 1;
+		}
+
+		if(entrenador->destinox > 0)
+		{
+			entrenador->posx += 1;
+			entrenador->destinox -= 1;
+		}
+
+		entrenador->movAnterior = 'x';
+		move = 1;
+	}
+
+	if(entrenador->destinoy != 0 && entrenador->movAnterior == 'x' && move == 0)
+	{
+		if(entrenador->destinoy < 0 ) //Me muevo hacia atras en X
+		{
+			entrenador->posy -=1;
+			entrenador->destinoy += 1;
+		}
+
+		if(entrenador->destinoy > 0)
+		{
+			entrenador->posy += 1;
+			entrenador->destinoy -= 1;
+		}
+
+		entrenador->movAnterior = 'y';
+		move = 1;
+	}
+
+	if(entrenador->destinox != 0 && move == 0) //Si todavia me queda mvimiento en X
+	{
+		if(entrenador->destinox < 0 ) //Me muevo hacia atras en X
+		{
+			entrenador->posx -=1;
+			entrenador->destinox += 1;
+		}
+
+		if(entrenador->destinox > 0)
+		{
+			entrenador->posx += 1;
+			entrenador->destinox -= 1;
+		}
+
+		entrenador->movAnterior = 'x';
+		move = 1;
+	}
+
+	if(entrenador->destinoy != 0 && move == 0)
+	{
+		if(entrenador->destinoy < 0 ) //Me muevo hacia atras en X
+		{
+			entrenador->posy -=1;
+			entrenador->destinoy += 1;
+		}
+
+		if(entrenador->destinoy > 0)
+		{
+			entrenador->posy += 1;
+			entrenador->destinoy -= 1;
+		}
+
+		entrenador->movAnterior = 'y';
+		move = 1;
+	}
 }
-
-
 
 
 #endif /* HEADERS_POKENEST_H_ */
