@@ -8,6 +8,32 @@
 #ifndef HEADERS_PLANIFICACION_H_
 #define HEADERS_PLANIFICACION_H_
 
+
+//***********************************************************************************
+//***********************************************************************************
+//***********************************************************************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //***********************************************************************************
 //***********************************************************************************
 //***********************************************************************************
@@ -67,7 +93,7 @@ void ordenarListaSRDF(t_list* lista)
 	{
 		if(movRestantes(jugador1->entrenador) == movRestantes(jugador2->entrenador)) //SI SON IGUALES, DESEMPATAN POR FIFO
 		{
-			if(jugador1->ingreso < jugador2->ingreso) return 1; //Si el ingreso es menor es porque ENTRO PRIMERO
+			if(jugador1->numero < jugador2->numero) return 1; //Si el ingreso es menor es porque ENTRO PRIMERO
 			else return 0;
 		}
 
@@ -112,6 +138,46 @@ void copiarListaCola(t_list* lista)
 		queue_push(colaListos,jugador);
 	}
 
+}
+
+
+
+
+//*******************
+
+Jugador* removeJugadorSocket(int socket)
+{
+
+	bool _find_Player_Socket(Jugador* jugador)
+	{
+		return jugador->socket == socket;
+	}
+
+	Jugador* jugadorEncontrado = (Jugador*) list_remove_by_condition(colaListos,(void*)_find_Player_Socket);
+	return jugadorEncontrado;
+
+}
+
+
+
+Jugador* get_SRDF()
+{
+	int tamColaListos = list_size(colaListos);
+	t_list* listaAuxiliar;
+	Jugador* jugadorAux;
+	Jugador* jugadorBuscado;
+
+
+	listaAuxiliar = list_take(colaListos,tamColaListos-1);
+	ordenarListaSRDF(listaAuxiliar);
+
+	jugadorAux = list_get(listaAuxiliar,0);
+
+	jugadorBuscado = removeJugadorSocket(jugadorAux->socket);
+
+	list_destroy(listaAuxiliar);
+
+	return jugadorBuscado;
 }
 
 

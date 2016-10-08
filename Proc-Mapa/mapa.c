@@ -24,6 +24,7 @@
 #include <dirent.h>
 #include <pkmn/battle.h>
 #include <semaphore.h>
+#include <signal.h>
 
 
 /****************************************************************************************************************
@@ -69,7 +70,7 @@ int global_cantJugadores = 0;
 fd_set fds_entrenadores;
 ParametrosMapa parametros;
 
-//#include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
+#include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
 
 
 /****************************************************************************************************************
@@ -238,7 +239,6 @@ char* getRutaPokenest(ParametrosMapa parametros)
 }
 
 
-//Para cada Pokenest E
 void leerTodasLasPokenest(ParametrosMapa parametros)
 {
 	char* rutaPokenest;
@@ -340,7 +340,7 @@ void gui_crearPokenests()
 
 }
 
-
+/*
 void printfLista()
 {
 	int cant;
@@ -365,6 +365,7 @@ void printfLista()
 	}
 
 }
+*/
 
 
 void desconectarJugador(Jugador* jugador)
@@ -375,7 +376,7 @@ void desconectarJugador(Jugador* jugador)
 	free(jugador);
 }
 
-
+/*
 void detectarDesconexiones()
 {
 	Jugador* jugador;
@@ -424,6 +425,8 @@ void detectarDesconexiones2(){		//LA REVANCHA
 	}
 }
 
+*/
+
 //*************************************************************************
 
 Paquete srlz_capturaOK(Pokemon* pokemon)
@@ -461,13 +464,6 @@ int send_capturaOK(Jugador* jugador,Pokemon* pokemon)
 }
 
 
-void enviarOK(int socket)
-{
-	char* a = malloc(20);
-	a = "hola";
-	send(socket,a,20,0);
-}
-
 
 Paquete srlz_MoverOK()
 {
@@ -499,7 +495,7 @@ int send_MoverOK(int socket)
 }
 
 
-
+/*
 Jugador* buscarJugadorSocket(int socket)
 {
 
@@ -593,6 +589,8 @@ void detectarDesconexiones5()
 
 }
 
+*/
+
 int verificarConexion(Jugador* jugador,int retval,int* quantum)
 {
 	if(retval < 0)
@@ -603,6 +601,15 @@ int verificarConexion(Jugador* jugador,int retval,int* quantum)
 	}
 
 	return 0;
+}
+
+
+void sigHandler_reloadMetadata(int signal)
+{
+	if(signal == SIGUSR2)
+	{
+		mdataMapa = leerMetadataMapa(parametros);
+	}
 }
 
 
@@ -629,6 +636,9 @@ void* thread_planificador()
 
 	MetadataPokenest pokenest;
 	bool flag_DESCONECTADO = FALSE;
+	bool flag_SRDF;
+
+
 
 	while(1)
 	{
@@ -643,16 +653,28 @@ void* thread_planificador()
 
 	while(!list_is_empty(colaListos))
 	{
-		//detectarDesconexiones4();
-		if(!list_is_empty(colaListos))
-		{
 
+		if(strcmp(mdataMapa.algoritmo,"SRDF") == 0)
+		{
 		pthread_mutex_lock(&mutex_Listos);
-		jugador = list_remove(colaListos,0);
+
+			jugador = get_SRDF();
+			flag_SRDF = TRUE;
+			quantum = 1;
 		pthread_mutex_unlock(&mutex_Listos);
+		}
+
+		else
+		{
+			pthread_mutex_lock(&mutex_Listos);
+			jugador = list_remove(colaListos,0);
+			quantum = mdataMapa.quantum;
+			flag_SRDF = FALSE;
+			pthread_mutex_unlock(&mutex_Listos);
+		}
 
 		buffer_recv = malloc(tam_buffer_recv);
-		quantum = mdataMapa.quantum;
+
 
 		//log_info(infoLogger, "Jugador %c sale de Listos.",jugador->entrenador.simbolo);
 		//loggearColas();
@@ -760,7 +782,11 @@ void* thread_planificador()
 			//loggearColas();
 			//pthread_mutex_lock(&mutex_socket);
 
+			if(flag_SRDF == FALSE)
+			{
 			quantum--;
+			}
+
 			nivel_gui_dibujar(gui_items, mostrar);
 
 		}//FIN WHILE
@@ -778,8 +804,6 @@ void* thread_planificador()
 
 	//	jugador=NULL;
 
-		}
-
 
 		flag_DESCONECTADO = FALSE;
 
@@ -792,7 +816,6 @@ void* thread_planificador()
 int main(int argc, char** argv)
 {
 
-	sem_init(&semaforo_SincroSelect,0,0);
 
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
@@ -871,6 +894,10 @@ int main(int argc, char** argv)
 	void* buffer;
 	int newfd;
 	char simboloEntrenador;
+
+
+	signal(SIGUSR2,sigHandler_reloadMetadata);
+
 
 	for (;;) {
 		read_fds = fds_entrenadores; // cópialo
