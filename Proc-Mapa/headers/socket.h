@@ -63,10 +63,31 @@ void socket_listen(int listener)
 //****************************************************************************************************************
 
 void socket_select(int fdmax, fd_set *read_fds)
-{	if (select(fdmax + 1, read_fds, NULL, NULL, NULL) == -1) {
-		perror("select");
-		exit(1);
+{
+	while(1)
+	{
+
+	if (select(fdmax + 1, read_fds, NULL, NULL, NULL) == -1)
+	{
+		if(errno = EINTR)
+		{
+			//DO NOTHING
+		}
+
+		else
+		{
+			perror("Select Error");
+			exit(1);
+		}
 	}
+
+	else
+	{
+		return;
+	}
+
+	}
+
 }
 //****************************************************************************************************************
 

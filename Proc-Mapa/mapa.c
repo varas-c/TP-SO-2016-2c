@@ -613,7 +613,36 @@ void sigHandler_reloadMetadata(int signal)
 }
 
 
+Jugador* get_prioritySRDF()
+{
+	Jugador* jugadorBuscado;
 
+	bool _find_priority_SRDF(Jugador* jugador)
+	{
+		return jugador->conocePokenest == FALSE;
+	}
+
+	jugadorBuscado= list_remove_by_condition(colaListos,_find_priority_SRDF);
+
+	return jugadorBuscado;
+
+}
+
+bool any_prioritySRDF()
+{
+
+	bool flag;
+
+	bool _any_satisfy_priority(Jugador* jugador)
+	{
+		return jugador->conocePokenest == FALSE;
+	}
+
+
+	flag = list_any_satisfy(colaListos,_any_satisfy_priority);
+
+	return flag;
+}
 
 void* thread_planificador()
 {
@@ -658,9 +687,20 @@ void* thread_planificador()
 		{
 		pthread_mutex_lock(&mutex_Listos);
 
+			if(any_prioritySRDF())
+			{
+				jugador = get_prioritySRDF();
+				quantum = 1;
+				flag_SRDF = FALSE;
+			}
+
+			else{
+
 			jugador = get_SRDF();
 			flag_SRDF = TRUE;
 			quantum = 1;
+			}
+
 		pthread_mutex_unlock(&mutex_Listos);
 		}
 
@@ -708,6 +748,7 @@ void* thread_planificador()
 					pokenestPedida = dsrlz_Pokenest(buffer_recv); //Obtenemos el simbolo de la pokenest que nos pidieron
 					pokenestEnviar = buscar_Pokenest(pokenestPedida); //Buscamos la info de la Pokenest pedida
 					retval = send_Pokenest(jugador->socket,pokenestEnviar); //Enviamos el paquete :D
+					jugador->conocePokenest = TRUE;
 					flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
 				break;
 				case MOVER: //El entrenador se quiere mover
@@ -813,17 +854,26 @@ void* thread_planificador()
 	}
 }
 
+
+
 int main(int argc, char** argv)
 {
 
+	struct sigaction sa;
+	sa.sa_handler = &sigHandler_reloadMetadata;
+	sa.sa_flags = SA_RESTART;
 
-	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	signal(SIGUSR2,sigHandler_reloadMetadata);
 
 	/*
+	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	*/
+
+
 	parametros.dirPokedex = "/mnt/pokedex";
 	parametros.nombreMapa = "PuebloPaleta";
-	*/
+
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
@@ -896,7 +946,7 @@ int main(int argc, char** argv)
 	char simboloEntrenador;
 
 
-	signal(SIGUSR2,sigHandler_reloadMetadata);
+
 
 
 	for (;;) {
@@ -925,6 +975,7 @@ int main(int argc, char** argv)
 					aux->estado = nuevoJugador.estado;
 					aux->pokemonCapturados = nuevoJugador.pokemonCapturados;
 					aux->numero = global_cantJugadores;
+					aux->conocePokenest = FALSE;
 
 					//Creamos el personaje
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);

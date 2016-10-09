@@ -61,6 +61,7 @@ typedef struct   //Jugador
 	int estado;
 	int socket;
 	int numero;
+	bool conocePokenest;
 }Jugador;
 //****************************************************************************************************************
 
@@ -122,6 +123,7 @@ Jugador new_Jugador(char simbolo, int socket, int numero){
 	jugador.estado = 0;
 	jugador.numero = numero;
 	jugador.pokemonCapturados = list_create();
+	jugador.conocePokenest = FALSE;
 
 	return jugador;
 }

@@ -168,7 +168,7 @@ Jugador* get_SRDF()
 	Jugador* jugadorBuscado;
 
 
-	listaAuxiliar = list_take(colaListos,tamColaListos-1);
+	listaAuxiliar = list_take(colaListos,tamColaListos);
 	ordenarListaSRDF(listaAuxiliar);
 
 	jugadorAux = list_get(listaAuxiliar,0);
