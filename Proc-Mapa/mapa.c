@@ -66,7 +66,7 @@ sem_t semaforo_SincroSelect;
 
 
 
-int global_cantJugadores = 0;
+int global_cantJugadores = -1;
 fd_set fds_entrenadores;
 ParametrosMapa parametros;
 
@@ -854,6 +854,43 @@ void* thread_planificador()
 	}
 }
 
+typedef struct
+{
+	int cantPokenest;
+	char* vectorPokenest;
+	int* recursos;
+}VectorRecursosMaximos;
+
+typedef struct
+{
+	int filas;
+	int columnas;
+
+}MatrizDeAsignaciones;
+
+
+VectorRecursosMaximos new_VectorRecursosMaximos()
+{
+	VectorRecursosMaximos maximo;
+
+	maximo.cantPokenest = list_size(listaPokenest);
+	maximo.vectorPokenest = malloc(sizeof(char)*maximo.cantPokenest);
+	maximo.recursos = malloc(sizeof(int)*maximo.cantPokenest);
+
+	MetadataPokenest* pokenest;
+
+	int i;
+
+	for(i=0;i<listaPokenest;i++)
+	{
+		pokenest = list_get(listaPokenest,i);
+		maximo.vectorPokenest[i] = pokenest->simbolo;
+		maximo.recursos[i] =queue_size(pokenest->colaDePokemon);
+	}
+
+	return maximo;
+}
+
 
 
 int main(int argc, char** argv)
@@ -889,6 +926,9 @@ int main(int argc, char** argv)
 	gui_crearPokenests();
 
 	mdataMapa = leerMetadataMapa(parametros);
+
+
+	VectorRecursosMaximos maximo = new_VectorRecursosMaximos();
 
 	//**********************************
 
