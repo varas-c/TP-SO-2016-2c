@@ -11,8 +11,15 @@
 #include <stdlib.h>
 #include <curses.h>
 #include <commons/collections/list.h>
+#include <commons/collections/queue.h>
 #include <commons/config.h>
 #include <tad_items.h>
+#include <pkmn/battle.h>
+#include <pkmn/factory.h>
+#include "headers/struct.h"
+#include <ctype.h>
+
+/*
 
 typedef struct{
 	char simbolo;
@@ -20,19 +27,17 @@ typedef struct{
 }PokemonDL;
 
 typedef struct{
-	char simbolo;
 	t_list* recursos;
 	char peticion;
 }EntrenadorDL;
 
 typedef struct{
 	char simbolo;
+	char *species;
 	int cant;
 }PokenestDL;
 
-
-
-
+*/
 
 int** inicializar_matriz(int cant_filas, int cant_columnas)
 {
@@ -80,15 +85,15 @@ void mostrar_recursos_disponibles(int* recursos, int cant_recursos)
 }
 
 
-int cantidad_obtenidos_de_un_tipo(EntrenadorDL* entrenador,char simbolo)//CANT DE POKEMONES ASIGNADOS A ESE ENTRENADOR DE UNA POKENEST
+int cantidad_obtenidos_de_un_tipo(Jugador* entrenador,char simbolo)//CANT DE POKEMONES ASIGNADOS A ESE ENTRENADOR DE UNA POKENEST
 {
 	int i=0,cantidad_total,cantidad=0;
-	PokemonDL* pokemon_aux;
-	cantidad_total = list_size(entrenador->recursos);
+	Pokemon* pokemon_aux;
+	cantidad_total = list_size(entrenador->pokemonCapturados);
 	while(i<cantidad_total)
 	{
-		pokemon_aux=(PokemonDL*)list_get(entrenador->recursos,i);
-		if(pokemon_aux->simbolo==simbolo) //SI ESE POKEMON ES DE ESA POKENEST
+		pokemon_aux=(Pokemon*)list_get(entrenador->pokemonCapturados,i);
+		if(letra_pokenest(pokemon_aux->nombre)==simbolo) //SI ESE POKEMON ES DE ESA POKENEST
 		{
 			cantidad++;
 		}
@@ -99,8 +104,8 @@ int cantidad_obtenidos_de_un_tipo(EntrenadorDL* entrenador,char simbolo)//CANT D
 
 int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 {
-	EntrenadorDL* entrenador_aux;
-	PokenestDL* pokenest_aux;
+	Jugador* entrenador_aux;
+	MetadataPokenest* pokenest_aux;
 	int i,j,cant_pokenests,cant_entrenadores,cantidad_recursos;
 
 	cant_pokenests=list_size(pokenests);
@@ -113,11 +118,11 @@ int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 
 	while(i<cant_pokenests)
 	{
-		pokenest_aux = (PokenestDL*)list_get(pokenests,i);
+		pokenest_aux = (MetadataPokenest*)list_get(pokenests,i);
 		j = 0;
 		while(j<cant_entrenadores)
 		{
-			entrenador_aux = (EntrenadorDL*)list_get(entrenadores,j);
+			entrenador_aux = (Jugador*)list_get(entrenadores,j);
 			if(entrenador_aux->peticion == pokenest_aux->simbolo)
 			{
 				matriz[j][i]=1;
@@ -132,8 +137,8 @@ int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 
 int** generar_matriz_asignados(t_list* entrenadores, t_list* pokenests)
 {
-	EntrenadorDL* entrenador_aux;
-	PokenestDL* pokenest_aux;
+	Jugador* entrenador_aux;
+	MetadataPokenest* pokenest_aux;
 	int i=0,j=0,cant_pokenests,cant_entrenadores,cantidad_recursos;
 
 	cant_pokenests=list_size(pokenests);
@@ -146,11 +151,11 @@ int** generar_matriz_asignados(t_list* entrenadores, t_list* pokenests)
 	while(i<cant_pokenests)
 	{
 		cantidad_recursos = 0;
-		pokenest_aux = (PokenestDL*)list_get(pokenests,i);
+		pokenest_aux = (MetadataPokenest*)list_get(pokenests,i);
 		j=0;
 		while(j<cant_entrenadores)
 		{
-			entrenador_aux = (EntrenadorDL*)list_get(entrenadores,j);
+			entrenador_aux = (Jugador*)list_get(entrenadores,j);
 			cantidad_recursos = cantidad_obtenidos_de_un_tipo(entrenador_aux, pokenest_aux->simbolo); //CANT DE POKEMONES ASIGNADOS A ESE ENTRENADOR DE ESA POKENEST
 			matriz[j][i]=cantidad_recursos;
 			j++;
@@ -167,13 +172,13 @@ int* generar_vector_recursos_disponibles(t_list* pokenests)
 	tamanio=list_size(pokenests);
 	while(i<tamanio)
 	{
-		vector[i]=((PokenestDL*)list_get(pokenests,i))->cant;
+		vector[i]=((MetadataPokenest*)list_get(pokenests,i))->cantPokemon;
 		i++;
 	}
 	return vector;
 }
 
-t_list * detectar_deadlock(t_list* entrenadores, t_list*pokenests)
+t_list * no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests)
 {
 	int **matriz_peticiones,**matriz_recursos_asignados,*recursos_disponibles,cant_entrenadores, cant_pokenests;
 	bool tiene_algun_recurso,pide_algun_recurso;
@@ -210,7 +215,7 @@ t_list * detectar_deadlock(t_list* entrenadores, t_list*pokenests)
 		    	if(matriz_peticiones[i][j] <= recursos_disponibles[j])
 		    	{
 					posible_deadlock[i] = 0;
-					j=pokenests;   //    ESTE ENTRENADOR PUEDE OBTENER EL POKEMON DE LA POKENEST
+					j=cant_pokenests;   //    ESTE ENTRENADOR PUEDE OBTENER EL POKEMON DE LA POKENEST
 		    	}
 		    }
 		}
@@ -236,13 +241,15 @@ t_list * detectar_deadlock(t_list* entrenadores, t_list*pokenests)
 }
 
 
-bool tiene_lo_que_pide(EntrenadorDL* entrenador, EntrenadorDL* otro_entrenador)
+bool tiene_lo_que_pide(Jugador* entrenador, Jugador* otro_entrenador)
 {
-	int i,j;
-	PokemonDL* pokeaux;
-	for(j=0;j<list_size(otro_entrenador->recursos);j++)
+	int i;
+	Pokemon* poke1;
+	for(i=0;i<list_size(otro_entrenador->pokemonCapturados);i++)
 	{
-		if(entrenador->peticion==*(char*)list_get(otro_entrenador->recursos,j))
+		poke1=(Pokemon*)list_get(entrenador->pokemonCapturados,i);
+
+		if(((char)letra_pokenest(poke1->nombre))==entrenador->peticion)
 		{
 			return true;
 		}
@@ -258,102 +265,167 @@ t_list* obtener_un_deadlock(t_list* entrenadores)    //ME DEVUELVE UN DEADLOCK
 {
 	t_list* un_deadlock = list_create();
 
-	EntrenadorDL *aux1,*aux2,*primero;
+	Entrenador *aux,*primero, *pivote;
 
-	int cantidad,i=0;
+	int i=0;
 
-	cantidad = list_size(entrenadores);
+	primero = ((Jugador*)list_get(entrenadores,0));//COMO TODOS ESTAN EN DEADLOCK, AGARRO UNO Y VEO CON CUALES ESTA EN DEADLOCK
 
-	primero = ((EntrenadorDL*)list_get(entrenadores,0));//COMO TODOS ESTAN EN DEADLOCK, AGARRO UNO Y VEO CON CUALES ESTA EN DEADLOCK
-
+	pivote = ((Jugador*)list_get(entrenadores,0));
 	list_add(un_deadlock,primero);
+	list_remove(entrenadores,0);
 
-	for(i=1;i<cantidad;i++)
+	while(i<list_size(entrenadores))
 	{
-		aux1 = (EntrenadorDL*)list_get(entrenadores,i-1);
-		aux2 = (EntrenadorDL*)list_get(entrenadores,i);
-		if(tiene_lo_que_pide(aux1,aux2))
+		aux = (Jugador*)list_get(entrenadores,i);
+
+		if(tiene_lo_que_pide(pivote,primero)&&(pivote != primero))
 		{
-			list_add(un_deadlock,aux2);
+			i = list_size(entrenadores);
 		}
-		if(tiene_lo_que_pide(aux2,primero))
+
+		else if(tiene_lo_que_pide(pivote,aux)&&(pivote != aux)&&(aux != primero))
 		{
-			i = cantidad;
+			pivote = aux;
+			list_add(un_deadlock,aux);
+			list_remove(entrenadores,i);
+			i=0;
 		}
+		else i++;
+
 	}
 
 	return un_deadlock;
 
 }
 
-bool resolver_deadlock(t_list* entrenadores)
+Pokemon* pokemon_mayor_nivel(Jugador* entrenador)
 {
-	if(list_size(entrenadores))
-	{
-		//BATALLAS...
-	}
-}
+	Pokemon* mas_fuerte = (Pokemon*)list_get((entrenador->pokemonCapturados),0);
 
-PokemonDL* pokemon_mas_fuerte(EntrenadorDL* entrenador)
-{
-	PokemonDL* mas_fuerte = (PokemonDL*)list_get(entrenador->recursos,0);
 	int i=0;
-	for(i=0;i<list_size(entrenador->recursos);i++)
+	for(i=1;i<list_size(entrenador->pokemonCapturados);i++)
 	{
-		if(((PokemonDL*)list_get(entrenador->recursos,i))->nivel>mas_fuerte->nivel)
+		if((((Pokemon*)list_get(entrenador->pokemonCapturados,i))->pokemon->level)>(mas_fuerte->pokemon->level))
 		{
-			mas_fuerte = list_get(entrenador->recursos,i);
+			mas_fuerte = (Pokemon*)list_get(entrenador->pokemonCapturados,i);
 		}
 	}
+
 	return mas_fuerte;
 }
 
+void resolver_deadlock(t_list* entrenadores)
+{
+	t_pokemon *poke2,*perdedor;
+
+	t_pkmn_factory* fabrica = create_pkmn_factory();
+
+
+
+	int cantidad_involucrados = list_size(entrenadores),i=0;
+
+	Jugador *aux1,*aux2;
+
+	Pokemon *mayor_nivel1,*mayor_nivel2;
+
+	aux1 = (Jugador*)list_get(entrenadores,0);
+
+
+	mayor_nivel1 = pokemon_mayor_nivel(aux1);
+
+	perdedor = create_pokemon(fabrica, mayor_nivel1->nombre,mayor_nivel1->pokemon->level);
+
+
+	for(i=1;i<cantidad_involucrados;i++)
+	{
+		aux2 = (Jugador*)list_get(entrenadores,i);
+
+		mayor_nivel2 = pokemon_mayor_nivel(aux2);
+
+		poke2 = create_pokemon(fabrica, mayor_nivel2->nombre,mayor_nivel2->pokemon->level);
+
+		perdedor = pkmn_battle(perdedor,poke2);
+
+	}
+}
+
+
+MetadataPokenest buscar_Pokenest(char simbolo,t_list* listaPokenest)
+{
+	bool _find_pokenest_(MetadataPokenest* aux)
+	{
+		return aux->simbolo == simbolo;
+	}
+
+	MetadataPokenest *ptr = (MetadataPokenest*) list_find(listaPokenest,(void*)_find_pokenest_);
+
+	return *ptr;
+}
+
+
+int letra_pokenest(char *species)
+{
+	return tolower(species[0]);
+}
+
+
 int main(void)
 {
+
 	int i;
     t_list* pokenests = list_create();
     t_list* entrenadores = list_create();
-    t_list* posibles_deadlock;
-    t_list* un_deadlock;
 
-    PokenestDL* pokenest1 = malloc(sizeof(PokenestDL));
 
-    pokenest1->cant = 0;
-    pokenest1->simbolo = 'p';
+    t_list* posibles_deadlock  = list_create();
+    t_list* un_deadlock  = list_create();
 
-    PokenestDL* pokenest2 = malloc(sizeof(PokenestDL));
 
-    pokenest2->cant = 0;
-    pokenest2->simbolo = 's';
 
-    PokenestDL* pokenest3 = malloc(sizeof(PokenestDL));
+    MetadataPokenest* pokenest = malloc(sizeof(MetadataPokenest));
 
-    pokenest3->cant = 0;
-    pokenest3->simbolo = 'j';
+    pokenest->cantPokemon = 0;
+    pokenest->simbolo = 'p';
 
-    list_add(pokenests,pokenest1);
+    list_add(pokenests,pokenest);
 
-    list_add(pokenests,pokenest2);
+    pokenest = malloc(sizeof(MetadataPokenest));
 
-    //list_add(pokenests,pokenest3);
+    pokenest->cantPokemon = 0;
+    pokenest->simbolo = 's';
+
+    list_add(pokenests,pokenest);
+
+    pokenest = malloc(sizeof(MetadataPokenest));
+
+    pokenest->cantPokemon = 0;
+    pokenest->simbolo = 'j';
+
+    list_add(pokenests,pokenest);
+
 
     ///////////////////   UN ENTRENADOR
 
-    EntrenadorDL* entrenador = malloc(sizeof(EntrenadorDL));
+
+    Jugador* entrenador = malloc(sizeof(Jugador));
 
     entrenador->peticion = 's';
 
-    entrenador->recursos = list_create();
+    entrenador->pokemonCapturados = list_create();
+    Pokemon* pokeaux;
 
-    PokemonDL* pokeaux = malloc(sizeof(PokemonDL));
-    pokeaux->simbolo = 's';
+    pokeaux = malloc(sizeof(Pokemon));
 
-    list_add(entrenador->recursos,pokeaux);
+    pokeaux->pokemon = malloc(sizeof(t_pokemon));
 
-    pokeaux = malloc(sizeof(PokemonDL));
-    pokeaux->simbolo = 'p';
+    pokeaux->nombre = string_new();
 
-    list_add(entrenador->recursos,pokeaux);
+    strcpy((pokeaux->nombre),"Jigglypuff");
+
+    pokeaux->pokemon->level = 1;
+
+    list_add(entrenador->pokemonCapturados,pokeaux);
 
     list_add(entrenadores,entrenador);
 
@@ -361,21 +433,29 @@ int main(void)
 
     ///////////////////   OTRO ENTRENADOR
 
-    entrenador = malloc(sizeof(EntrenadorDL));
 
-    entrenador->peticion = 'p';
 
-    entrenador->recursos = list_create();
+    entrenador = malloc(sizeof(Entrenador));
 
-    pokeaux = malloc(sizeof(PokemonDL));
-    pokeaux->simbolo = 'p';
+    entrenador->peticion = 'j';
 
-    list_add(entrenador->recursos,pokeaux);
+    entrenador->pokemonCapturados = list_create();
 
-    pokeaux = malloc(sizeof(PokemonDL));
-    pokeaux->simbolo = 'p';
 
-    list_add(entrenador->recursos,pokeaux);
+
+    pokeaux = malloc(sizeof(Pokemon));
+
+    pokeaux->pokemon = malloc(sizeof(t_pokemon));
+
+    pokeaux->nombre = string_new();
+
+    strcpy(pokeaux->nombre,"Pikachu");
+
+    pokeaux->pokemon->level = 2;
+
+    list_add(entrenador->pokemonCapturados,pokeaux);
+
+
 
     list_add(entrenadores,entrenador);
 
@@ -384,53 +464,53 @@ int main(void)
 
     ///////////////////   OTRO ENTRENADOR
 
-    entrenador = malloc(sizeof(EntrenadorDL));
+
+
+
+    entrenador = malloc(sizeof(Entrenador));
 
     entrenador->peticion = 'p';
 
-    entrenador->recursos = list_create();
+    entrenador->pokemonCapturados = list_create();
 
-    pokeaux = malloc(sizeof(PokemonDL));
-    pokeaux->simbolo = 'p';
+    pokeaux = malloc(sizeof(Pokemon));
 
-    list_add(entrenador->recursos,pokeaux);
+    pokeaux->pokemon = malloc(sizeof(t_pokemon));
 
-    pokeaux = malloc(sizeof(PokemonDL));
-    pokeaux->simbolo = 'p';
+    pokeaux->nombre = string_new();
 
-    list_add(entrenador->recursos,pokeaux);
+    strcpy(pokeaux->nombre,"Squirtle");
 
-    pokeaux = malloc(sizeof(PokemonDL));
-    pokeaux->simbolo = 'p';
+    pokeaux->pokemon->level = 9;
 
-    list_add(entrenador->recursos,pokeaux);
-
-    pokeaux = malloc(sizeof(PokemonDL));
-    pokeaux->simbolo = 's';
-
-    list_add(entrenador->recursos,pokeaux);
-
-    pokeaux = malloc(sizeof(PokemonDL));
-    pokeaux->simbolo = 's';
-
-    list_add(entrenador->recursos,pokeaux);
+    list_add(entrenador->pokemonCapturados,pokeaux);
 
     list_add(entrenadores,entrenador);
 
 
     ///////////////////
+
+
 
     int** matriz_peticiones = generar_matriz_peticiones(entrenadores, pokenests);
 
     int** matriz_recursos_asignados = generar_matriz_asignados(entrenadores, pokenests);
 
-
     int* recursos_disponibles = generar_vector_recursos_disponibles(pokenests);
 
-    posibles_deadlock = detectar_deadlock(entrenadores,pokenests);
+    posibles_deadlock = no_pueden_ejecutar(entrenadores,pokenests);
 
 
-    un_deadlock = obtener_un_deadlock(posibles_deadlock);
+	printf("%d ", list_size(posibles_deadlock));
+    if(list_size(posibles_deadlock)>1)
+    {
+    	un_deadlock = obtener_un_deadlock(posibles_deadlock);
+
+    	printf("%d", list_size(un_deadlock));
+
+
+    resolver_deadlock(un_deadlock);
+
 
     printf("                  PETICIONES\n");
     mostrar_matriz(matriz_peticiones,list_size(entrenadores),list_size(pokenests));
@@ -438,6 +518,9 @@ int main(void)
     mostrar_matriz(matriz_recursos_asignados,list_size(entrenadores),list_size(pokenests));
 
     mostrar_recursos_disponibles(recursos_disponibles, list_size(pokenests));
+    }
+
+
 
     list_destroy(posibles_deadlock);
 
