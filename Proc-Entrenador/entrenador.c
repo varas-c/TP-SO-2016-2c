@@ -123,6 +123,7 @@ int main(int argc, char** argv)
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
 	Nivel nivel = new_nivel();
+	nivel.cantNiveles = cantidadDeViajes(mdata.hojaDeViaje);
 	DatosMapa mapa;
 
 	int opcion = -1;
@@ -144,7 +145,7 @@ int main(int argc, char** argv)
 	char* pokemonDat;
 	char pokenestSiguiente;
 
-	while(1)
+	while(nivel.cantNiveles > nivel.nivelActual)
 	{
 		mapa.nombre = obtenerNombreMapa(mdata.hojaDeViaje,nivel.nivelActual); //Obtenemos el nombre del mapa numero X
 
@@ -160,6 +161,7 @@ int main(int argc, char** argv)
 		 */
 		nivel.finNivel = 0;
 		nivel.cantObjetivos = getCantObjetivos(mdata.objetivos[nivel.nivelActual]);
+
 
 		pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
 		while(nivel.finNivel == 0) //Mientras que no hayamos ganado el nivel
