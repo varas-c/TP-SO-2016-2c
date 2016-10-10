@@ -88,19 +88,31 @@ void recv_MoverOK(int fdServer)
 	}
 
 }
+
+void reiniciarEntrenador(Entrenador *entrenador)
+{
+	entrenador->posx = 1;
+	entrenador->posy = 1;
+	entrenador->movAnterior = 'y';
+    entrenador->flagx = 0;
+    entrenador->flagy = 0;
+}
+
+
+
 int main(int argc, char** argv)
 {
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
 
-	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	//parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
+	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 
 
 
-	parametros.dirPokedex = "/mnt/pokedex";
-	parametros.nombreEntrenador = "Ash";
+	//parametros.dirPokedex = "/mnt/pokedex";
+	//parametros.nombreEntrenador = "Ash";
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
@@ -188,6 +200,8 @@ int main(int argc, char** argv)
 							nivel.finNivel = 1;
 							nivel.nivelActual++;
 							nivel.numPokenest = 0;
+							reiniciarEntrenador(&entrenador);
+
 						}
 						else
 						{

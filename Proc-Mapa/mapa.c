@@ -902,14 +902,14 @@ int main(int argc, char** argv)
 
 	signal(SIGUSR2,sigHandler_reloadMetadata);
 
-	/*
+
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
-	*/
 
 
-	parametros.dirPokedex = "/mnt/pokedex";
-	parametros.nombreMapa = "PuebloPaleta";
+
+	//parametros.dirPokedex = "/mnt/pokedex";
+	//parametros.nombreMapa = "PuebloPaleta";
 
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
@@ -926,9 +926,6 @@ int main(int argc, char** argv)
 	gui_crearPokenests();
 
 	mdataMapa = leerMetadataMapa(parametros);
-
-
-	VectorRecursosMaximos maximo = new_VectorRecursosMaximos();
 
 	//**********************************
 
