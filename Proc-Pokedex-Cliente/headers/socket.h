@@ -17,7 +17,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-
+#include <signal.h>
 
 int fd_server;
 int vidas_restantes;

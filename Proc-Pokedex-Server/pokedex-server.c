@@ -13,17 +13,6 @@
 #include "headers/osada.h"
 #include "headers/socket.h"
 
-
-
-
-
-
-
-
-
-
-
-
 leer_archivo_osada(FILE* f,osada_header* header, osada_file* file)
 {
 	//HEADER

@@ -452,8 +452,6 @@ int main(int argc, char *argv[])
 	fstat(fd_fileSystem, &fsStat);
 
 	header= mmap(0, fsStat.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd_fileSystem, 0);
-
-
 	bitmap.size = header->bitmap_blocks * OSADA_BLOCK_SIZE;
 	bitmap.bitarray=header;
 	bitmap.bitarray+=OSADA_BLOCK_SIZE;

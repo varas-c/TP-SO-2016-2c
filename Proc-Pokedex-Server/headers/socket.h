@@ -19,7 +19,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "struct.h"
-
+#include <errno.h>
+#include <signal.h>
 //Obtiene un listener, si hay error, exit(1).
 int socket_listener()
 {	int listener;
@@ -69,7 +70,7 @@ void socket_select(int fdmax, fd_set *read_fds)
 
 	if (select(fdmax + 1, read_fds, NULL, NULL, NULL) == -1)
 	{
-		if(errno = EINTR)
+		if(errno == EINTR)
 		{
 			//DO NOTHING
 		}
