@@ -9,8 +9,9 @@ Códigos de operación:
 7: delete
 8: rename
 9: truncate
+...Puede haber más...
 --------------------------------------------------------------------------------------------------------------------------------------------------
-Criterios de envío: para todas las operaciones, se enviarán 2 paquetes: uno de 2 bytes, con el código de operación y el tamaño del buffer siguiente, y otro con la ruta necesaria. Si la ruta fuese mayor que el límite de mensaje impuesto, se deberá enviar un 0 en el tamaño.
+Criterios de envío: para todas las operaciones, se enviarán 2 paquetes: uno de 2 bytes, con el código de operación y el tamaño del buffer siguiente, y otro con la ruta necesaria. Si la ruta fuese mayor que el límite de mensaje impuesto, se deberá enviar un 0 en el tamaño. Límite a definir.
 --------------------------------------------------------------------------------------------------------------------------------------------------
 0 - getattr
 El tamaño del buffer respuesta es fijo, 32 bytes.
