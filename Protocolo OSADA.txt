@@ -1,0 +1,20 @@
+Códigos de operación:
+0: getattr
+1: readdir
+2: read
+3:write
+4: open
+5: create
+6: mkdir
+7: delete
+8: rename
+9: truncate
+--------------------------------------------------------------------------------------------------------------------------------------------------
+Criterios de envío: para todas las operaciones, se enviarán 2 paquetes: uno de 2 bytes, con el código de operación y el tamaño del buffer siguiente, y otro con la ruta necesaria. Si la ruta fuese mayor que el límite de mensaje impuesto, se deberá enviar un 0 en el tamaño.
+--------------------------------------------------------------------------------------------------------------------------------------------------
+0 - getattr
+El tamaño del buffer respuesta es fijo, 32 bytes.
+-------------------------------------------------------------------------
+1 - readdir
+El servidor responde en un byte si encontró el directorio (1= sí, -1=no) con un primer mensaje, y luego todos los nombres de los archivos, enviando un mensaje de ceros si no hay más.
+El tamaño máximo del buffer es 17, ya que es el máximo tamaño que puede tomar el nombre de un archivo.
