@@ -10,7 +10,7 @@
 
 t_list* listaPokenest;
 
-MetadataPokenest buscar_Pokenest(char simbolo)
+MetadataPokenest* buscar_Pokenest(char simbolo)
 {
 	bool _find_pokenest_(MetadataPokenest* aux)
 	{
@@ -19,14 +19,14 @@ MetadataPokenest buscar_Pokenest(char simbolo)
 
 	MetadataPokenest *ptr = (MetadataPokenest*) list_find(listaPokenest,(void*)_find_pokenest_);
 
-	return *ptr;
+	return ptr;
 }
 //****************************************************************************************************************
 
-int send_Pokenest(int socket,MetadataPokenest pokenestEnviar)
+int send_Pokenest(int socket,MetadataPokenest* pokenestEnviar)
 {
 	Paquete paquete;
-	paquete = srlz_Pokenest(pokenestEnviar); //Armamos un paquete serializado
+	paquete = srlz_Pokenest(*pokenestEnviar); //Armamos un paquete serializado
 	int retval = 0;
 
 	retval = send(socket,paquete.buffer,paquete.tam_buffer,0);

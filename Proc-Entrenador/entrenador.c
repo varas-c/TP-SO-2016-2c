@@ -183,8 +183,6 @@ int main(int argc, char** argv)
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 
-
-
 	//parametros.dirPokedex = "/mnt/pokedex";
 	//parametros.nombreEntrenador = "Ash";
 

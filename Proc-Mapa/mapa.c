@@ -83,6 +83,7 @@ structColasBloqueados colasBloqueados;
 			FUNCIONES DE LECTURA DE PARAMETROS POR CONSOLA (LOS QUE SE RECIBEN POR **ARGV)
 ****************************************************************************************************************/
 
+/*
 void loggearColas(void){
 	t_queue *auxLista;
 	auxLista = queue_create();
@@ -149,6 +150,7 @@ void loggearColas(void){
 	pthread_mutex_unlock(&mutex_Listos);
 	pthread_mutex_unlock(&mutex_Bloqueados);
 }
+*/
 //****************************************************************************************************************
 
 void free_paquete(Paquete *paquete)
@@ -326,8 +328,6 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 	DIR *dpPokenest = NULL;
 	struct dirent *dptrPokenest = NULL;
 
-	char* pokemonDat = NULL;
-
 	t_pkmn_factory* fabrica = create_pkmn_factory();     //SE CREA LA FABRICA PARA HACER POKEMONES
 
 	dpPokenest = opendir(rutaPokenest); //Abrimos la rutaPokenest (PRUEBA: /mnt/pokedex/Mapas/Mapa1/Pokenest)
@@ -445,12 +445,11 @@ void printfLista()
 void expropiarPokemones(t_list* listaPokemones)
 {
 	Pokemon* pokemon = NULL;
-	MetadataPokenest pokenest;;
+	MetadataPokenest* pokenest;;
 	Jugador* jugador = NULL;
 
 	int cantPokemones = list_size(listaPokemones);
 	int i;
-	int posicion;
 
 	for(i=0;i<cantPokemones;i++)
 	{
@@ -471,7 +470,7 @@ void expropiarPokemones(t_list* listaPokemones)
 		else //Ningun jugador estaba esperando este pokemon, asi que metemos al pokemon a la pokenest
 		{
 			pokenest = buscar_Pokenest(pokemon->pokenest);
-			queue_push(pokenest.colaDePokemon,pokemon);
+			queue_push(pokenest->colaDePokemon,pokemon);
 		}
 
 	}
@@ -542,6 +541,7 @@ Paquete srlz_MoverOK()
 
 }
 
+
 int send_MoverOK(int socket)
 {
 	Paquete paquete;
@@ -554,6 +554,7 @@ int send_MoverOK(int socket)
 
 	return retval;
 }
+
 
 int verificarConexion(Jugador* jugador,int retval,int* quantum)
 {
@@ -586,10 +587,9 @@ Jugador* get_prioritySRDF()
 		return jugador->conocePokenest == FALSE;
 	}
 
-	jugadorBuscado= list_remove_by_condition(colaListos,_find_priority_SRDF);
+	jugadorBuscado= list_remove_by_condition(colaListos,(void*)_find_priority_SRDF);
 
 	return jugadorBuscado;
-
 }
 
 bool any_prioritySRDF()
@@ -603,7 +603,7 @@ bool any_prioritySRDF()
 	}
 
 
-	flag = list_any_satisfy(colaListos,_any_satisfy_priority);
+	flag = list_any_satisfy(colaListos,(void*)_any_satisfy_priority);
 
 	return flag;
 }
@@ -659,12 +659,12 @@ void* thread_planificador()
 	int codOp = -1;
 
 	char pokenestPedida;
-	MetadataPokenest pokenestEnviar;
+	MetadataPokenest* pokenestEnviar;
 	char* mostrar = malloc(sizeof(char)*256);
 
 	PosEntrenador pos;
 
-	MetadataPokenest pokenest;
+	MetadataPokenest* pokenest;
 	bool flag_DESCONECTADO = FALSE;
 	bool flag_SRDF;
 
@@ -767,22 +767,22 @@ void* thread_planificador()
 					Pokemon* pokemon;
 
 					//HASTA ACA ESTA BIEN!!!
-					if(queue_size(pokenest.colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
+					if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
 					{
-						pokemon = queue_pop(pokenest.colaDePokemon);
+						pokemon = queue_pop(pokenest->colaDePokemon);
 						retval = send_capturaOK(jugador,pokemon);
 						flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
 
 						if(flag_DESCONECTADO == FALSE)
 						{
 							list_add(jugador->pokemonCapturados,pokemon);
-							restarRecurso(gui_items,pokenest.simbolo);
+							restarRecurso(gui_items,pokenest->simbolo);
 							jugador->conocePokenest = false;
 						}
 
 						else
 						{
-							queue_push(pokenest.colaDePokemon,pokemon);
+							queue_push(pokenest->colaDePokemon,pokemon);
 						}
 
 						quantum=0;
@@ -807,7 +807,7 @@ void* thread_planificador()
 
 			}//FIN ELSE
 
-			calcular_coordenadas(&(jugador->entrenador),pokenestEnviar.posicionX,pokenestEnviar.posicionY);
+			calcular_coordenadas(&(jugador->entrenador),pokenestEnviar->posicionX,pokenestEnviar->posicionY);
 
 			int tam = list_size(colaListos);
 
@@ -901,7 +901,7 @@ int main(int argc, char** argv)
 	int fdmax;        // número máximo de descriptores de fichero
 	int listener;     // descriptor de socket a la escucha
 
-	int i, j;
+	int i;
 	FD_ZERO(&fds_entrenadores);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);
 
@@ -1003,7 +1003,6 @@ int main(int argc, char** argv)
 	free(mdataPokenest.tipoPokemon);
 	free(mdataMapa.algoritmo);
 	free(mdataMapa.ip);
-	free(mdataMapa.puerto);
 
 	log_info(infoLogger, "Se cierra Mapa.");
 	log_destroy(traceLogger);
