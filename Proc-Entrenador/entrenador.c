@@ -150,7 +150,7 @@ bool informar_signalMuerteEntrenador()
 				return true;
 				break;
 			case '2':
-				printf("1) Saliendo... \n");
+				printf("2) Saliendo... \n");
 				return false;
 				break;
 			default:
@@ -208,6 +208,9 @@ int main(int argc, char** argv)
 	bool flag_seguirJugando = true;
 
 	Entrenador entrenador_estadoInicial = entrenador;
+	int auxcantNiveles;
+	int auxreintentos;
+
 
 	while(nivel.cantNiveles > nivel.nivelActual && flag_seguirJugando == true)
 	{
@@ -276,10 +279,10 @@ int main(int argc, char** argv)
 			if(flag_SIGNALMUERTE == true)
 			{
 				close(fd_server);
-				int auxcantNiveles = nivel.cantNiveles;
+				auxcantNiveles = nivel.cantNiveles;
 				nivel = new_nivel();
 				nivel.cantNiveles = auxcantNiveles;
-				int auxreintentos = entrenador.reintentos;
+				entrenador.reintentos = auxreintentos;
 				entrenador = entrenador_estadoInicial;
 				entrenador.reintentos = auxreintentos++;
 				nivel.finNivel = 1;
