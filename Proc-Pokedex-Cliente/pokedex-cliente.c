@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
+#include <time.h>
 #include <commons/string.h>
 #include <commons/config.h>
 #include "headers/struct.h"
@@ -24,6 +25,13 @@
 char* numero_IP = "127.0.0.1";
 char* numero_Puerto = "9995";
 int fd_server;
+
+void finalizarProceso(int signal)
+{
+	//if(signal==SIGTERM || signal==SIGINT || signal == SIGHUP)
+	close(fd_server);
+	exit(0);
+}
 
 void enviarCodigoyTamanio(int codigo, int tamanio)
 {
@@ -59,6 +67,7 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 		buffer = malloc(32);
 		if ((res = recv(fd_server, (osada_file*)buffer, 32, 0)) <= 0)
 		{
+			fflush(stdout);
 			printf("El servidor se encuentra desconectado.\n");
 			retorno = -ENOENT;
 		}
@@ -69,12 +78,14 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 			{
 				stbuf->st_mode = S_IFDIR | 0777;
 				stbuf->st_nlink = 2;
+				stbuf->st_mtim.tv_sec = (__time_t)(archivo->lastmod);
 			}
 			else if (archivo->state == REGULAR)
 			{
 				stbuf->st_mode = S_IFREG | 0777;
 				stbuf->st_nlink = 1;
-				stbuf->st_size = (__off_t)archivo->file_size;
+				stbuf->st_size = (__off_t)(archivo->file_size);
+				stbuf->st_mtim.tv_sec = (__time_t)(archivo->lastmod);
 			}
 			else
 				retorno = -ENOENT;
@@ -99,14 +110,14 @@ static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
 	{
+		fflush(stdout);
 		printf("El servidor se encuentra desconectado.\n");
 		retorno = -ENOENT;
 	}
 
+
 	if ((signed char) *(signed char*)buffer==1)
 	{
-		filler(buf, ".", NULL, 0);
-		filler(buf, "..", NULL, 0);
 		do
 		{
 			free(buffer);
@@ -114,14 +125,16 @@ static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 			memset(buffer, 0, 17);
 			if ((res = recv(fd_server, buffer, 17, 0))<=0)
 			{
+				fflush(stdout);
 				printf("El servidor se encuentra desconectado.\n");
 				retorno = -ENOENT;
 			}
 			filler(buf, buffer, NULL, 0);
 		}while(strlen(buffer)>0);
 	}
-	else
+	else if ((signed char) *(signed char*)buffer==-1)
 		retorno = -ENOENT;
+
 
 	free(buffer);
 	return retorno;
@@ -137,7 +150,12 @@ static struct fuse_operations osada_oper = {
 int main(int argc, char** argv)
 {
 	fd_server = get_fdServer(numero_IP,numero_Puerto); //el fd_server es el "socket" que necesitas para comunicarte con el mapa
-
+/*
+ * Uso de señales. Por ahora no hacen falta, el server detecta la desconexion
+	signal(SIGINT, finalizarProceso);
+	signal(SIGTERM, finalizarProceso);
+	signal(SIGHUP, finalizarProceso);
+*/
 	return fuse_main(argc, argv, &osada_oper, NULL);
 
 	return 0;
