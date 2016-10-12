@@ -162,19 +162,31 @@ bool informar_signalMuerteEntrenador()
 }
 
 
+
+
+void send_coordenadasDestino(Entrenador* entrenador)
+{
+	int destinox = fabs(entrenador->destinox);
+	int destinoy = fabs(entrenador->destinoy);
+
+
+
+}
+
+
+
 int main(int argc, char** argv)
 {
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
-
-	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	//parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
-
+	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 
 
-	parametros.dirPokedex = "/mnt/pokedex";
-	parametros.nombreEntrenador = "Ash";
+
+	//parametros.dirPokedex = "/mnt/pokedex";
+	//parametros.nombreEntrenador = "Ash";
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
@@ -242,7 +254,7 @@ int main(int argc, char** argv)
 					send_solicitarPokenest(&paquete,fd_server);
 					recv_solicitarPokenest(&pokenest, fd_server);
 					calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
-					//send_coordenadas(entrenador);
+					//send_coordenadasDestino(&entrenador);
 					break;
 				case MOVER://Caso 2: Queremos movernos!
 					mover_entrenador(&entrenador);

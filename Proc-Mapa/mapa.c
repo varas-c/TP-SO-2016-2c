@@ -644,6 +644,44 @@ bool any_prioritySRDF()
 	return flag;
 }
 
+
+void calcular_coordenadas(Entrenador* entrenador, int x, int y)
+{
+	//Pregunto por X
+
+	if(x > entrenador->posx)
+	{
+		entrenador ->destinox = fabs(x - entrenador->posx);
+	}
+
+	if(entrenador->posx == x)
+	{
+		entrenador ->destinox = 0;
+	}
+
+	if(x < entrenador->posx)
+	{
+		entrenador->destinox = fabs(x - entrenador->posx);
+	}
+
+	//Pregunto por y
+
+	if(y > entrenador->posy)
+	{
+		entrenador ->destinoy = fabs(y - entrenador->posy);
+	}
+
+	if(entrenador->posy == y)
+	{
+		entrenador ->destinoy = 0;
+	}
+
+	if(y < entrenador->posy)
+	{
+		entrenador->destinoy = fabs(y - entrenador->posy);
+	}
+}
+
 void* thread_planificador()
 {
 
@@ -776,6 +814,7 @@ void* thread_planificador()
 						{
 							list_add(jugador->pokemonCapturados,pokemon);
 							restarRecurso(gui_items,pokenest.simbolo);
+							jugador->conocePokenest = false;
 						}
 
 						else
@@ -804,7 +843,7 @@ void* thread_planificador()
 
 			}//FIN ELSE
 
-
+			calcular_coordenadas(&(jugador->entrenador),pokenestEnviar.posicionX,pokenestEnviar.posicionY);
 
 			int tam = list_size(colaListos);
 
@@ -903,13 +942,13 @@ int main(int argc, char** argv)
 	signal(SIGUSR2,sigHandler_reloadMetadata);
 
 
-	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
 
 
-	//parametros.dirPokedex = "/mnt/pokedex";
-	//parametros.nombreMapa = "PuebloPaleta";
+	parametros.dirPokedex = "/mnt/pokedex";
+	parametros.nombreMapa = "PuebloPaleta";
 
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
