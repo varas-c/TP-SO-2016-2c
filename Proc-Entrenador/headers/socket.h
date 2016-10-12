@@ -68,18 +68,27 @@ int get_fdServer(char* numero_IP, char* numero_Puerto)
 //******************************************
 
 void manejar_signals(int operacion){
-	switch(operacion){
-	case SIGUSR1:
-		vidas_restantes = vidas_restantes + 1;
-		break;
-	case SIGTERM:
-		vidas_restantes = vidas_restantes - 1;
-		if(vidas_restantes == 0){
-			exit(1);
+
+	if(flag_SIGNALMUERTE == false)
+	{
+
+		switch(operacion){
+
+		case SIGUSR1: //Le sumamos una vida al entrenador
+			entrenador.vidas += 1;
+			break;
+		case SIGTERM://Le restamos uan vida al entrenador
+			entrenador.vidas -= 1;
+
+			if(entrenador.vidas == 0)
+			{
+				flag_SIGNALMUERTE = true;
+			}
+			break;
 		}
-		break;
 	}
 }
+
 //******************************************
 
 void sigHandler_endProcess(int signal)
