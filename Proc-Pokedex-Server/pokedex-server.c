@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 //#include <fuse.h>
+#include <pthread.h>
 #include <commons/config.h>
 #include <commons/log.h>
 #include <commons/bitarray.h>
@@ -123,11 +124,10 @@ int liberarBloque(int bloque, uint8_t eliminarEnlace)
 	{
 		int i;
 
-		for(i=0;i<header->data_blocks, i>=0;i++)
+		for(i=0;i<header->data_blocks && i>=0;i++)
 		{
 			if (tablaAsignaciones[i]==bloque)
 			{
-				printf("Bloque vale: %d. El bloque que lo contiene es %d.\n\n", bloque, i);
 				tablaAsignaciones[i]=tablaAsignaciones[bloque];
 				i=-2;
 			}
@@ -306,33 +306,6 @@ int actualizar(int archivo, void* nuevosDatos, int cantidadBytes, int offset)
 	return 1;
 }
 
-/*
-leer_archivo_osada(FILE* f,osada_header* header, osada_file* file)
-{
-	//HEADER
-	header = malloc(sizeof(osada_header*));
-	fread(header->magic_number, 7, 1, f);
-	fread(header->version, 1, 1, f);
-	fread(header->fs_blocks, 4, 1, f);
-	fread(header->bitmap_blocks, 4, 1, f);
-	fread(header->allocations_table_offset, 4, 1, f);
-	fread(header->data_blocks, 4, 1, f);
-	fread(header->padding, 40, 1, f);
-
-	printf("\n%s\n",header->magic_number);
-
-	//FILE
-	file=malloc(sizeof(osada_file));
-	osada_file_state state;
-	fread(&state, 1, 1, f);
-	file->state=state;
-	fread(file->fname, 17, 1, f);
-	fread(file->parent_directory, 2, 1, f);
-	fread(file->file_size, 4, 1, f);
-	fread(file->lastmod, 4, 1, f);
-	fread(file->first_block, 4, 1, f);
-}
-*/
 
 void gestionarSocket(void* socket)
 {
@@ -347,7 +320,11 @@ void gestionarSocket(void* socket)
 		buffer = malloc(2);
 		resultado= recv(cliente, buffer, 2, 0);
 		if (resultado<=0)
+		{
+			fflush(stdout);
+			printf("Cliente %d desconectado.\n\n", cliente);
 			return;
+		}
 		memcpy(&operacion, buffer, 1);
 		memcpy(&tamBuffer, buffer+1, 1);
 		free(buffer);
@@ -355,7 +332,11 @@ void gestionarSocket(void* socket)
 		switch(operacion)
 		{
 		case 0: if ((resultado = recv(cliente, buffer, tamBuffer, 0))<=0)
+				{
+					fflush(stdout);
+					printf("Cliente %d desconectado.\n\n", cliente);
 					return;
+				}
 				archivo = obtenerArchivo((char*)buffer);
 				free(buffer);
 				if (archivo<0)
@@ -376,7 +357,8 @@ void gestionarSocket(void* socket)
 
 		case 1: if ((resultado = recv(cliente, buffer, tamBuffer, 0))<=0)
 				{
-					printf("Cliente desconectado. Hilo cerrado\n\n");
+					fflush(stdout);
+					printf("Cliente %d desconectado.\n\n", cliente);
 					return;
 				}
 				if (strcmp(buffer, "/") == 0)
@@ -401,9 +383,20 @@ void gestionarSocket(void* socket)
 						if (tablaArchivos[i].state != DELETED && tablaArchivos[i].parent_directory == archivo)
 							send(cliente, (void*)tablaArchivos[i].fname, 17, 0);
 					}
-					buffer = malloc(17);
-					memset(buffer, 0, 17);
-					send(cliente, buffer, 17, 0);
+
+					if (primero)
+					{
+						buffer = malloc(1);
+						memset(buffer, 0, 1);
+						send(cliente, buffer, 1, 0);
+					}
+					else
+					{
+						buffer = malloc(17);
+						memset(buffer, 0, 17);
+						send(cliente, buffer, 17, 0);
+					}
+
 				}
 				else
 				{
@@ -434,20 +427,20 @@ int main(int argc, char** argv)
 
 
 	bitmap.size = header->bitmap_blocks * OSADA_BLOCK_SIZE;
-	bitmap.bitarray=header;
+	bitmap.bitarray=(char*)header;
 	bitmap.bitarray+=OSADA_BLOCK_SIZE;
 	bitmap.mode=MSB_FIRST;
 
-	uint8_t* aux = header;
+	uint8_t* aux = (uint8_t*)header;
 	aux+= OSADA_BLOCK_SIZE + bitmap.size;
 	tablaArchivos = (osada_file*)aux;
 
 	aux+= 2048*sizeof(osada_file);
-	tablaAsignaciones = aux;
+	tablaAsignaciones = (osada_block_pointer*)aux;
 	tamanioAsig = header->fs_blocks - header->allocations_table_offset - header->data_blocks; //En bloques
 
 	aux += tamanioAsig*OSADA_BLOCK_SIZE;
-	inicioDatos= aux;
+	inicioDatos= (osada_block*)aux;
 
 	tamanioAdmin = header->fs_blocks - header->data_blocks;
 
@@ -491,8 +484,11 @@ int main(int argc, char** argv)
 						//ACEPTAMOS UN NUEVO CLIENTE
 						//socket_addNewConnection lo que ace
 						int cliente = socket_addNewConection(listener,&master,&fdmax);
-						int retval = pthread_create(&hilo, NULL, gestionarSocket, (void*) cliente);
-						printf("Nueva conexion detectada.Socket: %d\n", cliente);
+						int retval = pthread_create(&hilo, NULL, (void*)gestionarSocket, (void*) cliente);
+						if(!retval)
+							printf("Nueva conexion detectada.Socket: %d\n", cliente);
+						else
+							printf("No se ha podido establecer la conexion con el cliente.Socket: %d\n", cliente);
 						//TODO revisar desconexion de cliente
 					}
 				}
