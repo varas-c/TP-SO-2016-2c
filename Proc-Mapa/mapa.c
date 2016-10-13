@@ -61,6 +61,7 @@ pthread_mutex_t mutex_Listos = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Bloqueados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Desconectados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_hiloDeadlock = PTHREAD_MUTEX_INITIALIZER;
 sem_t semaforo_SincroSelect;
 
 typedef struct
@@ -748,7 +749,9 @@ void* thread_planificador()
 	{
 
 		//Desbloqueamos jugadores
+		pthread_mutex_lock(&mutex_hiloDeadlock);
 		desbloquearJugadores(lista_jugadoresBloqueados);
+		pthread_mutex_lock(&mutex_hiloDeadlock);
 
 		if(!list_is_empty(colaListos))
 		{
@@ -916,7 +919,9 @@ void* thread_planificador()
 		if(flag_DESCONECTADO == TRUE)
 		{
 		lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
+		pthread_mutex_lock(&mutex_hiloDeadlock);
 		borrarJugadorSistema(jugador);
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
 		desconectarJugador(jugador);
 		quantum = 0;
 		flag_DESCONECTADO = TRUE;
@@ -1058,8 +1063,11 @@ int main(int argc, char** argv)
 					//Mutua exclusion con el planificador !
 					pthread_mutex_lock(&mutex_Listos);
 					list_add(colaListos, aux);
-					list_add(global_listaJugadoresSistema,aux);
 					pthread_mutex_unlock(&mutex_Listos);
+
+					pthread_mutex_lock(&mutex_hiloDeadlock);
+					list_add(global_listaJugadoresSistema,aux);
+					pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 					//Loggeamos info
 					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
