@@ -14,6 +14,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <time.h>
 #include <commons/string.h>
@@ -21,6 +23,14 @@
 #include "headers/struct.h"
 #include "headers/socket.h"
 #include "headers/osada.h"
+
+#define COD_GETATTR 1
+#define COD_READDIR 2
+#define COD_READ 3
+#define COD_TRUNCATE 4
+#define COD_WRITE 5
+//enum codigo_operacion {GETATTR, READDIR, READ, TRUNCATE, WRITE};
+//ATENCIÓN: off_t ocupa 8 bytes acá, y 4 en el servidor. Tener en cuenta al hacer sizeof(off_t)
 
 char* numero_IP = "127.0.0.1";
 char* numero_Puerto = "9995";
@@ -33,7 +43,7 @@ void finalizarProceso(int signal)
 	exit(0);
 }
 
-void enviarCodigoyTamanio(int codigo, uint8_t tamanio)
+void enviarCodigoYTamanio(int codigo, uint8_t tamanio)
 {
 	void* buffer;
 	buffer = malloc(2);
@@ -49,7 +59,6 @@ void enviarPath(const char* path)
 	void* buffer;
 	buffer = malloc(strlen(path)+1);
 	memcpy(buffer, path, strlen(path)+1);
-	printf("Path: %s, buffer: %s\n\n", path, (char*)buffer);
 	send(fd_server, buffer, strlen(path)+1, 0);
 	free(buffer);
 	return;
@@ -57,7 +66,6 @@ void enviarPath(const char* path)
 
 static int osada_getattr(const char *path, struct stat *stbuf)
 {
-	printf("Entra en getattr\n\n");
 	void* buffer;
 	int res = 0;
 	int retorno = 0;
@@ -68,11 +76,10 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 	{
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
-		stbuf->st_mtim.tv_sec = (__time_t)time(NULL);
 	}
 	else
 	{
-		enviarCodigoyTamanio(1, strlen(path)+1);
+		enviarCodigoYTamanio(COD_GETATTR, strlen(path)+1);
 		enviarPath(path);
 		buffer = malloc(32);
 		if ((res = recv(fd_server, (osada_file*)buffer, 32, 0)) <= 0)
@@ -108,12 +115,11 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 
 static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
-	printf("Entra en readdir\n\n");
 	void* buffer;
 	int retorno = 0;
 	int res=0;
 
-	enviarCodigoyTamanio(2, strlen(path)+1);
+	enviarCodigoYTamanio(COD_READDIR, strlen(path)+1);
 	enviarPath(path);
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
@@ -156,8 +162,10 @@ static int osada_read(const char *path, char *buf, size_t size, off_t offset,
 	void* buffer;
 	int retorno = size;
 	int res=0;
-	printf("Entra a read, size: %d offset: %d\n\n", size, offset);
-	enviarCodigoyTamanio(3, strlen(path)+1);
+
+	//ATENCIÓN: off_t ocupa 8 bytes acá, y 4 en el servidor. Tener en cuenta al hacer sizeof(off_t)
+
+	enviarCodigoYTamanio(COD_READ, strlen(path)+1);
 	enviarPath(path);
 	buffer = malloc(sizeof(size)+sizeof(offset));
 	memcpy(buffer, &size, sizeof(size));
@@ -175,7 +183,57 @@ static int osada_read(const char *path, char *buf, size_t size, off_t offset,
 		retorno = 0;
 	free(buffer);
 
-	printf("Sale de read. Leyo: %d\n\n", retorno);
+	return retorno;
+}
+
+int osada_truncate(const char * path, off_t size) //Truncate debe estar para que write funcione
+{
+	void* buffer;
+
+	enviarCodigoYTamanio(COD_TRUNCATE, strlen(path)+1);
+	enviarPath(path);
+	buffer = malloc(sizeof(size));
+	memset(buffer, size, sizeof(size));
+	send(fd_server, buffer, sizeof(off_t), 0);
+	free(buffer);
+
+	return 0;
+}
+
+static int osada_write(const char *path, const char *buf, size_t size, off_t offset,
+		struct fuse_file_info *fi) {
+
+	void* buffer;
+	int retorno = size;
+	int res=0;
+
+	enviarCodigoYTamanio(COD_WRITE, strlen(path)+1);
+	enviarPath(path);
+
+	buffer=malloc(sizeof(size_t)+sizeof(off_t));
+	memcpy(buffer, &size, sizeof(size));
+	memcpy(buffer+sizeof(size_t), &offset, sizeof(off_t));
+	send(fd_server, buffer, sizeof(size_t)+sizeof(off_t), 0);
+	free(buffer);
+	buffer= malloc(size);
+	memcpy(buffer, buf, size);
+	send(fd_server, buffer, size, 0);
+	free(buffer);
+	buffer = malloc(1);
+	if ((res = recv(fd_server, buffer, 1, 0))<=0)
+	{
+		printf("El servidor se encuentra desconectado.\n");
+		retorno = 0;
+	}
+	if (!((int*)buffer)[0])
+		retorno = 0;
+
+	if (retorno)
+		printf("Se escribieron %d bytes.\n\n", retorno);
+	else
+		printf("No se pudo escribir.\n\n");
+
+
 	return retorno;
 }
 
@@ -183,10 +241,12 @@ static struct fuse_operations osada_oper = {
 		.getattr = osada_getattr,
 		.readdir = osada_readdir,
 		.read = osada_read,
+		.truncate = osada_truncate,
+		.write = osada_write,
 };
 
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
 	fd_server = get_fdServer(numero_IP,numero_Puerto); //el fd_server es el "socket" que necesitas para comunicarte con el mapa
 /*
