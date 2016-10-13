@@ -363,13 +363,12 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 			strcat(rutaAux,"/");
 
 			//inicializamos las variables para una nueva Pokenest!
-			pokenest = malloc(sizeof(MetadataPokenest));
+
 
 			//Dentro de la carpeta hay un metadata que hay que leer!
 
 			//Leemos la metadata
-			*pokenest = leerMetadataPokenest(rutaAux,"metadata");
-
+			pokenest = leerMetadataPokenest(rutaAux,"metadata");
 			pokenest->colaDePokemon = queue_create();
 
 			//Ya leimos la Pokenest, ahora hay que leer los archivos pokemon que tienen el nombre DE LA CARPETA solo que son archivos y tienen numero y .dat!
@@ -384,6 +383,7 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 				pokemon->nombre = stringPokemonDat(dptrPokenest->d_name,i);
 				pokemon->pokenest = pokenest->simbolo;
 				mdataPokemon = leerMetadataPokemon(rutaAux,pokemon->nombre);
+				//pokemon->pokemon = malloc(sizeof(t_pokemon*));
 				pokemon->pokemon = create_pokemon(fabrica, dptrPokenest->d_name, mdataPokemon.nivel);
 				queue_push(pokenest->colaDePokemon,pokemon);
 			}
@@ -507,7 +507,7 @@ Paquete srlz_capturaOK(Pokemon* pokemon)
 	memcpy(paquete.buffer+sizeof(int),&tamPokemonDat,sizeof(int));
 	memcpy(paquete.buffer+sizeof(int)*2,pokemonDat,sizeof(char)*tamPokemonDat);
 
-	free(pokemonDat);
+	//free(pokemonDat);
 	return paquete;
 }
 
@@ -648,7 +648,7 @@ void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 
 void* thread_planificador()
 {
-	//nivel_gui_inicializar();
+	nivel_gui_inicializar();
 
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
@@ -667,7 +667,7 @@ void* thread_planificador()
 	MetadataPokenest* pokenest;
 	bool flag_DESCONECTADO = FALSE;
 	bool flag_SRDF;
-
+	Pokemon* pokemon;
 
 
 	while(1)
@@ -764,7 +764,6 @@ void* thread_planificador()
 					pokenestPedida = dsrlz_Pokenest(buffer_recv);//Identificamos la pokenest pedida
 					//opc = tomarDecisionCapturaPokemon(jugador,pokenestPedida);
 					pokenest = buscar_Pokenest(pokenestPedida);
-					Pokemon* pokemon;
 
 					//HASTA ACA ESTA BIEN!!!
 					if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
@@ -844,7 +843,14 @@ void* thread_planificador()
 			pthread_mutex_unlock(&mutex_Listos);
 			quantum = 0;
 		}
+
+		if(jugador->estado == 1)
+		{
+			//Do nothing
 		}
+
+		}
+
 
 	//	jugador=NULL;
 
