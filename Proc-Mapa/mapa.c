@@ -42,7 +42,6 @@
 			VARIABLES GLOBALES
 ****************************************************************************************************************/
 
-#define TAMANIO_BUFFER 11
 t_list* colaListos;
 t_list* colaBloqueados;
 t_queue* colaDesconectados;
@@ -75,6 +74,8 @@ int global_cantJugadores = -1;
 fd_set fds_entrenadores;
 ParametrosMapa parametros;
 structColasBloqueados colasBloqueados;
+
+t_list* global_listaJugadoresSistema;
 
 #include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
 
@@ -442,40 +443,52 @@ void printfLista()
 }
 */
 
-void expropiarPokemones(t_list* listaPokemones)
+
+
+typedef struct
 {
-	Pokemon* pokemon = NULL;
+	Pokemon* pokemon;
+	Jugador* jugador;
+}JugadorBloqueado;
+
+
+
+t_list* expropiarPokemones(t_list* listaPokemones)
+{
+	JugadorBloqueado* jugadorBloqueado;
+	t_list* lista_jugadoresBloqueados = list_create();
+
+	Pokemon* pokemonDesbloqueado = NULL;
 	MetadataPokenest* pokenest;;
-	Jugador* jugador = NULL;
+	Jugador* jugadorDesbloqueado = NULL;
 
 	int cantPokemones = list_size(listaPokemones);
 	int i;
 
 	for(i=0;i<cantPokemones;i++)
 	{
-		pokemon = list_get(listaPokemones,i); //Obtengo el primer Pokemon
+		pokemonDesbloqueado = list_get(listaPokemones,i); //Obtengo el primer Pokemon
 
-		jugador = desbloquearJugador(pokemon->pokenest);
+		jugadorDesbloqueado = desbloquearJugador(pokemonDesbloqueado->pokenest);
 
-		if(jugador != NULL) //Desbloqueamos un jugador de la cola de bloqueados! Hay que pasarlo a ready
+		if(jugadorDesbloqueado != NULL) //Desbloqueamos un jugador, agrego al jugador y a su pokemon, a la lista para desbloquear
 		{
-			pthread_mutex_lock(&mutex_Listos);
-			jugador->estado = 1;
-			jugador->peticionBloqueado = -1;
-			list_add(jugador->pokemonCapturados,pokemon);
-			list_add(colaListos,jugador);
-			pthread_mutex_unlock(&mutex_Listos);
+			jugadorBloqueado = malloc(sizeof(JugadorBloqueado));
+			jugadorBloqueado->jugador = jugadorDesbloqueado; //Pasamos el jugador al struct
+			jugadorBloqueado->pokemon = pokemonDesbloqueado;
+			list_add(lista_jugadoresBloqueados,jugadorBloqueado);
+
 		}
 
 		else //Ningun jugador estaba esperando este pokemon, asi que metemos al pokemon a la pokenest
 		{
-			pokenest = buscar_Pokenest(pokemon->pokenest);
-			queue_push(pokenest->colaDePokemon,pokemon);
+			pokenest = buscar_Pokenest(pokemonDesbloqueado->pokenest);
+			queue_push(pokenest->colaDePokemon,pokemonDesbloqueado);
 		}
 
 	}
 
-	//list_clean(listaPokemones);
+	return lista_jugadoresBloqueados;
 }
 
 
@@ -483,11 +496,15 @@ void expropiarPokemones(t_list* listaPokemones)
 
 void desconectarJugador(Jugador* jugador)
 {
-	close(jugador->socket);
+	int socket = jugador->socket;
+	close(socket);
 	BorrarItem(gui_items,jugador->entrenador.simbolo);
-	FD_CLR(jugador->socket,&fds_entrenadores);
-	expropiarPokemones(jugador->pokemonCapturados);
+	list_clean(jugador->pokemonCapturados);
+	list_destroy(jugador->pokemonCapturados);
+	//free(jugador->entrenador);
 	free(jugador);
+
+	FD_CLR(socket,&fds_entrenadores);
 }
 
 //*************************************************************************
@@ -646,6 +663,51 @@ void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 	}
 }
 
+void desbloquearJugadores(t_list* lista)
+{
+
+	if(lista != NULL)
+	{
+		JugadorBloqueado* jugadorBloqueado;
+		int tamLista = list_size(lista);
+		int i;
+
+
+		if(tamLista > 0)
+		{
+			for(i=0;i<tamLista;i++)
+			{
+				jugadorBloqueado = list_remove(lista,i); //Hay que informarle que capturó
+				send_capturaOK(jugadorBloqueado->jugador,jugadorBloqueado->pokemon);
+
+				pthread_mutex_lock(&mutex_Listos);
+				jugadorBloqueado->jugador->estado = 0;
+				jugadorBloqueado->jugador->peticionBloqueado = 0;
+				list_add(jugadorBloqueado->jugador->pokemonCapturados,jugadorBloqueado->pokemon);
+				list_add(colaListos,jugadorBloqueado->jugador);
+				free(jugadorBloqueado);
+				pthread_mutex_unlock(&mutex_Listos);
+			}
+		}
+	}
+
+}
+
+void borrarJugadorSistema(Jugador* jugador)
+{
+	int socketBuscado = jugador->socket;
+
+	bool _find_socket_(Jugador* removido)
+	{
+		return removido->socket == socketBuscado;
+	}
+
+	list_remove_by_condition(global_listaJugadoresSistema,(void*)_find_socket_);
+
+
+}
+
+
 void* thread_planificador()
 {
 	nivel_gui_inicializar();
@@ -668,6 +730,7 @@ void* thread_planificador()
 	bool flag_DESCONECTADO = FALSE;
 	bool flag_SRDF;
 	Pokemon* pokemon;
+	t_list* lista_jugadoresBloqueados = NULL;
 
 
 	while(1)
@@ -681,8 +744,14 @@ void* thread_planificador()
 
 	int retval = 0;
 
-	while(!list_is_empty(colaListos))
+	while(!list_is_empty(global_listaJugadoresSistema))
 	{
+
+		//Desbloqueamos jugadores
+		desbloquearJugadores(lista_jugadoresBloqueados);
+
+		if(!list_is_empty(colaListos))
+		{
 
 		if(strcmp(mdataMapa.algoritmo,"SRDF") == 0)
 		{
@@ -703,6 +772,7 @@ void* thread_planificador()
 			}
 
 		pthread_mutex_unlock(&mutex_Listos);
+
 		}
 
 		else
@@ -723,16 +793,11 @@ void* thread_planificador()
 		while(quantum > 0)
 		{
 			usleep(mdataMapa.retardo*1000);
-			//Ya tenemos jugador, ahora le mandamos un turno
-			//send_Turno(jugador->socket);
-			//Ya mandamos el turno, ahora recibimos el pedido del entrenador
-
 
 			estado_socket = recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
 			if(estado_socket <= 0)
 			{
-				desconectarJugador(jugador);
 				quantum = 0;
 				flag_DESCONECTADO = TRUE;
 			}
@@ -798,8 +863,10 @@ void* thread_planificador()
 
 				break;
 				case 0:
+					lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
 					desconectarJugador(jugador);
 					quantum = 0;
+					flag_DESCONECTADO = TRUE;
 					break;
 
 				} //FIN SWITCH
@@ -844,21 +911,23 @@ void* thread_planificador()
 			quantum = 0;
 		}
 
-		if(jugador->estado == 1)
+		}
+
+		if(flag_DESCONECTADO == TRUE)
 		{
-			//Do nothing
+		lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
+		borrarJugadorSistema(jugador);
+		desconectarJugador(jugador);
+		quantum = 0;
+		flag_DESCONECTADO = TRUE;
 		}
-
-		}
-
-
-	//	jugador=NULL;
-
 
 		flag_DESCONECTADO = FALSE;
 
 
 	}
+
+	} //While global
 
 	}
 }
@@ -884,6 +953,7 @@ int main(int argc, char** argv)
 	gui_items = list_create();
 	listaPokenest= list_create();
 	listaPokemon = list_create();
+	global_listaJugadoresSistema = list_create();
 
 
 	leerTodasLasPokenest(parametros);
@@ -981,12 +1051,14 @@ int main(int argc, char** argv)
 					aux->conocePokenest = FALSE;
 					aux->peticionBloqueado = 0;
 
+
 					//Creamos el personaje
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
 
 					//Mutua exclusion con el planificador !
 					pthread_mutex_lock(&mutex_Listos);
 					list_add(colaListos, aux);
+					list_add(global_listaJugadoresSistema,aux);
 					pthread_mutex_unlock(&mutex_Listos);
 
 					//Loggeamos info
@@ -997,10 +1069,6 @@ int main(int argc, char** argv)
 
 			}
 		}
-
-
-		sem_post(&semaforo_SincroSelect);
-
 
 	}
 
