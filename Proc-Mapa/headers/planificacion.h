@@ -45,22 +45,6 @@
 - NOTA: USAR SEMAFOROS! La funcion no tiene ninguno, implementarlos fuera de la función.
 */
 
-void sort_SRDF()
-{
-	t_list* lista = list_create(); //Creamos cola auxiliar.
-	Jugador* aux;
-	while(!queue_is_empty(colaListos))
-	{
-		aux = queue_pop(colaListos);
-		list_add(lista,aux);
-	}
-
-	ordenarListaSRDF(lista);
-	copiarListaCola(lista);
-}
-
-
-
 //***********************************************************************************
 //***********************************************************************************
 //***********************************************************************************
@@ -124,24 +108,6 @@ void printf_lista(t_list* lista)
 
 
 //***********************************************************************************
-//Vuelca la Lista a una cola
-void copiarListaCola(t_list* lista)
-{
-	int tam = list_size(lista);
-	Jugador* jugador;
-	int i;
-	int movs;
-
-	for(i=0;i<tam;i++)
-	{
-		jugador = list_get(lista,i);
-		queue_push(colaListos,jugador);
-	}
-
-}
-
-
-
 
 //*******************
 

@@ -90,9 +90,10 @@ MetadataMapa leerMetadataMapa(ParametrosMapa parametros)         //Lee todos los
 }
 //****************************************************************************************************************
 
-MetadataPokenest leerMetadataPokenest(char* ruta, char* nombreArchivo) //Lee todos los campos de un archivo Metadata Pokenest y los guarda en un struct
+MetadataPokenest* leerMetadataPokenest(char* ruta, char* nombreArchivo) //Lee todos los campos de un archivo Metadata Pokenest y los guarda en un struct
 {
-	MetadataPokenest mdata;
+	MetadataPokenest *mdata = malloc(sizeof(MetadataPokenest));
+
 	t_config* config; //Estructura
 
 	char* auxiliar;
@@ -122,17 +123,17 @@ MetadataPokenest leerMetadataPokenest(char* ruta, char* nombreArchivo) //Lee tod
 	int i = strlen(auxiliar)-1;
 	int pos_es_y = 1;
 	int potencia = 0;
-	mdata.posicionX = 0;
-	mdata.posicionY = 0;
+	mdata->posicionX = 0;
+	mdata->posicionY = 0;
 
 	for (;i>=0;i--)
 	{
 		if (isdigit(auxiliar[i]))
 		{
 			if (pos_es_y)
-				mdata.posicionY += (auxiliar[i]-'0') * (int)powf(10,potencia);
+				mdata->posicionY += (auxiliar[i]-'0') * (int)powf(10,potencia);
 			else
-				mdata.posicionX += (auxiliar[i]-'0') * (int)powf(10,potencia);
+				mdata->posicionX += (auxiliar[i]-'0') * (int)powf(10,potencia);
 			potencia++;
 		}
 		else
@@ -143,11 +144,10 @@ MetadataPokenest leerMetadataPokenest(char* ruta, char* nombreArchivo) //Lee tod
 	}
 
 	auxiliar = config_get_string_value(config, "Tipo");
-	mdata.tipoPokemon = malloc(strlen(auxiliar)+1);
-	strcpy(mdata.tipoPokemon, auxiliar);
+	mdata->tipoPokemon = strdup(auxiliar);
 
 	auxiliar = config_get_string_value(config,"Identificador");
-	memcpy(&(mdata.simbolo),auxiliar,sizeof(char));
+	memcpy(&(mdata->simbolo),auxiliar,sizeof(char));
 
 	config_destroy(config);
 

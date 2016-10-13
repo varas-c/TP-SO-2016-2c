@@ -5,6 +5,9 @@
  *      Author: utnso
  */
 
+
+
+
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
@@ -21,12 +24,24 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <signal.h>
+
+
+
+
+
 #include "headers/struct.h"
+
+Entrenador entrenador;
+bool flag_SIGNALMUERTE = false;
+
 #include "headers/socket.h"
 #include "headers/configEntrenador.h"
 #include "headers/send.h"
 #include "headers/serializeEntrenador.h"
 #include "headers/pokenest.h"
+
+
+
 
 /*
 void leerObjetivos(char* objetivos, t_config* config, int cantViajes,char** hojaDeViaje)
@@ -99,17 +114,74 @@ void reiniciarEntrenador(Entrenador *entrenador)
 }
 
 
+void avanzarNivel(Nivel* nivel,Entrenador* entrenador)
+{
+	nivel->finNivel = 1;
+	nivel->nivelActual++;
+	nivel->numPokenest = 0;
+
+	reiniciarEntrenador(entrenador);
+}
+
+void informar_perdidaVida()
+{
+	printf("Conectando nuevamente al mapa para reiniciar objetivos ... \n");
+}
+
+bool informar_signalMuerteEntrenador()
+{
+	char opc;
+
+	printf("†††††††† -- You are dead -- †††††††† \n");
+
+	printf("No tienes mas vidas - cantidad de reintentos: %i\n", entrenador.reintentos);
+	printf("1) Reiniciar \n");
+	printf("2) Salir \n");
+
+	while(1)
+	{
+		fflush(stdin);
+		opc = getchar();
+
+		switch(opc)
+		{
+			case '1':
+				printf("1) Reiniciando... \n");
+				return true;
+				break;
+			case '2':
+				printf("2) Saliendo... \n");
+				return false;
+				break;
+			default:
+				printf("Opcion Invalida - Ingrese nuevamente \n");
+				break;
+			}
+		}
+
+}
+
+
+
+
+void send_coordenadasDestino(Entrenador* entrenador)
+{
+	int destinox = fabs(entrenador->destinox);
+	int destinoy = fabs(entrenador->destinoy);
+
+
+
+}
+
+
 
 int main(int argc, char** argv)
 {
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
-
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
-
-
 
 	//parametros.dirPokedex = "/mnt/pokedex";
 	//parametros.nombreEntrenador = "Ash";
@@ -127,7 +199,6 @@ int main(int argc, char** argv)
 	DatosMapa mapa;
 
 	int opcion = -1;
-	Entrenador entrenador;
 	entrenador = new_Entrenador(mdata);
 	vidas_restantes = entrenador.vidas;
 	Paquete paquete;
@@ -143,10 +214,17 @@ int main(int argc, char** argv)
 
 	Pokenest pokenest;
 	char* pokemonDat;
-	char pokenestSiguiente;
+	int opc;
+	bool flag_seguirJugando = true;
 
-	while(nivel.cantNiveles > nivel.nivelActual)
+	Entrenador entrenador_estadoInicial = entrenador;
+	int auxcantNiveles;
+	int auxreintentos;
+
+
+	while(nivel.cantNiveles > nivel.nivelActual && flag_seguirJugando == true)
 	{
+
 		mapa.nombre = obtenerNombreMapa(mdata.hojaDeViaje,nivel.nivelActual); //Obtenemos el nombre del mapa numero X
 
 		ConexionEntrenador connect;
@@ -156,80 +234,82 @@ int main(int argc, char** argv)
 		fd_server = get_fdServer(connect.ip,connect.puerto);
 		send_simboloEntrenador(mdata.simbolo, fd_server);
 
-		/*A partir de aca, ya nos conectamos al mapa, asi que tenemos que estar dentro de un While Interno hasta que terminamos
-		 * de capturar todos los pokemon, cuando terminamos, salimos del while interno y volvemos al externo.
-		 */
+
 		nivel.finNivel = 0;
 		nivel.cantObjetivos = getCantObjetivos(mdata.objetivos[nivel.nivelActual]);
 
 
 		pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
+
 		while(nivel.finNivel == 0) //Mientras que no hayamos ganado el nivel
 		{
+			opcion = evaluar_opciones(entrenador,pokenest);
 
-				opcion = evaluar_opciones(entrenador,pokenest);
-
-				switch(opcion)
-				{
-					case POKENEST://Caso 1: QUEREMOS UNA POKENEST!
-
-						paquete = srlz_solicitarPokenest(pokenest);
-						send_solicitarPokenest(&paquete,fd_server);
-						recv_solicitarPokenest(&pokenest, fd_server);
-						calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
-						//send_coordenadas(entrenador);
+			switch(opcion)
+			{
+				case POKENEST://Caso 1: QUEREMOS UNA POKENEST!
+					paquete = srlz_solicitarPokenest(pokenest);
+					send_solicitarPokenest(&paquete,fd_server);
+					recv_solicitarPokenest(&pokenest, fd_server);
+					calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
+					//send_coordenadasDestino(&entrenador);
 					break;
-					case MOVER://Caso 2: Queremos movernos!
-						mover_entrenador(&entrenador);
-						paquete = srlz_movEntrenador(entrenador);
-						send_movEntrenador(&paquete,fd_server);
-						recv_MoverOK(fd_server);
+				case MOVER://Caso 2: Queremos movernos!
+					mover_entrenador(&entrenador);
+					paquete = srlz_movEntrenador(entrenador);
+					send_movEntrenador(&paquete,fd_server);
+					recv_MoverOK(fd_server);
 					break;
-					case CAPTURAR: //Caso 3: Ya llegamos a una Pokenest. QUEREMOS CAPTURAR
-						paquete = srlz_capturarPokemon(pokenest.simbolo);
-						send_capturarPokemon(&paquete,fd_server);
-						paquete = recv_capturarPokemon(fd_server);
-						pokemonDat = dsrlz_capturarPokemon(&paquete);
-						//fflush(stdout);
-						printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
 
+				case CAPTURAR: //Caso 3: Ya llegamos a una Pokenest. QUEREMOS CAPTURAR
+					paquete = srlz_capturarPokemon(pokenest.simbolo);
+					send_capturarPokemon(&paquete,fd_server);
+					paquete = recv_capturarPokemon(fd_server);
+					pokemonDat = dsrlz_capturarPokemon(&paquete);
+					//fflush(stdout);
+					printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
 
+					if(nivel.cantObjetivos <= nivel.numPokenest)
+					{
+						printf("Fin Nivel\n");
+						close(fd_server);
+						avanzarNivel(&nivel,&entrenador);
+					}
 
-						if(nivel.cantObjetivos <= nivel.numPokenest)
-						{
-							printf("Fin Nivel\n");
-							close(fd_server);
-							nivel.finNivel = 1;
-							nivel.nivelActual++;
-							nivel.numPokenest = 0;
-							reiniciarEntrenador(&entrenador);
+					else
+					{
+						nivel.numPokenest++;
+						pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
+					}
 
-						}
-						else
-						{
-							nivel.numPokenest++;
-							pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
-						}
-
-
-
-
-					break;
-					case FINOBJETIVOS:
-						paquete = srlz_finObjetivos();
-						send_finObjetivos(&paquete,fd_server);
 					break;
 				}
 
-				//free(paquete.buffer);
-		//FUERA DEL WHILE INTERNO
-		//Una vez que salimos del While interno, quiere decir que terminamos el mapa y hay que pasar a otro
-		//Antes, el entrenador tiene que dirigirse a la Pokedex y copiar la respectiva medalla del mapa
 
-		//Ahora si pasamos al siguiente mapa, podemos hacer numeroMapaActual++ y repetimos.
-		//En caso de que hayamos llegado al limite de mapas, hay que salir del while porque terminamos el juego.
+			if(flag_SIGNALMUERTE == true)
+			{
+				close(fd_server);
+				auxcantNiveles = nivel.cantNiveles;
+				nivel = new_nivel();
+				nivel.cantNiveles = auxcantNiveles;
+				entrenador.reintentos = auxreintentos;
+				entrenador = entrenador_estadoInicial;
+				entrenador.reintentos = auxreintentos++;
+				nivel.finNivel = 1;
+				flag_seguirJugando = informar_signalMuerteEntrenador();
+			}
+
+
+
+
 	}
+
+
+		flag_SIGNALMUERTE = false;
 	}
 	//free(paquete.buffer);
 	return 0;
 }
+
+
+
