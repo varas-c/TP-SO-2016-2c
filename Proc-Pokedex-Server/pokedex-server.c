@@ -244,7 +244,7 @@ int guardarDesdeBloque(int bloqueActual, void* datos, int cantBytes, int offset)
 {
 	osada_block bloqueAux;
 	memcpy(bloqueAux, inicioDatos[bloqueActual], OSADA_BLOCK_SIZE);
-	int bytesCopiados= cantBytes>OSADA_BLOCK_SIZE ? OSADA_BLOCK_SIZE-offset : cantBytes;
+	int bytesCopiados= cantBytes>OSADA_BLOCK_SIZE-offset ? OSADA_BLOCK_SIZE-offset : cantBytes;
 	memcpy(bloqueAux+offset, datos, bytesCopiados);
 	int bloqueSgte;
 
@@ -322,19 +322,21 @@ void gestionarSocket(void* socket)
 		if (resultado<=0)
 		{
 			fflush(stdout);
-			printf("Cliente %d desconectado.\n\n", cliente);
+			printf("Cliente %d desconectado al recibir codigo de operacion\n\n", cliente);
 			return;
 		}
 		memcpy(&operacion, buffer, 1);
 		memcpy(&tamBuffer, buffer+1, 1);
+		printf("Contenidos buffer: %d, %d -- CodOP: %d, tamaño: %d\n\n", ((uint8_t*)buffer)[0], ((uint8_t*)buffer)[1], operacion, tamBuffer);
 		free(buffer);
 		buffer=malloc(tamBuffer);
+		printf("tamBuffer vale: %d\n\n", tamBuffer);
 		switch(operacion)
 		{
-		case 0: if ((resultado = recv(cliente, buffer, tamBuffer, 0))<=0)
+		case 1: if ((resultado = recv(cliente, buffer, tamBuffer, 0))<=0)
 				{
 					fflush(stdout);
-					printf("Cliente %d desconectado.\n\n", cliente);
+					printf("Cliente %d desconectado al entrar en getattr.\n\n", cliente);
 					return;
 				}
 				archivo = obtenerArchivo((char*)buffer);
@@ -355,10 +357,10 @@ void gestionarSocket(void* socket)
 				free(buffer);
 				break;
 
-		case 1: if ((resultado = recv(cliente, buffer, tamBuffer, 0))<=0)
+		case 2: if ((resultado = recv(cliente, buffer, tamBuffer, 0))<=0)
 				{
 					fflush(stdout);
-					printf("Cliente %d desconectado.\n\n", cliente);
+					printf("Cliente %d desconectado al entrar en readdir.\n\n", cliente);
 					return;
 				}
 				if (strcmp(buffer, "/") == 0)
@@ -405,6 +407,46 @@ void gestionarSocket(void* socket)
 					memcpy(buffer, &menosUno, 1);
 					send(cliente, buffer, 1, 0);
 				}
+				free(buffer);
+				break;
+
+		case 3: if ((resultado = recv(cliente, buffer, tamBuffer, 0))<=0)
+				{
+					printf("Cliente %d desconectado.\n\n", cliente);
+					return;
+				}
+
+				archivo = obtenerArchivo((char*)buffer);
+				free(buffer);
+				buffer = malloc(sizeof(size_t)+sizeof(off_t));
+				if ((resultado = recv(cliente, buffer, sizeof(size_t)+sizeof(off_t), 0))<=0)
+				{
+					printf("Cliente %d desconectado.\n\n", cliente);
+					return;
+				}
+				size_t cantLeida;
+				memcpy(&cantLeida, buffer, sizeof(size_t));
+				off_t offset;
+				memcpy(&offset, buffer+sizeof(size_t), sizeof(off_t));
+				free(buffer);
+				printf("CantLeida: %d, offset: %d\n\n", cantLeida, offset);
+				int cantidad = 0;
+				int *bloques = obtenerBloques(archivo, &cantidad);
+				unsigned char* contenidoArchivo;
+
+				buffer = malloc(cantLeida);
+				printf("Cantidad de bloques: %d\n\n", cantidad);
+				if (cantidad>0)
+				{
+					contenidoArchivo=concatenarBloques(bloques, cantidad);
+					memcpy(buffer, contenidoArchivo+offset, cantLeida);
+					free(contenidoArchivo);
+					free(bloques);
+				}
+				else
+					memset(buffer, 0, cantLeida);
+
+				send(cliente, buffer, cantLeida, 0);
 				free(buffer);
 				break;
 		}
