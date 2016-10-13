@@ -751,7 +751,7 @@ void* thread_planificador()
 		//Desbloqueamos jugadores
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 		desbloquearJugadores(lista_jugadoresBloqueados);
-		pthread_mutex_lock(&mutex_hiloDeadlock);
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 		if(!list_is_empty(colaListos))
 		{
@@ -943,11 +943,11 @@ int main(int argc, char** argv)
 {
 
 
-	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	parametros.dirPokedex = "/mnt/pokedex";
-	parametros.nombreMapa = "PuebloPaleta";
+	//parametros.dirPokedex = "/mnt/pokedex";
+	//parametros.nombreMapa = "PuebloPaleta";
 
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
