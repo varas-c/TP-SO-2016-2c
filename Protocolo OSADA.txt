@@ -1,14 +1,14 @@
 Códigos de operación:
-0: getattr
-1: readdir
-2: read
-3:write
-4: open
-5: create
-6: mkdir
-7: delete
-8: rename
-9: truncate
+1: getattr
+2: readdir
+3: read
+4:write
+5: open
+6: create
+7: mkdir
+8: delete
+9: rename
+10: truncate
 ...Puede haber más...
 --------------------------------------------------------------------------------------------------------------------------------------------------
 Criterios de envío: para todas las operaciones, se enviarán 2 paquetes: uno de 2 bytes, con el código de operación y el tamaño del buffer siguiente, y otro con la ruta necesaria. Si la ruta fuese mayor que el límite de mensaje impuesto, se deberá enviar un 0 en el tamaño. Límite a definir.

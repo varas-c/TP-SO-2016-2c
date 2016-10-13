@@ -33,7 +33,7 @@ void finalizarProceso(int signal)
 	exit(0);
 }
 
-void enviarCodigoyTamanio(int codigo, int tamanio)
+void enviarCodigoyTamanio(int codigo, uint8_t tamanio)
 {
 	void* buffer;
 	buffer = malloc(2);
@@ -44,8 +44,20 @@ void enviarCodigoyTamanio(int codigo, int tamanio)
 	return;
 }
 
+void enviarPath(const char* path)
+{
+	void* buffer;
+	buffer = malloc(strlen(path)+1);
+	memcpy(buffer, path, strlen(path)+1);
+	printf("Path: %s, buffer: %s\n\n", path, (char*)buffer);
+	send(fd_server, buffer, strlen(path)+1, 0);
+	free(buffer);
+	return;
+}
+
 static int osada_getattr(const char *path, struct stat *stbuf)
 {
+	printf("Entra en getattr\n\n");
 	void* buffer;
 	int res = 0;
 	int retorno = 0;
@@ -54,16 +66,14 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 
 	if (strcmp(path, "/") == 0)
 	{
-		stbuf->st_mode = S_IFDIR | 0777;
+		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
+		stbuf->st_mtim.tv_sec = (__time_t)time(NULL);
 	}
 	else
 	{
-		enviarCodigoyTamanio(0, strlen(path)+1);
-		buffer = malloc(strlen(path)+1);
-		memcpy(buffer, path, strlen(path)+1);
-		res = send(fd_server, buffer, strlen(path)+1, 0);
-		free(buffer);
+		enviarCodigoyTamanio(1, strlen(path)+1);
+		enviarPath(path);
 		buffer = malloc(32);
 		if ((res = recv(fd_server, (osada_file*)buffer, 32, 0)) <= 0)
 		{
@@ -76,7 +86,7 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 			osada_file* archivo = (osada_file*) buffer;
 			if ( archivo->state== DIRECTORY)
 			{
-				stbuf->st_mode = S_IFDIR | 0777;
+				stbuf->st_mode = S_IFDIR | 0755;
 				stbuf->st_nlink = 2;
 				stbuf->st_mtim.tv_sec = (__time_t)(archivo->lastmod);
 			}
@@ -98,15 +108,13 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 
 static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
+	printf("Entra en readdir\n\n");
 	void* buffer;
 	int retorno = 0;
 	int res=0;
 
-	enviarCodigoyTamanio(1, strlen(path)+1);
-	buffer = malloc(strlen(path)+1);
-	memcpy(buffer, path, strlen(path)+1);
-	send(fd_server, buffer, strlen(path)+1, 0);
-	free(buffer);
+	enviarCodigoyTamanio(2, strlen(path)+1);
+	enviarPath(path);
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
 	{
@@ -115,6 +123,8 @@ static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 		retorno = -ENOENT;
 	}
 
+	filler(buf, ".", NULL,0);
+	filler(buf, "..", NULL,0);
 
 	if ((signed char) *(signed char*)buffer==1)
 	{
@@ -140,10 +150,39 @@ static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 	return retorno;
 }
 
+static int osada_read(const char *path, char *buf, size_t size, off_t offset,
+		struct fuse_file_info *fi) {
+
+	void* buffer;
+	int retorno = size;
+	int res=0;
+	printf("Entra a read, size: %d offset: %d\n\n", size, offset);
+	enviarCodigoyTamanio(3, strlen(path)+1);
+	enviarPath(path);
+	buffer = malloc(sizeof(size)+sizeof(offset));
+	memcpy(buffer, &size, sizeof(size));
+	memcpy(buffer+sizeof(size), &offset, sizeof(offset));
+	send(fd_server, buffer, sizeof(size)+sizeof(offset), 0);
+	free(buffer);
+	buffer = malloc(size);
+	if ((res = recv(fd_server, buffer, size, 0))<=0)
+	{
+		printf("El servidor se encuentra desconectado.\n");
+		retorno = 0;
+	}
+	memcpy(buf, buffer, size);
+	if (!strlen((char*)buffer))
+		retorno = 0;
+	free(buffer);
+
+	printf("Sale de read. Leyo: %d\n\n", retorno);
+	return retorno;
+}
 
 static struct fuse_operations osada_oper = {
 		.getattr = osada_getattr,
 		.readdir = osada_readdir,
+		.read = osada_read,
 };
 
 

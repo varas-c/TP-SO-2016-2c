@@ -40,4 +40,4 @@
 RemoteSystemsTempFiles/
 
 #File System Files
-.bin
+*.bin
