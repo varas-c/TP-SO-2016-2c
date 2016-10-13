@@ -2,20 +2,30 @@ Códigos de operación:
 1: getattr
 2: readdir
 3: read
-4:write
-5: open
-6: create
-7: mkdir
-8: delete
-9: rename
-10: truncate
+4: truncate
+5:write
+6: open
+7: create
+8: mkdir
+9: delete
+10: rename
 ...Puede haber más...
 --------------------------------------------------------------------------------------------------------------------------------------------------
 Criterios de envío: para todas las operaciones, se enviarán 2 paquetes: uno de 2 bytes, con el código de operación y el tamaño del buffer siguiente, y otro con la ruta necesaria. Si la ruta fuese mayor que el límite de mensaje impuesto, se deberá enviar un 0 en el tamaño. Límite a definir.
 --------------------------------------------------------------------------------------------------------------------------------------------------
-0 - getattr
+1 - getattr
 El tamaño del buffer respuesta es fijo, 32 bytes.
 -------------------------------------------------------------------------
-1 - readdir
+2 - readdir
 El servidor responde en un byte si encontró el directorio (1= sí, -1=no) con un primer mensaje, y luego todos los nombres de los archivos, enviando un mensaje de ceros si no hay más.
 El tamaño máximo del buffer es 17, ya que es el máximo tamaño que puede tomar el nombre de un archivo.
+-------------------------------------------------------------------------
+3 - read
+El cliente envía el tamaño del buffer, la cantidad de bytes a leer y el desplazamiento, cada uno representado por un su resectivo tipo (size_t - 4 bytes, y off_t - 8 bytes).
+El servidor responde enviando el buffer lleno(el tamaño ya está definido por el cliente).
+-------------------------------------------------------------------------
+4 - truncate
+El cliente envía el nuevo tamaño del archivo. De momento el servidor no devuelve nada.
+-------------------------------------------------------------------------
+5 - write
+El cliente envía el buffer de escritura, su tamaño y el offset (mismos tamaños que en read, orden: tamaño -> offset -> buffer), y el server responde 1 si pudo escribir, o 0 si no pudo.
