@@ -940,7 +940,16 @@ void* thread_planificador()
 
 void* thread_deadlock()
 {
+	while(1)
+	{
+		pthread_mutex_lock(&mutex_hiloDeadlock);
 
+		usleep(mdataMapa.tiempoChequeoDeadlock*1000);
+
+		detectar_y_solucionar_deadlock(listaPokenest,global_listaJugadoresSistema);
+
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
+	}
 	/*
 	 * NOTAS!!!
 	 * El semaforo que deberias usar es mutex_deadlock
