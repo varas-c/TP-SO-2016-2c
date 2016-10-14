@@ -708,9 +708,11 @@ void* thread_planificador()
 	while(!list_is_empty(global_listaJugadoresSistema))
 	{
 		//Desbloqueamos jugadores
+		/*
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 		desbloquearJugadores(lista_jugadoresBloqueados);
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
+		*/
 
 		if(!list_is_empty(listaListos))
 		{
@@ -872,9 +874,11 @@ void* thread_planificador()
 		if(flag_DESCONECTADO == TRUE)
 		{
 		lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
+		/*
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 		borrarJugadorSistema(jugador);
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
+		*/
 		desconectarJugador(jugador);
 		quantum = 0;
 		flag_DESCONECTADO = TRUE;
@@ -887,7 +891,16 @@ void* thread_planificador()
 
 void* thread_deadlock()
 {
+	while(1)
+	{
+		pthread_mutex_lock(&mutex_hiloDeadlock);
 
+		usleep(mdataMapa.tiempoChequeoDeadlock*1000);
+
+		detectar_y_solucionar_deadlock(listaPokenest,global_listaJugadoresSistema);
+
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
+	}
 	/*
 	 * NOTAS!!!
 	 * El semaforo que deberias usar es mutex_deadlock
@@ -982,6 +995,7 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
+	/*
 	pthread_t hiloDeadlock;
 
 	valorHilo = pthread_create(&hiloDeadlock,NULL,thread_deadlock,NULL);
@@ -991,6 +1005,7 @@ int main(int argc, char** argv)
 		perror("Error al crear hilo Deadlock");
 		exit(1);
 	}
+	*/
 
 	Jugador nuevoJugador;
 	Jugador *aux;
@@ -1038,9 +1053,11 @@ int main(int argc, char** argv)
 					list_add(listaListos, aux);
 					pthread_mutex_unlock(&mutex_Listos);
 
+					/*
 					pthread_mutex_lock(&mutex_hiloDeadlock);
 					list_add(global_listaJugadoresSistema,aux);
 					pthread_mutex_unlock(&mutex_hiloDeadlock);
+					*/
 
 					//Loggeamos info
 					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);

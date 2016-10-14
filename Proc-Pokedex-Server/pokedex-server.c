@@ -33,6 +33,7 @@
 #define COD_TRUNCATE 4
 #define COD_WRITE 5
 
+#define PUERTO 9995
 /* TAMAÑOS ESTRUCTURAS [BLOQUES]: (F= tamaño filesystem)
  *
  * HEADER = 1 (H)
@@ -532,7 +533,7 @@ void gestionarSocket(void* socket)
 
 int main(int argc, char** argv)
 {
-	int fd_fileSystem = open("../challenge.bin", 2); //2 significa O_RDWR, leer y escribir
+	int fd_fileSystem = open(argv[1], 2); //2 significa O_RDWR, leer y escribir
 	if (fd_fileSystem==-1)
 	{
 		printf("Archivo de file system no encontrado.\n");
@@ -574,8 +575,7 @@ int main(int argc, char** argv)
 	FD_ZERO(&master);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);
 
-	int puerto = 9995;
-	listener = socket_startListener(puerto);
+	listener = socket_startListener(PUERTO);
 
 	// añadir listener al conjunto maestro
 	FD_SET(listener, &master);
