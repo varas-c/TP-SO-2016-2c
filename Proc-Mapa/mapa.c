@@ -978,6 +978,8 @@ int main(int argc, char** argv)
 	//parametros.dirPokedex = "/mnt/pokedex";
 	//parametros.nombreMapa = "PuebloPaleta";
 
+	signal(SIGUSR2, sigHandler_reloadMetadata);
+
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
 	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
