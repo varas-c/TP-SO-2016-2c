@@ -79,6 +79,7 @@ structColasBloqueados colasBloqueados;
 t_list* global_listaJugadoresSistema;
 
 #include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
+#include "headers/deadlock.h"
 
 
 /****************************************************************************************************************
@@ -683,7 +684,7 @@ void desbloquearJugadores(t_list* lista)
 
 				pthread_mutex_lock(&mutex_Listos);
 				jugadorBloqueado->jugador->estado = 0;
-				jugadorBloqueado->jugador->peticionBloqueado = 0;
+				jugadorBloqueado->jugador->peticion = 0;
 				list_add(jugadorBloqueado->jugador->pokemonCapturados,jugadorBloqueado->pokemon);
 				list_add(colaListos,jugadorBloqueado->jugador);
 				free(jugadorBloqueado);
@@ -859,7 +860,7 @@ void* thread_planificador()
 					{
 						// NO HAY MAS POKEMONS! hay que bloquear al entrenador
 						jugador->estado = 1;
-						jugador->peticionBloqueado = pokenestPedida;
+						jugador->peticion = pokenestPedida;
 						bloquearJugador(jugador,pokenestPedida);
 						quantum=0;
 					}
@@ -937,7 +938,35 @@ void* thread_planificador()
 	}
 }
 
+void* thread_deadlock()
+{
 
+	/*
+	 * NOTAS!!!
+	 * El semaforo que deberias usar es mutex_deadlock
+	 *
+	 * mutex_deadlock evita que el planificador y el mapa te pisen la lista de entrenadores (en teoria lo hice bien)
+	 *
+	 * Usalo vos tambien para cuando quieras acceder a esa lista, yo te recomendaria hacer un mutex desde el principio
+	 * y cuando terminas todo, haces el signal.
+	 *
+	 *las listas que deberias usar son "global_listaJugadoresSistema" y "listaPokenest"
+	 *las listas son globales, asi que no hace falta pasarlas por parametros, leelas directamente
+	 *
+	 *Deberías leer el archivo mdataMapa para ver cada cuanto tiempo ejecutas este hilo, supongo que si haces sleep de este hilo durante ese
+	 *tiempo, no deberia pasar nada. EL problema es que no se si duerme a los otros hilos tambien
+	 *
+	 *Cualquier cosa avisame :)
+	 *
+	 *Ah ya te hice el header deadlock, la unica que diferencia es que vos usabas la funcion buscar_Pokenest vieja (fijate que la comenté
+	 *deadlock.h) la nueva (la que tenes que usar) está aca en el mapa, buscala. la dif es que antes te devolvia un contenido, ahora te devuelve
+	 *el puntero a ese contenido, deberias cambiar eso a menos que le cambies el nombre a TU funcion porque si no se chocan, depende que necesites
+	 *
+	 */
+
+
+
+}
 
 int main(int argc, char** argv)
 {
@@ -1014,6 +1043,16 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
+	pthread_t hiloDeadlock;
+
+	valorHilo = pthread_create(&hiloDeadlock,NULL,thread_deadlock,NULL);
+
+	if(valorHilo != 0)
+	{
+		perror("Error al crear hilo Deadlock");
+		exit(1);
+	}
+
 	Jugador nuevoJugador;
 	Jugador *aux;
 	int *aux2;
@@ -1054,7 +1093,7 @@ int main(int argc, char** argv)
 					aux->pokemonCapturados = list_create();
 					aux->numero = global_cantJugadores;
 					aux->conocePokenest = FALSE;
-					aux->peticionBloqueado = 0;
+					aux->peticion = 0;
 
 
 					//Creamos el personaje
