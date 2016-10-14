@@ -7,35 +7,6 @@
 
 #ifndef HEADERS_PLANIFICACION_H_
 #define HEADERS_PLANIFICACION_H_
-
-
-//***********************************************************************************
-//***********************************************************************************
-//***********************************************************************************
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//***********************************************************************************
-//***********************************************************************************
 //***********************************************************************************
 
 /*FUNCION PRINCIPAL!
@@ -44,18 +15,11 @@
 -
 - NOTA: USAR SEMAFOROS! La funcion no tiene ninguno, implementarlos fuera de la función.
 */
-
 //***********************************************************************************
-//***********************************************************************************
-//***********************************************************************************
-
 
 /* FUNCIONES AUXILIARES A sort_SRDF() - NO INVOCAR PARA HACER EL ORDENAMIENTO - sort_SRDF YA LO HACE! */
 
 //***********************************************************************************
-//***********************************************************************************
-//***********************************************************************************
-
 
 //Dado un entrenador, cacula cuanto le falta para llegar a destino
 int movRestantes(Entrenador entrenador)
@@ -64,8 +28,6 @@ int movRestantes(Entrenador entrenador)
 	movRestantes = entrenador.destinox + entrenador.destinoy;
 	return movRestantes;
 }
-
-
 
 //***********************************************************************************
 /* Ordena una lista por SRDF
@@ -88,7 +50,6 @@ void ordenarListaSRDF(t_list* lista)
 	list_sort(lista,(void*)_less_distance_);
 }
 
-
 //***********************************************************************************
 //Imprime una lista de Jugadores por pantalla.
 void printf_lista(t_list* lista)
@@ -105,10 +66,6 @@ void printf_lista(t_list* lista)
 		printf("Jugador: %i \n", movs);
 	}
 }
-
-
-//***********************************************************************************
-
 //*******************
 
 Jugador* removeJugadorSocket(int socket)
@@ -119,22 +76,18 @@ Jugador* removeJugadorSocket(int socket)
 		return jugador->socket == socket;
 	}
 
-	Jugador* jugadorEncontrado = (Jugador*) list_remove_by_condition(colaListos,(void*)_find_Player_Socket);
+	Jugador* jugadorEncontrado = (Jugador*) list_remove_by_condition(listaListos,(void*)_find_Player_Socket);
 	return jugadorEncontrado;
-
 }
-
-
 
 Jugador* get_SRDF()
 {
-	int tamColaListos = list_size(colaListos);
+	int tamColaListos = list_size(listaListos);
 	t_list* listaAuxiliar;
 	Jugador* jugadorAux;
 	Jugador* jugadorBuscado;
 
-
-	listaAuxiliar = list_take(colaListos,tamColaListos);
+	listaAuxiliar = list_take(listaListos,tamColaListos);
 	ordenarListaSRDF(listaAuxiliar);
 
 	jugadorAux = list_get(listaAuxiliar,0);
@@ -145,9 +98,5 @@ Jugador* get_SRDF()
 
 	return jugadorBuscado;
 }
-
-
-
-
 
 #endif /* HEADERS_PLANIFICACION_H_ */

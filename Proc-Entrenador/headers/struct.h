@@ -86,7 +86,7 @@ Pokenest new_pokenest(char** objetivos, int num)
 	pokenest.posx = -1;
 	pokenest.posy = -1;
 	char* aux = strdup(objetivos[num]);
-	memcpy(&(pokenest.simbolo),aux, sizeof(char));
+	memcpy(&(pokenest.simbolo),aux, sizeof(char));//TODO arreglar memory leak
 	return pokenest;
 }
 //**********************************************************************************************************
