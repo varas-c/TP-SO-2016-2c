@@ -33,7 +33,7 @@
 //ATENCIÓN: off_t ocupa 8 bytes acá, y 4 en el servidor. Tener en cuenta al hacer sizeof(off_t)
 
 char* numero_IP = "127.0.0.1";
-char* numero_Puerto = "9995";
+char* numero_Puerto = "10000";
 int fd_server;
 
 void finalizarProceso(int signal)

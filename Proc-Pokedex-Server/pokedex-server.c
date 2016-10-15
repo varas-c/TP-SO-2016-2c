@@ -33,7 +33,7 @@
 #define COD_TRUNCATE 4
 #define COD_WRITE 5
 
-#define PUERTO 9995
+#define PUERTO 10000
 /* TAMAÑOS ESTRUCTURAS [BLOQUES]: (F= tamaño filesystem)
  *
  * HEADER = 1 (H)
