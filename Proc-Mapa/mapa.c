@@ -83,7 +83,7 @@ t_list* global_listaJugadoresSistema;
 /****************************************************************************************************************
 			FUNCIONES DE LECTURA DE PARAMETROS POR CONSOLA (LOS QUE SE RECIBEN POR **ARGV)
 ****************************************************************************************************************/
-
+/*
 void loggearColas(void){
 	t_queue *auxLista;
 	auxLista = queue_create();
@@ -157,6 +157,8 @@ void loggearColas(void){
 
 	pthread_mutex_unlock(&mutex_Bloqueados);
 }
+*/
+
 
 //****************************************************************************************************************
 
@@ -213,9 +215,10 @@ void bloquearJugador(Jugador* jugador,char simboloPokenest)
 		printf("Error - Func %s - Linea %d - No existe la pokenest, posicion -1",__func__,__LINE__);
 		exit(1);
 	}
+	log_info(infoLogger, "Jugador %c entra a Bloqueados.",jugador->entrenador.simbolo);
 	queue_push(colasBloqueados.cola[posicion],jugador);
 	log_info(infoLogger, "Jugador %c entra a Bloqueados.",jugador->entrenador.simbolo);
-	loggearColas();
+	//loggearColas();
 }
 
 Jugador* desbloquearJugador(char simboloPokenest)
@@ -235,7 +238,7 @@ Jugador* desbloquearJugador(char simboloPokenest)
 		jugadorDesbloqueado = queue_pop(colasBloqueados.cola[posicion]);
 
 		log_info(infoLogger, "Jugador %c sale de Bloqueados.",jugadorDesbloqueado->entrenador.simbolo);
-		loggearColas();
+		//loggearColas();
 	}
 
 	return jugadorDesbloqueado;
@@ -424,6 +427,8 @@ void printfLista()
 
 }
 */
+
+
 typedef struct
 {
 	Pokemon* pokemon;
@@ -461,6 +466,7 @@ t_list* expropiarPokemones(t_list* listaPokemones)
 		{
 			pokenest = buscar_Pokenest(pokemonDesbloqueado->pokenest);
 			queue_push(pokenest->colaDePokemon,pokemonDesbloqueado);
+
 		}
 
 	}
@@ -647,7 +653,7 @@ void desbloquearJugadores(t_list* lista)
 				list_add(jugadorBloqueado->jugador->pokemonCapturados,jugadorBloqueado->pokemon);
 				list_add(listaListos,jugadorBloqueado->jugador);
 				log_info(infoLogger, "Jugador %c entra a Listos.",jugadorBloqueado->jugador->entrenador.simbolo);
-				loggearColas();
+				//loggearColas();
 				free(jugadorBloqueado);
 				pthread_mutex_unlock(&mutex_Listos);
 			}
@@ -740,6 +746,7 @@ void* thread_planificador()
 			{
 				pthread_mutex_lock(&mutex_Listos);
 				jugador = list_remove(listaListos,0);
+//				log_info(infoLogger, "el jugador :%c ha salido de la lista de listos del mapa:%s",jugador->entrenador.simbolo, parametros.nombreMapa);
 				quantum = mdataMapa.quantum;
 				flag_SRDF = FALSE;
 				pthread_mutex_unlock(&mutex_Listos);
@@ -747,8 +754,6 @@ void* thread_planificador()
 
 			buffer_recv = malloc(tam_buffer_recv);
 
-		//log_info(infoLogger, "Jugador %c sale de Listos.",jugador->entrenador.simbolo);
-		//loggearColas();
 
 		while(quantum > 0)
 		{
@@ -796,6 +801,7 @@ void* thread_planificador()
 						pokemon = queue_pop(pokenest->colaDePokemon);
 						retval = send_capturaOK(jugador,pokemon);
 						flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
+//						log_info(infoLogger,"el jugador:%c ha ingresado en la lista de listos del mapa:",jugador->entrenador.simbolo,parametros.nombreMapa);
 
 						if(flag_DESCONECTADO == FALSE)
 						{
@@ -818,6 +824,7 @@ void* thread_planificador()
 						jugador->estado = 1;
 						jugador->peticion = pokenestPedida;
 						bloquearJugador(jugador,pokenestPedida);
+//						log_info(infoLogger,"El Jugador %c ha entrado a la cola de Bloqueados del mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
 						quantum=0;
 					}
 
@@ -825,6 +832,7 @@ void* thread_planificador()
 				case 0:
 					lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
 					desconectarJugador(jugador);
+//					log_info(infoLogger, "El jugador %c ha salido del mapa%s",jugador->entrenador.simbolo,parametros.nombreMapa);
 					quantum = 0;
 					flag_DESCONECTADO = TRUE;
 					break;
@@ -1060,8 +1068,8 @@ int main(int argc, char** argv)
 
 
 					//Loggeamos info
-					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
-					log_info(infoLogger, "Jugador %c entra en Lista Listos", nuevoJugador.entrenador.simbolo);
+//					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
+//					log_info(infoLogger, "Jugador %c entra en Lista Listos en el Mapa:%s", nuevoJugador.entrenador.simbolo,parametros.nombreMapa);
 					//loggearColas();
 				}
 			}
