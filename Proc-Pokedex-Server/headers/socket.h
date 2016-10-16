@@ -70,7 +70,7 @@ void socket_select(int fdmax, fd_set *read_fds)
 
 	if (select(fdmax + 1, read_fds, NULL, NULL, NULL) == -1)
 	{
-		if(errno = EINTR)
+		if(errno == EINTR)
 		{
 			//DO NOTHING
 		}

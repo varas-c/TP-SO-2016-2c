@@ -4,10 +4,10 @@ Códigos de operación:
 3: read
 4: truncate
 5:write
-6: open
-7: create
-8: mkdir
-9: delete
+6: create
+7: mkdir
+8: rmdir
+9: unlink
 10: rename
 ...Puede haber más...
 --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -29,3 +29,6 @@ El cliente envía el nuevo tamaño del archivo. De momento el servidor no devuel
 -------------------------------------------------------------------------
 5 - write
 El cliente envía el buffer de escritura, su tamaño y el offset (mismos tamaños que en read, orden: tamaño -> offset -> buffer), y el server responde 1 si pudo escribir, o 0 si no pudo.
+-------------------------------------------------------------------------
+6 - create
+El servidor responde con un 0 si pudo crear el archivo, o: 1 si no existe la ruta, 2 si el nombre del archivo es muy largo, 3 si ya existe el archivo y 4 si no hay espacio.

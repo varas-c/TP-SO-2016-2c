@@ -32,6 +32,7 @@
 #define COD_READ 3
 #define COD_TRUNCATE 4
 #define COD_WRITE 5
+#define COD_CREATE 6
 
 #define PUERTO 10000
 /* TAMAÑOS ESTRUCTURAS [BLOQUES]: (F= tamaño filesystem)
@@ -67,10 +68,14 @@ int liberarBloque(int, uint8_t);
 void borrarArchivo(int);
 int* obtenerBloques(int, int*);
 int obtenerArchivo(char*);
+int obtenerDirectorioPadre(char*);
+char* obtenerNombreArchivo(char*); //Nombre del archivo según ruta, no según tabla de archivos
 int truncarArchivo(int, off_t);
 unsigned char* concatenarBloques(int*, int);
 int guardarDesdeBloque(int, void*, int, int);
 int actualizar(int, void*, size_t, off_t);
+int crearArchivo(int, const char*, osada_file_state);
+
 
 
 
@@ -206,7 +211,7 @@ int obtenerArchivo(char* path)
 	while(path[i]!=0 && path[i]=='/')
 		i++;
 	if (i==strlen(path))
-		return-1;
+		return -1;
 	else
 		i = 0;
 	char** directorios=NULL;
@@ -225,6 +230,57 @@ int obtenerArchivo(char* path)
 		return -1;
 	else
 		return dirActual;
+}
+
+int obtenerDirectorioPadre(char* path)
+{
+	int i = 0;
+	while(path[i]!=0 && path[i]=='/')
+		i++;
+	if (i==strlen(path))
+		return -1;
+	else
+		i = 0;
+	char** directorios=NULL;
+	int dirActual=DIRECTORIO_NULO;
+	directorios = string_split(path, "/");
+	if (directorios[0]==NULL)
+		return -1;
+
+	while(directorios[i+1]!=NULL)
+	{
+		dirActual = buscarIndice(directorios[i], dirActual);
+		if (dirActual<0)
+			return -1;
+		i++;
+	}
+
+	return dirActual;
+}
+
+char* obtenerNombreArchivo(char* path) //Nombre del archivo según ruta, no según tabla de archivos. Hacer free de la variable devuelta
+{
+	int i = 0;
+	char* nombre = "\0";
+	while(path[i]!=0 && path[i]=='/')
+		i++;
+	if (i==strlen(path))
+		return nombre;
+	else
+		i = 1;
+	char** directorios=NULL;
+	int dirActual=DIRECTORIO_NULO;
+	directorios = string_split(path, "/");
+	if (directorios[0]==NULL)
+		return nombre;
+
+	while(directorios[i]!=NULL)
+		i++;
+
+	nombre = malloc(strlen(directorios[i-1])+1);
+	strcpy(nombre, directorios[i-1]);
+
+	return nombre;
 }
 
 int encontrarBloqueLibre()
@@ -315,7 +371,7 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, off_t offse
 	else
 		return 0;
 
-	//tablaArchivos[archivo].lastmod = time(NULL);
+	tablaArchivos[archivo].lastmod = time(NULL);
 
 	return 1;
 }
@@ -344,6 +400,33 @@ int truncarArchivo(int archivo, off_t size)
 		tablaArchivos[archivo].lastmod = time(NULL);
 	}
 	return size;
+}
+
+int crearArchivo(int dirPadre, const char* nombre, osada_file_state tipo)
+{
+	if (strlen(nombre)>16)
+		return -2;
+	if (dirPadre<0)
+		return -1;
+	int i, nuevoIndice = -1;
+	for(i=2047;i>=0;i--)
+	{
+		if (!strcmp(tablaArchivos[i].fname, nombre)  && (tablaArchivos[i].parent_directory == dirPadre) && tablaArchivos[i].state != DELETED)
+			return -3;
+		else if (tablaArchivos[i].state==DELETED)
+			nuevoIndice = i;
+	}
+
+	if (nuevoIndice<0)
+		return -4;
+
+	tablaArchivos[nuevoIndice].state = tipo;
+	tablaArchivos[nuevoIndice].first_block = BLOQUE_NULO;
+	tablaArchivos[nuevoIndice].parent_directory = dirPadre;
+	strcpy(tablaArchivos[nuevoIndice].fname, nombre);
+	tablaArchivos[nuevoIndice].lastmod = time(NULL);
+	tablaArchivos[nuevoIndice].file_size = 0;
+	return 0;
 }
 
 void gestionarSocket(void* socket)
@@ -507,8 +590,6 @@ void gestionarSocket(void* socket)
 				memcpy(&tamEscritura, buffer, sizeof(tamEscritura));
 				off_t offsetEscritura;
 				memcpy(&offsetEscritura, buffer+sizeof(tamEscritura), sizeof(offsetEscritura));
-				printf("Recibe tamaño y offset: %d - %d\n\n", (int)tamEscritura, (int)offsetEscritura);
-				printf("Tamaño off_t: %d\n\n", sizeof(off_t));
 				free(buffer);
 				buffer = malloc(tamEscritura);
 				if ((resultado = recv(cliente, buffer, tamEscritura, 0))<=0)
@@ -526,6 +607,28 @@ void gestionarSocket(void* socket)
 				send(cliente, buffer, 1, 0);
 				free(buffer);
 				break;
+
+		case COD_CREATE:; //No me deja declarar como primera instrucción -.-
+				int dirPadre = obtenerDirectorioPadre((char*)buffer);
+				char* nombre = obtenerNombreArchivo((char*)buffer);
+				free(buffer);
+				buffer = malloc(1);
+				if (strlen(nombre))
+				{
+					switch (crearArchivo(dirPadre, nombre, REGULAR))
+					{
+					case 0 : memset(buffer, 0, 1); break;
+					case -1 : memset(buffer, 1, 1); break;
+					case -2 : memset(buffer, 2, 1); break;
+					case -3 : memset(buffer, 3, 1); break;
+					case -4 : memset(buffer, 4, 1); break;
+					}
+				}
+				else
+					memset(buffer, 1, 1);
+				send(cliente, buffer, 1, 0);
+				free(buffer);
+				break;
 		}
 	}
 	return;
@@ -534,6 +637,7 @@ void gestionarSocket(void* socket)
 int main(int argc, char** argv)
 {
 	int fd_fileSystem = open(argv[1], 2); //2 significa O_RDWR, leer y escribir
+//	int fd_fileSystem = open("challenge.bin", 2); //Para debuggear
 	if (fd_fileSystem==-1)
 	{
 		printf("Archivo de file system no encontrado.\n");
