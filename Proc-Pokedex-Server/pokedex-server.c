@@ -33,6 +33,10 @@
 #define COD_TRUNCATE 4
 #define COD_WRITE 5
 #define COD_CREATE 6
+#define COD_MKDIR 7
+#define COD_RMDIR 8
+#define COD_UNLINK 9
+#define COD_RENAME 10
 
 #define PUERTO 10000
 /* TAMAÑOS ESTRUCTURAS [BLOQUES]: (F= tamaño filesystem)
@@ -437,6 +441,8 @@ void gestionarSocket(void* socket)
 	uint8_t operacion;
 	uint8_t tamBuffer;
 	int archivo;
+	int dirPadre;
+	char* nombre;
 	while(1)
 	{
 		buffer = malloc(2);
@@ -577,7 +583,6 @@ void gestionarSocket(void* socket)
 
 		case COD_WRITE:
 				archivo = obtenerArchivo((char*)buffer);
-				printf("Recibe ruta de archivo: %s\n\n", (char*)buffer);
 				free(buffer);
 				buffer = malloc(sizeof(size_t)+2*sizeof(off_t));
 				if ((resultado = recv(cliente, buffer, sizeof(size_t)+2*sizeof(off_t), 0))<=0)
@@ -609,8 +614,8 @@ void gestionarSocket(void* socket)
 				break;
 
 		case COD_CREATE:; //No me deja declarar como primera instrucción -.-
-				int dirPadre = obtenerDirectorioPadre((char*)buffer);
-				char* nombre = obtenerNombreArchivo((char*)buffer);
+				dirPadre = obtenerDirectorioPadre((char*)buffer);
+				nombre = obtenerNombreArchivo((char*)buffer);
 				free(buffer);
 				buffer = malloc(1);
 				if (strlen(nombre))
@@ -627,6 +632,30 @@ void gestionarSocket(void* socket)
 				else
 					memset(buffer, 1, 1);
 				send(cliente, buffer, 1, 0);
+				free(nombre);
+				free(buffer);
+				break;
+
+		case COD_MKDIR:;
+				dirPadre = obtenerDirectorioPadre((char*)buffer);
+				nombre = obtenerNombreArchivo((char*)buffer);
+				free(buffer);
+				buffer = malloc(1);
+				if (strlen(nombre))
+				{
+					switch (crearArchivo(dirPadre, nombre, DIRECTORY))
+					{
+					case 0 : memset(buffer, 0, 1); break;
+					case -1 : memset(buffer, 1, 1); break;
+					case -2 : memset(buffer, 2, 1); break;
+					case -3 : memset(buffer, 3, 1); break;
+					case -4 : memset(buffer, 4, 1); break;
+					}
+				}
+				else
+					memset(buffer, 1, 1);
+				send(cliente, buffer, 1, 0);
+				free(nombre);
 				free(buffer);
 				break;
 		}

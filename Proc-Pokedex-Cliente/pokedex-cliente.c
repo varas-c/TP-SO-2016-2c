@@ -30,6 +30,11 @@
 #define COD_TRUNCATE 4
 #define COD_WRITE 5
 #define COD_CREATE 6
+#define COD_MKDIR 7
+#define COD_RMDIR 8
+#define COD_UNLINK 9
+#define COD_RENAME 10
+
 //enum codigo_operacion {GETATTR, READDIR, READ, TRUNCATE, WRITE};
 //ATENCIÓN: off_t ocupa 8 bytes acá, y 4 en el servidor. Tener en cuenta al hacer sizeof(off_t)
 
@@ -227,13 +232,7 @@ static int osada_write(const char *path, const char *buf, size_t size, off_t off
 		retorno = 0;
 	}
 	if (!((int*)buffer)[0])
-		retorno = 0;
-
-	if (retorno)
-		printf("Se escribieron %d bytes.\n\n", retorno);
-	else
-		printf("No se pudo escribir.\n\n");
-
+		retorno = -ENOSPC;
 
 	return retorno;
 }
@@ -265,6 +264,33 @@ int osada_create (const char *path, mode_t tipo, struct fuse_file_info *fi)
 	return retorno;
 }
 
+int osada_mkdir(const char* path, mode_t mode)
+{
+	void* buffer;
+	int retorno = 0;
+	int res=0;
+
+	enviarCodigoYTamanio(COD_MKDIR, strlen(path)+1);
+	enviarPath(path);
+
+	buffer = malloc(1);
+	if ((res = recv(fd_server, buffer, 1, 0))<=0)
+	{
+		printf("El servidor se encuentra desconectado.\n");
+		retorno = -1;
+	}
+
+	switch(((int*)buffer)[0])
+	{
+	case 1: retorno = -ENOENT; break;
+	case 2: retorno = -ENAMETOOLONG; break;
+	case 3: retorno = -EEXIST; break;
+	case 4: retorno = -ENOSPC; break;
+	}
+
+	return retorno;
+}
+
 static struct fuse_operations osada_oper = {
 		.getattr = osada_getattr,
 		.readdir = osada_readdir,
@@ -272,6 +298,7 @@ static struct fuse_operations osada_oper = {
 		.truncate = osada_truncate,
 		.write = osada_write,
 		.create = osada_create,
+		.mkdir = osada_mkdir,
 };
 
 
