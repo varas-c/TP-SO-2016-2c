@@ -234,6 +234,7 @@ static int osada_write(const char *path, const char *buf, size_t size, off_t off
 	if (!((int*)buffer)[0])
 		retorno = -ENOSPC;
 
+	free(buffer);
 	return retorno;
 }
 
@@ -261,6 +262,7 @@ int osada_create (const char *path, mode_t tipo, struct fuse_file_info *fi)
 	case 4: retorno = -ENOSPC; break;
 	}
 
+	free(buffer);
 	return retorno;
 }
 
@@ -288,6 +290,54 @@ int osada_mkdir(const char* path, mode_t mode)
 	case 4: retorno = -ENOSPC; break;
 	}
 
+	free(buffer);
+	return retorno;
+}
+
+int osada_rmdir(const char* path)
+{
+	void* buffer;
+	int retorno = 0;
+	int res=0;
+
+	enviarCodigoYTamanio(COD_RMDIR, strlen(path)+1);
+	enviarPath(path);
+	buffer = malloc(1);
+	if ((res = recv(fd_server, buffer, 1, 0))<=0)
+	{
+		printf("El servidor se encuentra desconectado.\n");
+		retorno = -1;
+	}
+
+	switch(((int*)buffer)[0])
+	{
+	case 1: retorno = -ENOENT; break;
+	case 2: retorno = -ENOTEMPTY; break;
+	}
+
+	free(buffer);
+	return retorno;
+}
+
+int osada_unlink(const char* path)
+{
+	void* buffer;
+	int retorno = 0;
+	int res=0;
+
+	enviarCodigoYTamanio(COD_UNLINK, strlen(path)+1);
+	enviarPath(path);
+	buffer = malloc(1);
+	if ((res = recv(fd_server, buffer, 1, 0))<=0)
+	{
+		printf("El servidor se encuentra desconectado.\n");
+		retorno = -1;
+	}
+
+	if(!((int*)buffer)[0])
+		retorno = -ENOENT;
+
+	free(buffer);
 	return retorno;
 }
 
@@ -299,6 +349,8 @@ static struct fuse_operations osada_oper = {
 		.write = osada_write,
 		.create = osada_create,
 		.mkdir = osada_mkdir,
+		.rmdir = osada_rmdir,
+		.unlink = osada_unlink,
 };
 
 

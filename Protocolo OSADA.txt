@@ -32,3 +32,12 @@ El cliente envía el buffer de escritura, su tamaño y el offset (mismos tamaño
 -------------------------------------------------------------------------
 6 - create
 El servidor responde con un 0 si pudo crear el archivo, o: 1 si no existe la ruta, 2 si el nombre del archivo es muy largo, 3 si ya existe el archivo y 4 si no hay espacio.
+-------------------------------------------------------------------------
+7 - mkdir
+Mismo criterio que para create.
+-------------------------------------------------------------------------
+8 - rmdir
+El servidor responde 0 si pudo borrar el archivo, 1 si no pudo, y 2 si es un directorio y contiene archivos.
+-------------------------------------------------------------------------
+9 - unlink
+El servidor responde 1 si pudo borrar el archivo, o 0 si no pudo.

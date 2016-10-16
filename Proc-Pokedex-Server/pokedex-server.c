@@ -69,7 +69,7 @@ int obtenerPrimerBloque(int);
 int obtenerBloqueSgte(int);
 int reservarNuevoBloque(int);
 int liberarBloque(int, uint8_t);
-void borrarArchivo(int);
+int borrarArchivo(int); //Valida además que, si es un directorio, esté vacío
 int* obtenerBloques(int, int*);
 int obtenerArchivo(char*);
 int obtenerDirectorioPadre(char*);
@@ -156,16 +156,27 @@ int liberarBloque(int bloque, uint8_t eliminarEnlace)
 	return 1;
 }
 
-void borrarArchivo(int indice)
+int borrarArchivo(int indice)
 {
 	if (indice>=0 && indice<2048)
 	{
+		if (tablaArchivos[indice].state==DIRECTORY)
+		{
+			int i;
+			for(i=0;i<2048;i++)
+			{
+				if (tablaArchivos[i].parent_directory == indice && tablaArchivos[i].state!=DELETED)
+					return -2;
+			}
+		}
+		else
+			truncarArchivo(indice, 0);
 		tablaArchivos[indice].state=DELETED;
-		int tamanio=0;
-		int* bloques=obtenerBloques(indice, &tamanio);
-		for(--tamanio;tamanio>0;tamanio--)
-			marcarBloque(bloques[tamanio], 0);
 	}
+	else
+		return -1;
+
+	return 0;
 }
 
 int* obtenerBloques(int indice, int* size) //Devuelve en orden los índices de los bloques que conforman el archivo.
@@ -386,7 +397,7 @@ int truncarArchivo(int archivo, off_t size)
 		return -1;
 	else
 	{
-		int cantidad=0;
+		int cantidad = 0;
 		int* bloques = obtenerBloques(archivo, &cantidad);
 		int bloquesNecesarios = size/OSADA_BLOCK_SIZE + ((size%OSADA_BLOCK_SIZE)>0);
 		for(;cantidad>bloquesNecesarios; cantidad--)
@@ -656,6 +667,33 @@ void gestionarSocket(void* socket)
 					memset(buffer, 1, 1);
 				send(cliente, buffer, 1, 0);
 				free(nombre);
+				free(buffer);
+				break;
+
+		case COD_RMDIR:
+				archivo = obtenerArchivo(buffer);
+				free(buffer);
+				buffer = malloc(1);
+				switch (borrarArchivo(archivo))
+				{
+				case 0: memset(buffer, 0, 1); break;
+				case -1: memset(buffer, 1, 1); break;
+				case -2: memset(buffer, 2, 1); break;
+				}
+				send(cliente, buffer, 1, 0);
+				free(buffer);
+				break;
+
+		case COD_UNLINK:
+				archivo = obtenerArchivo(buffer);
+				free(buffer);
+				buffer = malloc(1);
+				switch (borrarArchivo(archivo))
+				{
+				case 0: memset(buffer, 1, 1); break;
+				case -1: memset(buffer, 0, 1); break;
+				}
+				send(cliente, buffer, 1, 0);
 				free(buffer);
 				break;
 		}
