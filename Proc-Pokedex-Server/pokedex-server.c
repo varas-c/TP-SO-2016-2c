@@ -58,6 +58,7 @@ int tamanioAsig;
 osada_block* inicioDatos;
 int tamanioAdmin;
 
+pthread_mutex_t sem_estructuras = PTHREAD_MUTEX_INITIALIZER;
 
 //**** PROTOTIPOS ****
 int encontrarBloqueLibre();
@@ -363,22 +364,32 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, off_t offse
 	if (tablaArchivos[archivo].state != REGULAR || tablaArchivos[archivo].file_size < offset)
 		return 0;
 
-	int nroBloques = tablaArchivos[archivo].file_size / OSADA_BLOCK_SIZE + ((tablaArchivos[archivo].file_size % OSADA_BLOCK_SIZE)>0);
-	int bloqueInicial = 0;
+	int nroBloques = 0;
+	int bloqueInicial = offset/OSADA_BLOCK_SIZE;
+	int* bloques = obtenerBloques(archivo, &nroBloques);
 
-	if(nroBloques==0)
+	if(bloqueInicial==nroBloques && nroBloques!=0)
 	{
-		bloqueInicial = reservarNuevoBloque(-1);
+		bloqueInicial = reservarNuevoBloque(bloques[nroBloques-1]);
 		if (bloqueInicial<0)
 			return 0;
-		tablaArchivos[archivo].first_block = bloqueInicial;
+	}
+	else
+	{
+		if(bloqueInicial==nroBloques && nroBloques==0)
+		{
+			bloqueInicial = reservarNuevoBloque(-1);
+			if (bloqueInicial<0)
+				return 0;
+			tablaArchivos[archivo].first_block = bloqueInicial;
+		}
+		else if (bloqueInicial>nroBloques)
+				return 0;
+			 else
+				 bloqueInicial=bloques[bloqueInicial];
 	}
 
-	int* bloques = obtenerBloques(archivo, &bloqueInicial); //Uso bloqueInicial porque no me sirve la cantidad
-	bloqueInicial = nroBloques==0 ? 0 : offset/(nroBloques*OSADA_BLOCK_SIZE);
-
-
-	if (guardarDesdeBloque(bloques[bloqueInicial], nuevosDatos, cantidadBytes, offset))
+	if (guardarDesdeBloque(bloqueInicial, nuevosDatos, cantidadBytes, offset%OSADA_BLOCK_SIZE))
 	{
 		if (cantidadBytes + offset > tablaArchivos[archivo].file_size)
 			tablaArchivos[archivo].file_size = cantidadBytes + offset;
@@ -475,6 +486,7 @@ void gestionarSocket(void* socket)
 			return;
 		}
 		printf("Operacion %d sobre %s\n", operacion, (char*)buffer);
+		pthread_mutex_lock(&sem_estructuras);
 		switch(operacion)
 		{
 		case COD_GETATTR:
@@ -697,6 +709,7 @@ void gestionarSocket(void* socket)
 				free(buffer);
 				break;
 		}
+		pthread_mutex_unlock(&sem_estructuras);
 	}
 	return;
 }
