@@ -74,13 +74,13 @@ int borrarArchivo(int); //Valida además que, si es un directorio, esté vacío
 int* obtenerBloques(int, int*);
 int obtenerArchivo(char*);
 int obtenerDirectorioPadre(char*);
-char* obtenerNombreArchivo(char*); //Nombre del archivo según ruta, no según tabla de archivos
-int truncarArchivo(int, off_t);
+char* obtenerNombreArchivo(char*); //Nombre del archivo según ruta, no según tabla de archivos. Hacer free luego invocar
+int truncarArchivo(int, uint64_t);
 unsigned char* concatenarBloques(int*, int);
 int guardarDesdeBloque(int, void*, int, int);
-int actualizar(int, void*, size_t, off_t);
+int actualizar(int, void*, size_t, uint64_t);
 int crearArchivo(int, const char*, osada_file_state);
-
+int renombrarArchivo(int, char*);
 
 
 
@@ -359,10 +359,11 @@ unsigned char* concatenarBloques(int* indicesBloques, int arraySize) //Hacer fre
 	return contenido;
 }
 
-int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, off_t offset)
+int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, uint64_t offset)
 {
+	int retorno = 1;
 	if (tablaArchivos[archivo].state != REGULAR || tablaArchivos[archivo].file_size < offset)
-		return 0;
+		retorno = 0;
 
 	int nroBloques = 0;
 	int bloqueInicial = offset/OSADA_BLOCK_SIZE;
@@ -372,7 +373,7 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, off_t offse
 	{
 		bloqueInicial = reservarNuevoBloque(bloques[nroBloques-1]);
 		if (bloqueInicial<0)
-			return 0;
+			retorno = 0;
 	}
 	else
 	{
@@ -380,11 +381,11 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, off_t offse
 		{
 			bloqueInicial = reservarNuevoBloque(-1);
 			if (bloqueInicial<0)
-				return 0;
+				retorno = 0;
 			tablaArchivos[archivo].first_block = bloqueInicial;
 		}
 		else if (bloqueInicial>nroBloques)
-				return 0;
+				retorno = 0;
 			 else
 				 bloqueInicial=bloques[bloqueInicial];
 	}
@@ -395,14 +396,14 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, off_t offse
 			tablaArchivos[archivo].file_size = cantidadBytes + offset;
 	}
 	else
-		return 0;
+		retorno = 0;
 
 	tablaArchivos[archivo].lastmod = time(NULL);
-
-	return 1;
+	free(bloques);
+	return retorno;
 }
 
-int truncarArchivo(int archivo, off_t size)
+int truncarArchivo(int archivo, uint64_t size)
 {
 	if (archivo<0 || size<0)
 		return -1;
@@ -424,6 +425,7 @@ int truncarArchivo(int archivo, off_t size)
 
 		tablaArchivos[archivo].file_size = size;
 		tablaArchivos[archivo].lastmod = time(NULL);
+		free(bloques);
 	}
 	return size;
 }
@@ -574,16 +576,16 @@ void gestionarSocket(void* socket)
 		case COD_READ: //ATENCIÓN: off_t ocupa 4 bytes acá, y 8 en el cliente. Tener en cuenta al hacer sizeof(off_t)
 				archivo = obtenerArchivo((char*)buffer);
 				free(buffer);
-				buffer = malloc(sizeof(size_t)+sizeof(off_t));
-				if ((resultado = recv(cliente, buffer, sizeof(size_t)+2*sizeof(off_t), 0))<=0)
+				buffer = malloc(sizeof(size_t)+sizeof(uint64_t));
+				if ((resultado = recv(cliente, buffer, sizeof(size_t)+sizeof(uint64_t), 0))<=0)
 				{
 					printf("Cliente %d desconectado.\n\n", cliente);
 					return;
 				}
 				size_t cantLeida;
 				memcpy(&cantLeida, buffer, sizeof(cantLeida));
-				off_t offsetLectura;
-				memcpy(&offsetLectura, buffer+sizeof(size_t), sizeof(offsetLectura));
+				uint64_t offsetLectura;
+				memcpy(&offsetLectura, buffer+sizeof(cantLeida), sizeof(offsetLectura));
 				free(buffer);
 				int cantidad = 0;
 				int *bloques = obtenerBloques(archivo, &cantidad);
@@ -607,13 +609,13 @@ void gestionarSocket(void* socket)
 		case COD_TRUNCATE:
 				archivo = obtenerArchivo((char*)buffer);
 				free(buffer);
-				buffer = malloc(2*sizeof(off_t));
-				if ((resultado = recv(cliente, buffer, 2*sizeof(off_t), 0))<=0)
+				buffer = malloc(sizeof(uint64_t));
+				if ((resultado = recv(cliente, buffer, sizeof(uint64_t), 0))<=0)
 				{
 					printf("Cliente %d desconectado.\n\n", cliente);
 					return;
 				}
-				off_t size;
+				uint64_t size;
 				memcpy(&size, buffer, sizeof(size));
 				free(buffer);
 				truncarArchivo(archivo, size);
@@ -622,8 +624,8 @@ void gestionarSocket(void* socket)
 		case COD_WRITE:
 				archivo = obtenerArchivo((char*)buffer);
 				free(buffer);
-				buffer = malloc(sizeof(size_t)+2*sizeof(off_t));
-				if ((resultado = recv(cliente, buffer, sizeof(size_t)+2*sizeof(off_t), 0))<=0)
+				buffer = malloc(sizeof(size_t)+sizeof(uint64_t));
+				if ((resultado = recv(cliente, buffer, sizeof(size_t)+sizeof(uint64_t), 0))<=0)
 				{
 					printf("Cliente %d desconectado.\n\n", cliente);
 					return;
@@ -631,7 +633,7 @@ void gestionarSocket(void* socket)
 
 				size_t tamEscritura;
 				memcpy(&tamEscritura, buffer, sizeof(tamEscritura));
-				off_t offsetEscritura;
+				uint64_t offsetEscritura;
 				memcpy(&offsetEscritura, buffer+sizeof(tamEscritura), sizeof(offsetEscritura));
 				free(buffer);
 				buffer = malloc(tamEscritura);
@@ -766,6 +768,7 @@ void gestionarSocket(void* socket)
 				free(nombre);
 				free(buffer);
 				break;
+		default: free(buffer);
 		}
 		pthread_mutex_unlock(&sem_estructuras);
 	}
