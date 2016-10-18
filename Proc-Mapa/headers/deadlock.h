@@ -398,7 +398,7 @@ void liberar_recursos_entrenador(Jugador* entrenador_perdedor,t_list* pokenests)
 //*************************************************************
 //*************************************************************
 
-Jugador* resolver_deadlock(t_list* posible_deadlock,t_list* pokenests)    //BATALLAS
+Jugador* batalla_deadlock(t_list* posible_deadlock,t_list* pokenests)    //BATALLAS
 {
 	ordenar_por_llegada(posible_deadlock);
 
@@ -438,7 +438,6 @@ Jugador* resolver_deadlock(t_list* posible_deadlock,t_list* pokenests)    //BATA
 
 	return entrenador_perdedor;
 }
-
 //*************************************************************
 //*************************************************************
 
@@ -465,55 +464,98 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 
     t_list* entrenadores_aux=list_create();
 
+    t_list* pokenests_aux=list_create();
+
     Jugador* perdedor =0;
 
     list_add_all(entrenadores_aux,entrenadores);
 
-	int** matriz_peticiones = generar_matriz_peticiones(entrenadores_aux, pokenests);
+    list_add_all(pokenests_aux,pokenests);
 
-	int** matriz_recursos_asignados = generar_matriz_asignados(entrenadores_aux, pokenests);
+	int** matriz_peticiones = generar_matriz_peticiones(entrenadores_aux, pokenests_aux);
 
-	int* recursos_disponibles = generar_vector_recursos_disponibles(pokenests);
+	int** matriz_recursos_asignados = generar_matriz_asignados(entrenadores_aux, pokenests_aux);
 
-	//printf("                  PETICIONES\n");
-	mostrar_matriz(matriz_peticiones,list_size(entrenadores_aux),list_size(pokenests));
-	//printf("                  ASIGNADOS\n");
-	mostrar_matriz(matriz_recursos_asignados,list_size(entrenadores_aux),list_size(pokenests));
+	int* recursos_disponibles = generar_vector_recursos_disponibles(pokenests_aux);
 
-	mostrar_recursos_disponibles(recursos_disponibles, list_size(pokenests));
-	//printf("\n\n\n");
+	printf("                  PETICIONES\n");
+	mostrar_matriz(matriz_peticiones,list_size(entrenadores_aux),list_size(pokenests_aux));
+	printf("                  ASIGNADOS\n");
+	mostrar_matriz(matriz_recursos_asignados,list_size(entrenadores_aux),list_size(pokenests_aux));
 
-	 if((list_size(entrenadores_aux)>1)&&(list_size(pokenests)))
+	mostrar_recursos_disponibles(recursos_disponibles, list_size(pokenests_aux));
+	printf("\n\n\n");
+
+	 if((list_size(entrenadores_aux)>1)&&(list_size(pokenests_aux)))
 	 {
-		posibles_deadlock = no_pueden_ejecutar(entrenadores_aux,pokenests);
+		posibles_deadlock = no_pueden_ejecutar(entrenadores_aux,pokenests_aux);
 
-		//printf("Cantidad de entrenadores en deadlock o inanicion: %d\n\n",list_size(posibles_deadlock));
+		printf("Cantidad de entrenadores en deadlock o inanicion: %d\n\n",list_size(posibles_deadlock));
 
 		if(list_size(posibles_deadlock)>1)
 		{
 			sacar_inanicion(posibles_deadlock);
 			if(list_size(posibles_deadlock)>1)
 			{
-				//printf("Cantidad de entrenadores en algun deadlock: %d\n",list_size(posibles_deadlock));
+				printf("Cantidad de entrenadores en algun deadlock: %d\n",list_size(posibles_deadlock));
 
 				if(list_size(posibles_deadlock)>1)
 				{
-					perdedor = resolver_deadlock(posibles_deadlock,pokenests);
+					perdedor = batalla_deadlock(posibles_deadlock,pokenests_aux);
 				}
 			}
+			else
+				printf("No hay deadlock\n\n");
 		}
 	 }
 
 	printf("Muere el entrenador %d\n",perdedor);
 
 	if(perdedor)
-	printf("Y su numero es: %d\n",perdedor->numero);
-	return perdedor;
+		printf("Y su numero es: %d\n",perdedor->numero);
+		return perdedor;
 
-	list_destroy(posibles_deadlock);
+		list_destroy(posibles_deadlock);
 
-	list_destroy(entrenadores_aux);
+		list_destroy(entrenadores_aux);
 }
+
+
+//*************************************************************
+//*************************************************************
+
+t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
+{
+	t_list* entrenadores_aux=list_create();
+
+	t_list* pokenests_aux=list_create();
+
+    Jugador* perdedor =0;
+
+    list_add_all(entrenadores_aux,entrenadores);
+
+    list_add_all(pokenests_aux,pokenests);
+
+    if((list_size(pokenests))&&((list_size(entrenadores))>1))
+    {
+
+		int** matriz_peticiones = generar_matriz_peticiones(entrenadores_aux, pokenests_aux);
+
+		int** matriz_recursos_asignados = generar_matriz_asignados(entrenadores_aux, pokenests_aux);
+
+		int* recursos_disponibles = generar_vector_recursos_disponibles(pokenests_aux);
+
+		entrenadores_aux = no_pueden_ejecutar(entrenadores_aux,pokenests_aux);
+
+		sacar_inanicion(entrenadores_aux);
+
+    }
+
+	list_destroy(pokenests_aux);
+
+	return entrenadores_aux;
+}
+
 
 //*************************************************************
 //*************************************************************

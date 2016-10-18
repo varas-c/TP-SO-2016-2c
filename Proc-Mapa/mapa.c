@@ -44,7 +44,7 @@
 
 t_list* listaListos;
 t_list* colaBloqueados;
-
+t_list* listaDeadlock;
 t_list* gui_items;
 t_list* listaPokemon;
 t_log* traceLogger;
@@ -899,13 +899,20 @@ void* thread_planificador()
 
 void* thread_deadlock()
 {
+	t_list * entrenadores_aux;
 	while(1)
 	{
+		usleep(mdataMapa.tiempoChequeoDeadlock*100000); //EXAGERO PARA PROBAR
+
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 
-		usleep(mdataMapa.tiempoChequeoDeadlock*1000);
+		entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema);
 
-		detectar_y_solucionar_deadlock(listaPokenest,global_listaJugadoresSistema);
+		list_clean(listaDeadlock);
+
+		list_add_all(listaDeadlock,entrenadores_aux);
+
+		list_destroy(entrenadores_aux);
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
