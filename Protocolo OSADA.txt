@@ -41,3 +41,6 @@ El servidor responde 0 si pudo borrar el archivo, 1 si no pudo, y 2 si es un dir
 -------------------------------------------------------------------------
 9 - unlink
 El servidor responde 1 si pudo borrar el archivo, o 0 si no pudo.
+-------------------------------------------------------------------------
+10 - rename
+El cliente envía la nueva ruta que tendrá el archivo, y el servidor responde 0 si pudo moverlo, 1 si no existe el archivo, 2 si el nombre es demasiado largo, y 3 si la nueva ruta ya existe.

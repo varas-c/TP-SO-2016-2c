@@ -455,6 +455,21 @@ int crearArchivo(int dirPadre, const char* nombre, osada_file_state tipo)
 	return 0;
 }
 
+int renombrarArchivo(int archivo, char* nuevoNombre)
+{
+	if(archivo<0)
+		return -1;
+
+	if (strlen(nuevoNombre)>16)
+		return -2;
+
+	strcpy(tablaArchivos[archivo].fname, nuevoNombre);
+	tablaArchivos[archivo].lastmod = time(NULL);
+	return 0;
+}
+
+
+
 void gestionarSocket(void* socket)
 {
 	int cliente = (int) socket;
@@ -706,6 +721,49 @@ void gestionarSocket(void* socket)
 				case -1: memset(buffer, 0, 1); break;
 				}
 				send(cliente, buffer, 1, 0);
+				free(buffer);
+				break;
+
+		case COD_RENAME:
+				archivo =obtenerArchivo((char*)buffer);
+				free(buffer);
+				buffer = malloc(1);
+				if ((recv(cliente,buffer,1,0))<=0)
+				{
+					printf("Cliente %d desconectado.\n\n", cliente);
+					return;
+				}
+				uint8_t tamPath=0;
+				memcpy(&tamPath, buffer, 1);
+				free(buffer);
+				buffer=malloc(tamPath);
+				if ((recv(cliente,buffer,tamPath,0))<=0)
+				{
+					printf("Cliente %d desconectado.\n\n", cliente);
+					return;
+				}
+
+				int archivoNuevo = obtenerArchivo((char*)buffer);
+				nombre = obtenerNombreArchivo((char*)buffer);
+				dirPadre = obtenerDirectorioPadre((char*)buffer);
+				free(buffer);
+				buffer=malloc(1);
+				if (archivoNuevo<0)
+				{
+					if (strlen(nombre)>0)
+					{	switch(renombrarArchivo(archivo,nombre))
+						{
+						case 0 : memset(buffer, 0, 1); tablaArchivos[archivo].parent_directory = dirPadre; break;
+						case -1 : memset(buffer, 1, 1); break;
+						case -2 : memset(buffer, 2, 1); break;
+						}
+					}
+				}
+				else
+					memset(buffer, 3, 1);
+
+				send(cliente, buffer, 1, 0);
+				free(nombre);
 				free(buffer);
 				break;
 		}

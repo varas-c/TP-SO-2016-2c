@@ -70,6 +70,24 @@ void enviarPath(const char* path)
 	return;
 }
 
+
+void enviarMensaje(char* mensaje)
+{
+	void* buffer;
+	buffer =malloc(strlen(mensaje)+2);
+	memset(buffer,0,strlen(mensaje)+2);
+
+	memset(buffer,strlen(mensaje)+1,1);
+	memcpy((char*)buffer+1,mensaje,strlen(mensaje));
+
+	send(fd_server,buffer,strlen(mensaje)+2,0);
+
+	free(buffer);
+	return;
+
+}
+
+
 static int osada_getattr(const char *path, struct stat *stbuf)
 {
 	void* buffer;
@@ -90,14 +108,13 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 		buffer = malloc(32);
 		if ((res = recv(fd_server, (osada_file*)buffer, 32, 0)) <= 0)
 		{
-			fflush(stdout);
 			printf("El servidor se encuentra desconectado.\n");
 			retorno = -ENOENT;
 		}
 		else
 		{
 			osada_file* archivo = (osada_file*) buffer;
-			if ( archivo->state== DIRECTORY)
+			if (archivo->state== DIRECTORY)
 			{
 				stbuf->st_mode = S_IFDIR | 0755;
 				stbuf->st_nlink = 2;
@@ -341,6 +358,36 @@ int osada_unlink(const char* path)
 	return retorno;
 }
 
+
+int osada_rename (const char *path,char* nuevoPath)
+{
+	void* buffer;
+	int retorno = 0;
+	int res=0;
+
+	printf("nuevo nombre %s",nuevoPath);
+	enviarCodigoYTamanio(COD_RENAME, strlen(path)+1);
+	enviarPath(path);
+	enviarMensaje(nuevoPath);
+
+	buffer = malloc(1);
+	if ((res = recv(fd_server, buffer, 1, 0))<=0)
+	{
+		printf("El servidor se encuentra desconectado.\n");
+		retorno = -1;
+	}
+
+	switch(((int*)buffer)[0])
+	{
+	case 1: retorno = -ENOENT; break;
+	case 2: retorno = -ENAMETOOLONG; break;
+	case 3: retorno = -EEXIST; break;
+	}
+
+	free(buffer);
+	return retorno;
+}
+
 static struct fuse_operations osada_oper = {
 		.getattr = osada_getattr,
 		.readdir = osada_readdir,
@@ -351,6 +398,7 @@ static struct fuse_operations osada_oper = {
 		.mkdir = osada_mkdir,
 		.rmdir = osada_rmdir,
 		.unlink = osada_unlink,
+		.rename = osada_rename,
 };
 
 
