@@ -537,16 +537,18 @@ void gestionarSocket(void* socket)
 					uint8_t primero = 1;
 					for (i=0;i<2048;i++)
 					{
-						if (primero)
-						{
-							buffer = malloc(1);
-							primero = 0;
-							memset(buffer, 1, 1);
-							send(cliente, buffer, 1, 0);
-							free(buffer);
-						}
 						if (tablaArchivos[i].state != DELETED && tablaArchivos[i].parent_directory == archivo)
+						{
+							if (primero)
+							{
+								primero = 0;
+								buffer = malloc(1);
+								memset(buffer, 1, 1);
+								send(cliente, buffer, 1, 0);
+								free(buffer);
+							}
 							send(cliente, (void*)tablaArchivos[i].fname, 17, 0);
+						}
 					}
 
 					if (primero)

@@ -44,15 +44,15 @@ int get_fdServer(char* numero_IP, char* numero_Puerto)
 			serverSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype, serverInfo->ai_protocol);	//Inicializamos el valor del serverSocket
 
 			if(serverSocket == -1) {
-				printf("Error de Socket Servidor");
+				printf("Error de Socket Servidor\n");
 				exit(1);
 			} //Error de conexion.
 
-			int valor_connect = connect(serverSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);		// Manda una peticion de conexion a donde apunta el socket
+			int valor_connect = connect(serverSocket, serverInfo->ai_addr, serverInfo->ai_addrlen); // Manda una peticion de conexion a donde apunta el socket
 
 
 			if(valor_connect == -1) {
-				printf("Error de Conexion");
+				printf("Error de Conexion\n");
 				exit(1);
 			}
 

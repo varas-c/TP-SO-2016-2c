@@ -365,7 +365,6 @@ int osada_rename (const char *path,char* nuevoPath)
 	int retorno = 0;
 	int res=0;
 
-	printf("nuevo nombre %s",nuevoPath);
 	enviarCodigoYTamanio(COD_RENAME, strlen(path)+1);
 	enviarPath(path);
 	enviarMensaje(nuevoPath);
