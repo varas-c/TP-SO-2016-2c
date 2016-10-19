@@ -5,9 +5,6 @@
  *      Author: utnso
  */
 
-
-
-
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,7 +23,6 @@
 #include <signal.h>
 #include <time.h>
 
-
 typedef struct{
 	int minutos;
 	int segundos;
@@ -43,7 +39,6 @@ tiempo tiempoTardado(tiempo inicio, tiempo fin){
 	return tiempoTardado;
 }
 
-
 #include "headers/struct.h"
 
 Entrenador entrenador;
@@ -54,9 +49,6 @@ bool flag_SIGNALMUERTE = false;
 #include "headers/send.h"
 #include "headers/serializeEntrenador.h"
 #include "headers/pokenest.h"
-
-
-
 
 /*
 void leerObjetivos(char* objetivos, t_config* config, int cantViajes,char** hojaDeViaje)
@@ -100,7 +92,6 @@ int recv_turnoConcedido(int fd_server)
 	return 0;
 }
 
-
 void recv_MoverOK(int fdServer)
 {
 	Paquete paquete;
@@ -127,7 +118,6 @@ void reiniciarEntrenador(Entrenador *entrenador)
     entrenador->flagx = 0;
     entrenador->flagy = 0;
 }
-
 
 void avanzarNivel(Nivel* nivel,Entrenador* entrenador)
 {
@@ -173,22 +163,13 @@ bool informar_signalMuerteEntrenador()
 				break;
 			}
 		}
-
 }
-
-
-
 
 void send_coordenadasDestino(Entrenador* entrenador)
 {
 	int destinox = fabs(entrenador->destinox);
 	int destinoy = fabs(entrenador->destinoy);
-
-
-
 }
-
-
 
 int main(int argc, char** argv)
 {
@@ -342,6 +323,3 @@ int main(int argc, char** argv)
 	//free(paquete.buffer);
 	return 0;
 }
-
-
-
