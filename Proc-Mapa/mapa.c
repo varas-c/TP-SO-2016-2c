@@ -94,9 +94,11 @@ void loggearColas(void){
 
 	pthread_mutex_lock(&mutex_Listos); //Mutex de listas
 
-	if (!list_is_empty(listaListos)){
+	if (!list_is_empty(listaListos))
+	{
 		jugador = (Jugador*)list_get(listaListos,0);
-		while(jugador!=NULL){
+		while(jugador!=NULL)
+		{
 			cantListos= cantListos + 2;
 			simbolos=realloc(simbolos,cantListos);
 			simbolos[indice++]= jugador->entrenador.simbolo;
@@ -155,9 +157,7 @@ void loggearColas(void){
 	queue_destroy(auxLista);
 
 	pthread_mutex_unlock(&mutex_Bloqueados);
-}
-*/
-
+}*/
 
 //****************************************************************************************************************
 
@@ -211,7 +211,7 @@ void bloquearJugador(Jugador* jugador,char simboloPokenest)
 
 	if(posicion == -1)
 	{
-		printf("Error - Func %s - Linea %d - No existe la pokenest, posicion -1",__func__,__LINE__);
+		printf("Error - Func %s - Linea %d - No existe la pokenest, posicion -1\n\n",__func__,__LINE__);
 		exit(1);
 	}
 	log_info(infoLogger, "Jugador %c entra a Bloqueados.",jugador->entrenador.simbolo);
@@ -228,7 +228,7 @@ Jugador* desbloquearJugador(char simboloPokenest)
 
 	if(posicion == -1)
 	{
-		printf("Error - Func %s - Linea %d - No existe la pokenest, posicion -1",__func__,__LINE__);
+		printf("Error - Func %s - Linea %d - No existe la pokenest, posicion -1 \n\n",__func__,__LINE__);
 		exit(1);
 	}
 
@@ -254,7 +254,7 @@ int cantPokemonEnDir(char* ruta)
 
 	if(rutaLeer == NULL)
 	{
-		perror("cantPokemonEnDir - open(ruta) == NULL");
+		perror("cantPokemonEnDir - open(ruta) == NULL\n\n");
 		exit(1);
 	}
 
@@ -327,7 +327,7 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 
 	if(dpPokenest == NULL)
 	{
-	   printf("Error -- Funcion: %s - Linea: %d ",__func__,__LINE__);
+	   printf("Error -- Funcion: %s - Linea: %d \n\n",__func__,__LINE__);
 	   exit(1);
 	}
 
@@ -863,8 +863,6 @@ void* thread_planificador()
 
 			int tam = list_size(listaListos);
 
-
-
 			sprintf(mostrar,"Mapa: %s -pid.%i - Quantum: %i - Jugador: %i - TamLista: %i ",parametros.nombreMapa,pid,quantum,jugador->numero,tam);
 
 			//free(buffer_recv);
@@ -1026,7 +1024,7 @@ int main(int argc, char** argv)
 
 	if(valorHilo != 0)
 	{
-		perror("Error al crear hilo Planificador");
+		perror("Error al crear hilo Planificador\n\n");
 		exit(1);
 	}
 

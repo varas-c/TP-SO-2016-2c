@@ -79,7 +79,7 @@ int recv_turnoConcedido(int fd_server)
 
 	if(valor_recv == -1)
 	{
-		perror("Error recv");
+		perror("Error recv\n\n");
 		exit(1);
 	}
 	//Deserializamos
