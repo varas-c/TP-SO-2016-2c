@@ -716,11 +716,12 @@ void* thread_planificador()
 	bool flag_SRDF;
 	Pokemon* pokemon;
 	t_list* lista_jugadoresBloqueados = NULL;
+	pid_t pid= getpid();
 
 	while(1)
 	{
 	nivel_gui_dibujar(gui_items,"                                                           ");
-	sprintf(mostrar,"Mapa: %s -- No hay jugadores",parametros.nombreMapa);
+	sprintf(mostrar,"Mapa: %s -- No hay jugadores -pid.%i                          ",parametros.nombreMapa,pid);
 	nivel_gui_dibujar(gui_items, mostrar);
 	usleep(mdataMapa.retardo*1000);
 
@@ -797,6 +798,7 @@ void* thread_planificador()
 					jugador->conocePokenest = TRUE;
 					flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
 				break;
+
 				case MOVER: //El entrenador se quiere mover
 					pos = dsrlz_movEntrenador(buffer_recv);//Obtengo las coordenadas X,Y
 					movEntrenador(pos,jugador);//Actualizamos el entrenador con las nuevas coordenadas
@@ -843,6 +845,7 @@ void* thread_planificador()
 					}
 
 				break;
+
 				case 0:
 					//sumarRecurso(jugador->pokemonCapturados,pokenest->simbolo);
 					lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
@@ -860,7 +863,9 @@ void* thread_planificador()
 
 			int tam = list_size(listaListos);
 
-			sprintf(mostrar,"Mapa: %s - Quantum: %i - Jugador: %i - TamLista: %i",parametros.nombreMapa,quantum,jugador->numero,tam);
+
+
+			sprintf(mostrar,"Mapa: %s -pid.%i - Quantum: %i - Jugador: %i - TamLista: %i ",parametros.nombreMapa,pid,quantum,jugador->numero,tam);
 
 			//free(buffer_recv);
 			//log_trace(traceLogger, "Termina turno de jugador %c", jugador->entrenador.simbolo);
@@ -897,7 +902,6 @@ void* thread_planificador()
 		if(flag_DESCONECTADO == TRUE)
 		{
 			lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
-
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 		borrarJugadorSistema(jugador);

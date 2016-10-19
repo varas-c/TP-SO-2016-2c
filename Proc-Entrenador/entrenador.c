@@ -173,6 +173,12 @@ void send_coordenadasDestino(Entrenador* entrenador)
 
 int main(int argc, char** argv)
 {
+	pid_t pid = getpid();
+
+
+	printf(" pid:%i \n\n",pid);
+
+
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
@@ -182,7 +188,9 @@ int main(int argc, char** argv)
 	//parametros.dirPokedex = "/mnt/pokedex";
 	//parametros.nombreEntrenador = "Ash";
 
+
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
+
 
 	metadata mdata;
 	mdata = leerMetadataEntrenador(parametros);
@@ -196,10 +204,14 @@ int main(int argc, char** argv)
 
 	int opcion = -1;
 	entrenador = new_Entrenador(mdata);
+
 	vidas_restantes = entrenador.vidas;
+
+
 	Paquete paquete;
 
 	//Agregamos las funciones que manejaran las señales enmascaras como SIGTERM Y SIGUSR1.
+
 	signal(SIGUSR1, manejar_signals);
 	signal(SIGTERM, manejar_signals);
 
@@ -259,6 +271,7 @@ int main(int argc, char** argv)
 					calcular_coordenadas(&entrenador,pokenest.posx,pokenest.posy);
 					//send_coordenadasDestino(&entrenador);
 					break;
+
 				case MOVER://Caso 2: Queremos movernos!
 					mover_entrenador(&entrenador);
 					paquete = srlz_movEntrenador(entrenador);
@@ -303,12 +316,7 @@ int main(int argc, char** argv)
 				nivel.finNivel = 1;
 				flag_seguirJugando = informar_signalMuerteEntrenador();
 			}
-
-
-
-
 	}
-
 
 		flag_SIGNALMUERTE = false;
 	}
