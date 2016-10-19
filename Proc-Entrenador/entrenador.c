@@ -24,9 +24,24 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <signal.h>
+#include <time.h>
 
 
+typedef struct{
+	int minutos;
+	int segundos;
+}tiempo;
 
+tiempo tiempoTardado(tiempo inicio, tiempo fin){
+	int totalInicio, totalFin, tardadoEnSegundos;
+	tiempo tiempoTardado;
+	totalInicio = ((inicio.minutos)*60 + (inicio.segundos));
+	totalFin = ((fin.minutos)*60 + (fin.segundos));
+	tardadoEnSegundos = totalFin - totalInicio;
+	tiempoTardado.minutos = (tardadoEnSegundos / 60);
+	tiempoTardado.segundos = (tardadoEnSegundos % 60);
+	return tiempoTardado;
+}
 
 
 #include "headers/struct.h"
@@ -212,6 +227,15 @@ int main(int argc, char** argv)
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
+	struct tm *local, *local2;
+	time_t t, t2;
+	tiempo tardado,inicio,fin;
+
+	t = time(NULL);
+	local = localtime(&t);
+	inicio.minutos = local->tm_min;
+	inicio.segundos = local->tm_sec;
+
 	Pokenest pokenest;
 	char* pokemonDat;
 	int opc;
@@ -307,6 +331,14 @@ int main(int argc, char** argv)
 
 		flag_SIGNALMUERTE = false;
 	}
+
+	t2 = time(NULL);
+	local2 = localtime(&t2);
+	fin.minutos = local2->tm_min;
+	fin.segundos = local2->tm_sec;
+
+	tardado = tiempoTardado(inicio, fin);
+	printf("Ganaste el Juego. Tu tiempo: %d minutos y %d segundos\n", tardado.minutos, tardado.segundos);
 	//free(paquete.buffer);
 	return 0;
 }
