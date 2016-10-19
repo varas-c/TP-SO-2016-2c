@@ -780,7 +780,7 @@ void gestionarSocket(void* socket)
 int main(int argc, char** argv)
 {
 	int fd_fileSystem = open(argv[1], 2); //2 significa O_RDWR, leer y escribir
-//	int fd_fileSystem = open("challenge.bin", 2); //Para debuggear
+//	int fd_fileSystem = open("juego.bin", 2); //Para debuggear
 	if (fd_fileSystem==-1)
 	{
 		printf("Archivo de file system no encontrado.\n");

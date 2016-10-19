@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <curses.h>
 #include <math.h>
 #include <ctype.h>
@@ -249,8 +250,11 @@ int cantPokemonEnDir(char* ruta)
 	struct dirent *archivo = NULL;
 	int cantPokes = 0;
 	DIR* rutaLeer = NULL;
+	char* aux;
 
 	rutaLeer = opendir(ruta);
+	struct stat st;
+
 
 	if(rutaLeer == NULL)
 	{
@@ -260,10 +264,15 @@ int cantPokemonEnDir(char* ruta)
 
 	while(NULL != (archivo = readdir(rutaLeer)))
 	{
-		if(archivo->d_type == DT_REG && strcmp(archivo->d_name,"metadata") != 0) //Si es un archivo y no es metadata -> es un pokemon!
+		aux = malloc(sizeof(char)*256);
+		strcpy(aux, ruta);
+		stat(strcat(aux,archivo->d_name), &st);
+
+		if(st.st_mode == (S_IFREG | 0777) && strcmp(archivo->d_name,"metadata") != 0) //Si es un archivo y no es metadata -> es un pokemon!
 		{
 			cantPokes++;
 		}
+		free(aux);
 	}
 	closedir(rutaLeer);
 
@@ -960,11 +969,11 @@ void* thread_deadlock()
 
 int main(int argc, char** argv)
 {
-	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	//parametros.dirPokedex = "/mnt/pokedex";
-	//parametros.nombreMapa = "PuebloPaleta";
+	parametros.dirPokedex = "/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Pokedex-Cliente/montaje/pokedex";
+	parametros.nombreMapa = "PuebloPaleta";
 
 	signal(SIGUSR2, sigHandler_reloadMetadata);
 
