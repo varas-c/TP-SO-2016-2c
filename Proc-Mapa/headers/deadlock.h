@@ -331,16 +331,16 @@ bool sacar_inanicion(t_list* entrenadores)
 //*************************************************************
 //*************************************************************
 
-Pokemon* pokemon_mayor_nivel(Jugador* entrenador)
+t_pokemon* pokemon_mayor_nivel(t_list* pokemones)
 {
-	Pokemon* mas_fuerte = (Pokemon*)list_get((entrenador->pokemonCapturados),0);
+	t_pokemon* mas_fuerte = (t_pokemon*)list_get((pokemones),0);
 
 	int i=0;
-	for(i=1;i<list_size(entrenador->pokemonCapturados);i++)
+	for(i=1;i<list_size(pokemones);i++)
 	{
-		if((((Pokemon*)list_get(entrenador->pokemonCapturados,i))->pokemon->level)>(mas_fuerte->pokemon->level))
+		if((((t_pokemon*)list_get(pokemones,i))->level)>(mas_fuerte->level))
 		{
-			mas_fuerte = (Pokemon*)list_get(entrenador->pokemonCapturados,i);
+			mas_fuerte = (Pokemon*)list_get(pokemones,i);
 		}
 	}
 
