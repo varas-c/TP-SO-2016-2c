@@ -297,7 +297,7 @@ int evaluar_opciones(Entrenador entrenador, Pokenest pokenest)
 Paquete recv_capturarPokemon(int fd_server)
 {
 	Paquete paquete;
-	paquete.tam_buffer = sizeof(int)*2+sizeof(char)*200;
+	paquete.tam_buffer = sizeof(int)*2+sizeof(char)*50+sizeof(int)+sizeof(char)*50+sizeof(t_pokemon);
 	paquete.buffer = malloc(paquete.tam_buffer);
 
 

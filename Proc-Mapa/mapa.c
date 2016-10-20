@@ -250,6 +250,34 @@ int cantPokemonEnDir(char* ruta)
 	struct dirent *archivo = NULL;
 	int cantPokes = 0;
 	DIR* rutaLeer = NULL;
+
+	rutaLeer = opendir(ruta);
+
+	if(rutaLeer == NULL)
+	{
+		perror("cantPokemonEnDir - open(ruta) == NULL");
+		exit(1);
+	}
+
+	while(NULL != (archivo = readdir(rutaLeer)))
+	{
+		if(archivo->d_type == DT_REG && strcmp(archivo->d_name,"metadata") != 0) //Si es un archivo y no es metadata -> es un pokemon!
+		{
+			cantPokes++;
+		}
+	}
+	closedir(rutaLeer);
+
+	return cantPokes;
+}
+
+
+/* FUNCION PARA USAR CON FUSE!!!!!!!!
+int cantPokemonEnDir(char* ruta)
+{
+	struct dirent *archivo = NULL;
+	int cantPokes = 0;
+	DIR* rutaLeer = NULL;
 	char* aux;
 
 	rutaLeer = opendir(ruta);
@@ -278,6 +306,7 @@ int cantPokemonEnDir(char* ruta)
 
 	return cantPokes;
 }
+*/
 
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {
@@ -523,7 +552,10 @@ Paquete srlz_capturaOK(Pokemon* pokemon)
 	char* pokemonDat = pokemon->nombre;
 	int tamPokemonDat = strlen(pokemonDat)+1;
 
-	paquete.tam_buffer = size_CAPTURA_OK+sizeof(char)*tamPokemonDat;
+	int tamSpecies = strlen(pokemon->pokemon->species)+1;
+
+
+	paquete.tam_buffer = size_CAPTURA_OK+sizeof(char)*tamPokemonDat+sizeof(int)+sizeof(char)*tamSpecies;
 	paquete.buffer = malloc(paquete.tam_buffer);
 
 	int codOp = CAPTURA_OK;
@@ -531,6 +563,10 @@ Paquete srlz_capturaOK(Pokemon* pokemon)
 	memcpy(paquete.buffer,&codOp,sizeof(int));
 	memcpy(paquete.buffer+sizeof(int),&tamPokemonDat,sizeof(int));
 	memcpy(paquete.buffer+sizeof(int)*2,pokemonDat,sizeof(char)*tamPokemonDat);
+	memcpy(paquete.buffer+sizeof(int)*2+sizeof(char)*tamPokemonDat,&tamSpecies,sizeof(int));
+	memcpy(paquete.buffer+sizeof(int)*2+sizeof(char)*tamPokemonDat+sizeof(int),pokemon->pokemon->species,sizeof(char)*tamSpecies);
+
+	memcpy(paquete.buffer+sizeof(int)*2+sizeof(char)*tamPokemonDat+sizeof(int)+sizeof(char)*tamSpecies,pokemon->pokemon,sizeof(t_pokemon));
 
 	//free(pokemonDat);
 	return paquete;
@@ -539,6 +575,7 @@ Paquete srlz_capturaOK(Pokemon* pokemon)
 int send_capturaOK(Jugador* jugador,Pokemon* pokemon)
 {
 	Paquete paquete;
+
 	paquete = srlz_capturaOK(pokemon);
 	int retval;
 
@@ -700,7 +737,19 @@ void borrarJugadorSistema(Jugador* jugador)
 
 	list_remove_by_condition(global_listaJugadoresSistema,(void*)_find_socket_);
 
+}
 
+int send_codigoOperacion(int socket,int operacion)
+{
+	Paquete paquete;
+	paquete.buffer = malloc(sizeof(int));
+
+	memcpy(paquete.buffer,&operacion,sizeof(int));
+
+	int retval = send(socket,paquete.buffer,sizeof(int),0);
+
+	free(paquete.buffer);
+	return retval;
 }
 
 void* thread_planificador()
@@ -825,9 +874,10 @@ void* thread_planificador()
 					if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
 					{
 						pokemon = queue_pop(pokenest->colaDePokemon);
+						send_codigoOperacion(jugador->socket,CAPTURA_OK);
 						retval = send_capturaOK(jugador,pokemon);
 						flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
-//						log_info(infoLogger,"el jugador:%c ha ingresado en la lista de listos del mapa:",jugador->entrenador.simbolo,parametros.nombreMapa);
+						//log_info(infoLogger,"el jugador:%c ha ingresado en la lista de listos del mapa:",jugador->entrenador.simbolo,parametros.nombreMapa);
 
 						if(flag_DESCONECTADO == FALSE)
 						{
@@ -846,10 +896,16 @@ void* thread_planificador()
 
 					else
 					{	// NO HAY MAS POKEMONS! hay que bloquear al entrenador
-						jugador->estado = 1;
-						jugador->peticion = pokenestPedida;
-						bloquearJugador(jugador,pokenestPedida);
-//						log_info(infoLogger,"El Jugador %c ha entrado a la cola de Bloqueados del mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
+						retval = send_codigoOperacion(jugador->socket,CAPTURA_BLOQUEADO);
+						flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
+
+						if(flag_DESCONECTADO == FALSE)
+						{
+							jugador->estado = 1;
+							jugador->peticion = pokenestPedida;
+							bloquearJugador(jugador,pokenestPedida);
+							//log_info(infoLogger,"El Jugador %c ha entrado a la cola de Bloqueados del mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
+						}
 						quantum=0;
 					}
 
@@ -972,7 +1028,7 @@ int main(int argc, char** argv)
 	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	parametros.dirPokedex = "/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Pokedex-Cliente/montaje/pokedex";
+	parametros.dirPokedex = "/mnt/pokedex/";
 	parametros.nombreMapa = "PuebloPaleta";
 
 	signal(SIGUSR2, sigHandler_reloadMetadata);
