@@ -37,6 +37,7 @@ enum sizeofBuffer
 	size_COORDENADAS = sizeof(int)+sizeof(int)+sizeof(int),
 	size_CAPTURA_OK = sizeof(int)+sizeof(int),
 	size_MOVER_OK = sizeof(int),
+	size_MENSAJECAPTURA = sizeof(int),
 };
 //******************************************
 
@@ -121,7 +122,7 @@ int dsrlz_codigoOperacion(void* buffer)
 }
 //******************************************
 
-char* dsrlz_capturarPokemon(Paquete* paquete)
+char* dsrlz_capturarPokemon(Paquete* paquete, Entrenador* entrenador)
 {
 	int codOp;
 	int lengthPokemonDat;
@@ -140,6 +141,11 @@ char* dsrlz_capturarPokemon(Paquete* paquete)
 	pokemonDat = malloc(sizeof(char)*lengthPokemonDat+1);
 
 	memcpy(pokemonDat,paquete->buffer+sizeof(int)*2,sizeof(char)*lengthPokemonDat);
+
+	t_pokemon* pokemonCapturado = malloc(sizeof(t_pokemon));
+	memcpy(pokemonCapturado,paquete->buffer+sizeof(int)*2+sizeof(char)*lengthPokemonDat,sizeof(t_pokemon));
+	entrenador->pokemonesCapturados
+
 
 	return pokemonDat;
 }

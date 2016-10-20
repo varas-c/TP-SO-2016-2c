@@ -5,6 +5,7 @@
  *      Author: utnso
  */
 
+#include <commons/collections/list.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,6 +23,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <time.h>
+#include <pkmn/factory.h>
 
 typedef struct{
 	int minutos;
@@ -237,6 +239,7 @@ int main(int argc, char** argv)
 	Entrenador entrenador_estadoInicial = entrenador;
 	int auxcantNiveles;
 	int auxreintentos;
+	int codOp;
 
 
 	while(nivel.cantNiveles > nivel.nivelActual && flag_seguirJugando == true)
@@ -282,10 +285,22 @@ int main(int argc, char** argv)
 				case CAPTURAR: //Caso 3: Ya llegamos a una Pokenest. QUEREMOS CAPTURAR
 					paquete = srlz_capturarPokemon(pokenest.simbolo);
 					send_capturarPokemon(&paquete,fd_server);
-					paquete = recv_capturarPokemon(fd_server);
-					pokemonDat = dsrlz_capturarPokemon(&paquete);
+					codOp = recv_mensajeCaptura();
+
+					if(codOp == CAPTURA_OK)
+					{
+						paquete = recv_capturarPokemon(fd_server);
+						pokemonDat = dsrlz_capturarPokemon(&paquete,&entrenador);
+						printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
+					}
+
+
+
 					//fflush(stdout);
-					printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
+
+
+
+
 
 					if(nivel.cantObjetivos <= nivel.numPokenest)
 					{
