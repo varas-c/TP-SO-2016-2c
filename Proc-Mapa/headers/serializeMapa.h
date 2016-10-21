@@ -24,6 +24,10 @@ enum codigoOperaciones {
 	COORDENADAS = 11,
 	CAPTURA_OK = 12,
 	MOVER_OK = 13,
+	CAPTURA_BLOQUEADO = 14,
+	BATALLA_PERDIDA = 15,
+	BATALLA_PELEA = 16,
+	MUERTE = 17,
 };
 
 //****************************************************************************************************************
@@ -38,7 +42,7 @@ enum sizeofBuffer
 	size_SIMBOLO = sizeof(int)+sizeof(char),
 	size_FINOBJETIVOS = sizeof(int),
 	size_COORDENADAS = sizeof(int)+sizeof(int)+sizeof(int),
-	size_CAPTURA_OK = sizeof(int)+sizeof(int),
+	size_CAPTURA_OK = sizeof(int)+sizeof(int) + sizeof(t_pokemon),
 	size_MOVER_OK = sizeof(int),
 };
 

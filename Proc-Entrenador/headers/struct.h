@@ -45,6 +45,7 @@ typedef struct{ //Entrenador
 	int vidas;
 	int reintentos;
 	char* nombre;
+	t_list* pokemonesCapturados;
 }Entrenador;
 //**********************************************************************************************************
 
@@ -120,6 +121,7 @@ Entrenador new_Entrenador(metadata mdata)
     entrenador.nombre = strdup(mdata.nombre);
     entrenador.vidas = mdata.vidas;
     entrenador.reintentos = mdata.reintentos;
+    entrenador.pokemonesCapturados = list_create();
     return entrenador;
 }
 //********************

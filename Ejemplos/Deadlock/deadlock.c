@@ -6,6 +6,7 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <commons/config.h>
+#include <commons/log.h>
 #include <pkmn/battle.h>
 #include <pkmn/factory.h>
 #include <ctype.h>
@@ -418,6 +419,89 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 	return entrenadores_aux;
 }
 
+void loggear_entrenadores_en_deadlock(t_list* entrenadores,t_log* infoLogger)
+{
+	int i=0,k=0,cantidad = list_size(entrenadores),cantidad_con_espacios=cantidad*4;
+	char* aux= malloc((sizeof(char)*(cantidad_con_espacios))+1);
+	for(i=0;i<cantidad;i++)
+	{
+		aux[k] = ((Jugador*)list_get(entrenadores,i))->entrenador.simbolo;
+		aux[k+1] =' ';
+		aux[k+2] =' ';
+		aux[k+3] =' ';
+		k+=4;
+	}
+	aux[cantidad_con_espacios]='\0';
+	log_info(infoLogger, "       %s",aux);
+	free(aux);
+}
+
+void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* infoLogger)
+{
+	int columnas=list_size(pokenests),filas=list_size(entrenadores);
+	int i,j,k=0,filas_con_espacios=filas*2,columnas_con_espacios = columnas*4;
+	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
+
+	k=0;
+	for(i=0;i<columnas;i++)
+	{
+		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
+		aux[k+1] =' ';
+		aux[k+2] =' ';
+		aux[k+3] =' ';
+		k+=4;
+	}
+	aux[columnas_con_espacios]='\0';
+
+	log_info(infoLogger, "       %s",aux);
+
+	for(i=0;i<filas;i++)
+	{
+		k=0;
+		for(j=0;j<columnas;j++)
+		{
+			aux[k] = matriz[i][j]+48;
+			aux[k+1]=' ';
+			aux[k+2]=' ';
+			aux[k+3]=' ';
+			k+=4;
+		}
+		log_info(infoLogger, "%c    %s",((Jugador*)list_get(entrenadores,i))->entrenador.simbolo,aux);
+	}
+	free(aux);
+}
+
+void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
+{
+	int columnas=list_size(pokenests);
+	int i,k=0,columnas_con_espacios = columnas*4;
+	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
+
+	k=0;
+	for(i=0;i<columnas;i++)
+	{
+		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
+		aux[k+1] =' ';
+		aux[k+2] =' ';
+		aux[k+3] =' ';
+		k+=4;
+	}
+	aux[columnas_con_espacios]='\0';
+
+	log_info(infoLogger, "     %s",aux);
+
+	k=0;
+	for(i=0;i<columnas;i++)
+	{
+		aux[k] = vector[i]+48;
+		aux[k+1]=' ';
+		aux[k+2]=' ';
+		aux[k+3]=' ';
+		k+=4;
+	}
+	log_info(infoLogger, "    %s",aux);
+	free(aux);
+}
 //////ESTE ES PARA PROBAR ACA
 Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 {
@@ -429,6 +513,8 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
     t_list* pokenests_aux=list_create();
 
     Jugador* perdedor =0;
+
+	t_log* infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
 
     list_add_all(entrenadores_aux,entrenadores);
 
@@ -442,8 +528,22 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 
 	printf("                  PETICIONES\n");
 	mostrar_matriz(matriz_peticiones,list_size(entrenadores_aux),list_size(pokenests_aux));
+
+	log_info(infoLogger, "    PETICIONES");
+
+	loggear_matriz(matriz_peticiones,pokenests_aux,entrenadores,infoLogger);
+
 	printf("                  ASIGNADOS\n");
 	mostrar_matriz(matriz_recursos_asignados,list_size(entrenadores_aux),list_size(pokenests_aux));
+
+	log_info(infoLogger, "    ASIGNADOS");
+
+	loggear_matriz(matriz_recursos_asignados,pokenests_aux,entrenadores,infoLogger);
+
+
+	log_info(infoLogger, "    DISPONIBLES");
+
+	loggear_vector(recursos_disponibles,pokenests_aux,infoLogger);
 
 	mostrar_recursos_disponibles(recursos_disponibles, list_size(pokenests_aux));
 	printf("\n\n\n");
@@ -461,13 +561,20 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 			{
 				printf("Cantidad de entrenadores en algun deadlock: %d\n",list_size(posibles_deadlock));
 
+				log_info(infoLogger, "    ENTRENADORES EN DEADLOCK");
+
+				loggear_entrenadores_en_deadlock(posibles_deadlock,infoLogger);
+
 				if(list_size(posibles_deadlock)>1)
 				{
 					perdedor = batalla_deadlock(posibles_deadlock,pokenests_aux);
 				}
 			}
 			else
+			{
 				printf("No hay deadlock\n\n");
+				log_info(infoLogger, "    NO HAY DEADLOCK");
+			}
 		}
 	 }
 
@@ -490,19 +597,17 @@ int main(void)
 
     MetadataPokenest* pokenest = malloc(sizeof(MetadataPokenest));
 
-    pokenest->cantPokemon = 1;
+    pokenest->cantPokemon = 0;
     pokenest->simbolo = 'z';
 
     list_add(pokenests,pokenest);
 
     pokenest = malloc(sizeof(MetadataPokenest));
 
-    pokenest->cantPokemon = 1;
+    pokenest->cantPokemon = 0;
     pokenest->simbolo = 'p';
 
     list_add(pokenests,pokenest);
-
-    pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest = malloc(sizeof(MetadataPokenest));
 
@@ -534,7 +639,7 @@ int main(void)
 
     pokenest = malloc(sizeof(MetadataPokenest));
 
-    pokenest->cantPokemon = 1;
+    pokenest->cantPokemon = 0;
     pokenest->simbolo = 'l';
 
     list_add(pokenests,pokenest);
@@ -548,6 +653,8 @@ int main(void)
     entrenador->peticion = 's';
 
     entrenador->numero = 1;
+
+    entrenador->entrenador.simbolo='#';
 
     entrenador->pokemonCapturados = list_create();
     Pokemon* pokeaux;
@@ -580,6 +687,8 @@ int main(void)
 
     entrenador->pokemonCapturados = list_create();
 
+    entrenador->entrenador.simbolo='$';
+
     pokeaux = malloc(sizeof(Pokemon));
 
     pokeaux->pokemon = malloc(sizeof(t_pokemon));
@@ -608,6 +717,8 @@ int main(void)
 
     entrenador->pokemonCapturados = list_create();
 
+    entrenador->entrenador.simbolo='%';
+
     pokeaux = malloc(sizeof(Pokemon));
 
     pokeaux->pokemon = malloc(sizeof(t_pokemon));
@@ -631,6 +742,8 @@ int main(void)
     entrenador->numero = 3;
 
     entrenador->pokemonCapturados = list_create();
+
+    entrenador->entrenador.simbolo='&';
 
     pokeaux = malloc(sizeof(Pokemon));
 
@@ -656,6 +769,8 @@ int main(void)
 
      entrenador->pokemonCapturados = list_create();
 
+     entrenador->entrenador.simbolo='@';
+
      pokeaux = malloc(sizeof(Pokemon));
 
      pokeaux->pokemon = malloc(sizeof(t_pokemon));
@@ -680,6 +795,8 @@ int main(void)
 
       entrenador->pokemonCapturados = list_create();
 
+      entrenador->entrenador.simbolo='*';
+
       pokeaux = malloc(sizeof(Pokemon));
 
       pokeaux->pokemon = malloc(sizeof(t_pokemon));
@@ -703,6 +820,8 @@ int main(void)
        entrenador->numero = 6;
 
        entrenador->pokemonCapturados = list_create();
+
+       entrenador->entrenador.simbolo='+';
 
        pokeaux = malloc(sizeof(Pokemon));
 

@@ -21,6 +21,10 @@ enum codigoOperaciones {
 	COORDENADAS = 11,
 	CAPTURA_OK = 12,
 	MOVER_OK = 13,
+	CAPTURA_BLOQUEADO = 14,
+	BATALLA_PERDIDA = 15,
+	BATALLA_PELEA = 16,
+	MUERTE = 17,
 };
 
 //****************************************************************************************************************
@@ -37,6 +41,7 @@ enum sizeofBuffer
 	size_COORDENADAS = sizeof(int)+sizeof(int)+sizeof(int),
 	size_CAPTURA_OK = sizeof(int)+sizeof(int),
 	size_MOVER_OK = sizeof(int),
+	size_MENSAJECAPTURA = sizeof(int),
 };
 //******************************************
 
@@ -121,11 +126,14 @@ int dsrlz_codigoOperacion(void* buffer)
 }
 //******************************************
 
-char* dsrlz_capturarPokemon(Paquete* paquete)
+char* dsrlz_capturarPokemon(Paquete* paquete, Entrenador* entrenador)
 {
 	int codOp;
 	int lengthPokemonDat;
 	char *pokemonDat;
+	char* species;
+	int tamSpecies;
+	t_pokemon* pokemonCapturado;
 
 	codOp = dsrlz_codigoOperacion(paquete->buffer);
 
@@ -140,6 +148,20 @@ char* dsrlz_capturarPokemon(Paquete* paquete)
 	pokemonDat = malloc(sizeof(char)*lengthPokemonDat+1);
 
 	memcpy(pokemonDat,paquete->buffer+sizeof(int)*2,sizeof(char)*lengthPokemonDat);
+
+	memcpy(&tamSpecies,paquete->buffer+sizeof(int)*2+sizeof(char)*lengthPokemonDat,sizeof(int));
+
+	species = malloc(tamSpecies);
+
+	memcpy(species,paquete->buffer+sizeof(int)*2+sizeof(char)*lengthPokemonDat+sizeof(int),sizeof(char)*tamSpecies);
+
+	pokemonCapturado = malloc(sizeof(t_pokemon));
+	memcpy(pokemonCapturado,paquete->buffer+sizeof(int)*2+sizeof(char)*lengthPokemonDat+sizeof(int)+sizeof(char)*tamSpecies,sizeof(t_pokemon));
+	pokemonCapturado->species = strdup(species);
+	free(species);
+
+	printf("Pokemon %s",pokemonCapturado->species);
+	list_add(entrenador->pokemonesCapturados,pokemonCapturado);
 
 	return pokemonDat;
 }

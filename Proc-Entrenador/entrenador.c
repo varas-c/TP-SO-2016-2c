@@ -5,6 +5,7 @@
  *      Author: utnso
  */
 
+#include <commons/collections/list.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,6 +23,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <time.h>
+#include <pkmn/factory.h>
 
 typedef struct{
 	int minutos;
@@ -69,6 +71,97 @@ void leerObjetivos(char* objetivos, t_config* config, int cantViajes,char** hoja
 }
 */
 
+
+void copiarPokemon(char *archivoPokemon, ParametrosConsola parametros, char* nombreMapa){
+	char *origen, *destino, *nombre, *comandoCopiar;
+	int tamanio;
+	tamanio = strlen(archivoPokemon);
+	nombre = malloc(tamanio - 6);
+	memcpy(nombre,archivoPokemon,tamanio-7);
+
+	char* barraCero = "\0";
+	memcpy(nombre+tamanio-7,barraCero,sizeof(char));
+	origen = malloc(sizeof(char)*256);
+	destino = malloc(sizeof(char)*256);
+	comandoCopiar = malloc(strlen(origen)+strlen(destino)+5);
+
+	strcpy(origen, parametros.dirPokedex);
+	strcat(origen, "/Mapas/");
+	strcat(origen, nombreMapa);
+	strcat(origen, "/Pokenest/");
+	strcat(origen, nombre);
+	strcat(origen, "/");
+	strcat(origen, archivoPokemon);
+
+	strcpy(destino, parametros.dirPokedex);
+	strcat(destino, "/Entrenadores/");
+	strcat(destino, parametros.nombreEntrenador);
+	strcat(destino, "/Dir de Bill");
+
+	sprintf(comandoCopiar, "cp %s %s", origen, destino);
+
+	system(comandoCopiar);
+
+	free(nombre);
+	free(origen);
+	free(destino);
+	free(comandoCopiar);
+}
+
+void borrarPokemones(ParametrosConsola parametros){
+	char *directorio, *comandoBorrar;
+	directorio = malloc(sizeof(char)*256);
+
+	comandoBorrar = malloc(strlen(directorio)+9);
+
+	strcpy(directorio, parametros.dirPokedex);
+	strcat(directorio, "/Entrenadores/");
+	strcat(directorio, parametros.nombreEntrenador);
+	strcat(directorio, "/Dir de Bill/");
+
+	sprintf(comandoBorrar, "rm -rf %s*", directorio);
+
+	system(comandoBorrar);
+
+	free(directorio);
+	free(comandoBorrar);
+}
+
+void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
+	char *origen, *destino, *archivoMedalla, *comandoCopiar;
+
+		char* barraCero = "\0";
+
+		archivoMedalla = malloc(strlen(nombreMapa)+13);
+		origen = malloc(sizeof(char)*256);
+		destino = malloc(sizeof(char)*256);
+		comandoCopiar = malloc(strlen(origen)+strlen(destino)+5);
+
+		strcpy(archivoMedalla, "/medalla-");
+		strcat(archivoMedalla, nombreMapa);
+		strcat(archivoMedalla, ".jpg");
+
+		strcpy(origen, parametros.dirPokedex);
+		strcat(origen, "/Mapas/");
+		strcat(origen, nombreMapa);
+		strcat(origen, archivoMedalla);
+
+		strcpy(destino, parametros.dirPokedex);
+		strcat(destino, "/Entrenadores/");
+		strcat(destino, parametros.nombreEntrenador);
+		strcat(destino, "/medallas");
+
+		sprintf(comandoCopiar, "cp %s %s", origen, destino);
+
+		system(comandoCopiar);
+
+		free(archivoMedalla);
+		free(origen);
+		free(destino);
+		free(comandoCopiar);
+}
+
+
 int recv_turnoConcedido(int fd_server)
 {
 	int tam_buffer = sizeof(int);
@@ -79,7 +172,7 @@ int recv_turnoConcedido(int fd_server)
 
 	if(valor_recv == -1)
 	{
-		perror("Error recv");
+		perror("Error recv\n\n");
 		exit(1);
 	}
 	//Deserializamos
@@ -165,28 +258,35 @@ bool informar_signalMuerteEntrenador()
 		}
 }
 
-void send_coordenadasDestino(Entrenador* entrenador)
+int recv_codigoOperacion(int fd_server)
 {
-	int destinox = fabs(entrenador->destinox);
-	int destinoy = fabs(entrenador->destinoy);
+	Paquete paquete;
+	paquete.buffer = malloc(sizeof(int));
+
+	recv(fd_server,paquete.buffer,sizeof(int),0);
+
+	int codop;
+
+	memcpy(&codop,paquete.buffer,sizeof(int));
+
+	free(paquete.buffer);
+
+	return codop;
 }
 
 int main(int argc, char** argv)
 {
 	pid_t pid = getpid();
-
-
-	printf(" pid:%i \n\n",pid);
-
+	printf("PID ENTRENADOR:%i \n\n",pid);
 
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
-	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
+	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	//parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 
-	//parametros.dirPokedex = "/mnt/pokedex";
-	//parametros.nombreEntrenador = "Ash";
+	parametros.dirPokedex = "/mnt/pokedex";
+	parametros.nombreEntrenador = "Ash";
 
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
@@ -194,6 +294,16 @@ int main(int argc, char** argv)
 
 	metadata mdata;
 	mdata = leerMetadataEntrenador(parametros);
+
+
+	struct tm *local, *local2;
+	time_t t, t2;
+	tiempo tardado,inicio,fin;
+
+	t = time(NULL);
+	local = localtime(&t);
+	inicio.minutos = local->tm_min;
+	inicio.segundos = local->tm_sec;
 
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
@@ -220,14 +330,6 @@ int main(int argc, char** argv)
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
-	struct tm *local, *local2;
-	time_t t, t2;
-	tiempo tardado,inicio,fin;
-
-	t = time(NULL);
-	local = localtime(&t);
-	inicio.minutos = local->tm_min;
-	inicio.segundos = local->tm_sec;
 
 	Pokenest pokenest;
 	char* pokemonDat;
@@ -237,6 +339,7 @@ int main(int argc, char** argv)
 	Entrenador entrenador_estadoInicial = entrenador;
 	int auxcantNiveles;
 	int auxreintentos;
+	int codOp;
 
 
 	while(nivel.cantNiveles > nivel.nivelActual && flag_seguirJugando == true)
@@ -282,10 +385,42 @@ int main(int argc, char** argv)
 				case CAPTURAR: //Caso 3: Ya llegamos a una Pokenest. QUEREMOS CAPTURAR
 					paquete = srlz_capturarPokemon(pokenest.simbolo);
 					send_capturarPokemon(&paquete,fd_server);
-					paquete = recv_capturarPokemon(fd_server);
-					pokemonDat = dsrlz_capturarPokemon(&paquete);
-					//fflush(stdout);
-					printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
+					codOp = recv_codigoOperacion(fd_server);
+
+					if(codOp == CAPTURA_OK)
+					{
+						paquete = recv_capturarPokemon(fd_server);
+						pokemonDat = dsrlz_capturarPokemon(&paquete,&entrenador);
+						printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
+					}
+
+					else if(codOp == CAPTURA_BLOQUEADO)
+					{
+						printf("Entrenador Bloqueado!");
+						do
+						{
+						codOp = recv_codigoOperacion(fd_server);
+
+						if(codOp == BATALLA_PELEA)
+						{
+							//CODIGO DE PELEA
+						}
+
+
+						}while(codOp != CAPTURA_OK || codOp !=BATALLA_PERDIDA);
+
+						if(codOp == CAPTURA_OK)
+						{
+							paquete = recv_capturarPokemon(fd_server);
+							pokemonDat = dsrlz_capturarPokemon(&paquete,&entrenador);
+							printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
+						}
+
+						else if(codOp == MUERTE)
+						{
+							flag_SIGNALMUERTE = true;
+						}
+					}
 
 					if(nivel.cantObjetivos <= nivel.numPokenest)
 					{
