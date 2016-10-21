@@ -851,6 +851,13 @@ int main(int argc, char** argv)
 		printf("Archivo de file system no encontrado.\n");
 		exit(0);
 	}
+
+	int puerto = strtol(argv[2], NULL, 10);
+	if(puerto<0)
+	{
+		printf("Puerto no válido.\n");
+		exit(0);
+	}
 	struct stat fsStat;
 	fstat(fd_fileSystem, &fsStat);
 
@@ -887,7 +894,7 @@ int main(int argc, char** argv)
 	FD_ZERO(&master);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);
 
-	listener = socket_startListener(PUERTO);
+	listener = socket_startListener(puerto);
 
 	// añadir listener al conjunto maestro
 	FD_SET(listener, &master);

@@ -415,6 +415,8 @@ static struct fuse_operations osada_oper = {
 
 int main(int argc, char* argv[])
 {
+	numero_IP = getenv("POKE_SERVER_IP");
+	numero_Puerto = getenv("POKE_SERVER_PUERTO");
 	fd_server = get_fdServer(numero_IP,numero_Puerto); //el fd_server es el "socket" que necesitas para comunicarte con el mapa
 /*
  * Uso de señales. Por ahora no hacen falta, el server detecta la desconexion

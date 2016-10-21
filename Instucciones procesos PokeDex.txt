@@ -1,0 +1,40 @@
+Proceso SERVER:
+Se necesita la ruta del archivo .bin que contendrá al file system, y el puerto que ocupará el proceso. Se pasan por línea de comandos, en ese orden.
+
+Ejemplo de ejecución:
+
+./Proc-Pokedex-Server /home/utnso/PokeServer/disco.bin
+
+----------------------------------------------------------------------------------------------
+Proceso CLIENTE:
+Se necesita la ruta del punto de montaje, que se pasa por línea de comandos, junto con los parámetros -f -s; pero además es necesario setear variables de entorno correspondientes a la dirección IP y el puerto del server, para que sepa dónde conectarse.
+Las variables de entorno se setean por consola, de esta forma:
+
+export NOMBREVARIABLE=valor (respetar las mayúsculas y la falta de espacios).
+
+Hasta donde sé, es necesario configurarlas para cada consola donde se quiera ejecutar el proceso.
+Para modificar el contenido de una variable de entorno:
+
+NOMBREVARIABLE=valor
+
+Las variables a configurar son: 
+
+POKE_SERVER_IP=direccion (si es en la máquina local, 127.0.0.1)
+POKE_SERVER_PUERTO=puerto
+
+Parámetros de FUSE:
+Los parámetros que FUSE entiende (los que hay que pasarle siguientes al punto de montaje) son:
+
+-f (recomendado): ejecuta FUSE en primer plano, o sea que la consola queda ejecutando el proceso exclusivamete, no puede usarse para otra cosa. De esta forma, puede matarse con Control+C, u observarse alguna falla, como segmentation fault.
+
+-s (obligatorio para la entrega): FUSE corre en modo single-thread; hay solamente un hilo recibendo las llamadas a sistema. Además de obligatorio, es recomendado si se usa la interfaz gráfica.
+
+-d: imprime por pantalla todas y cada una de las operaciones realizadas por FUSE, de una manera que probablemente sólo él entienda. Es útil al debuggear, para buscar errores o para entender cómo funciona una operación, pero es muy incómodo, y hace que la aplicación funcione más lento, porque tiene que imprimir todo.
+
+
+Ejemplo de ejecución:
+
+export POKE_SERVER_IP=127.0.0.1
+POKE_SERVER_PUERTO=10000
+
+./Proc-Pokedex-Cliente /home/utnso/montaje -f -s
