@@ -27,14 +27,14 @@ int main (int argc, char *argv[])
 		vector[j] = malloc(sizeof(char)*256);
 	}
 
-	strcpy(vector[0],"xterm -e ./Proc-Mapa /mnt/pokedex CiudadAzafran");
-	strcpy(vector[1],"xterm -e ./Proc-Mapa /mnt/pokedex CiudadCeleste");
-	strcpy(vector[2],"xterm -e ./Proc-Mapa /mnt/pokedex CiudadFucsia");
-	strcpy(vector[3],"xterm -e ./Proc-Mapa /mnt/pokedex CiudadPlateada");
-	strcpy(vector[4],"xterm -e ./Proc-Mapa /mnt/pokedex CiudadVerde");
-	strcpy(vector[5],"xterm -e ./Proc-Mapa /mnt/pokedex IslaCanela");
-	strcpy(vector[6],"xterm -e ./Proc-Mapa /mnt/pokedex PuebloLavanda");
-	strcpy(vector[7],"xterm -e ./Proc-Mapa /mnt/pokedex PuebloPaleta");
+	strcpy(vector[0],"xterm -e ./Proc-Mapa ../..//Proc-Pokedex-Cliente/montaje/pokedex CiudadAzafran");
+	strcpy(vector[1],"xterm -e ./Proc-Mapa ../../Proc-Pokedex-Cliente/montaje/pokedex CiudadCeleste");
+	strcpy(vector[2],"xterm -e ./Proc-Mapa ../../Proc-Pokedex-Cliente/montaje/pokedex CiudadFucsia");
+	strcpy(vector[3],"xterm -e ./Proc-Mapa ../../Proc-Pokedex-Cliente/montaje/pokedex CiudadPlateada");
+	strcpy(vector[4],"xterm -e ./Proc-Mapa ../../Proc-Pokedex-Cliente/montaje/pokedex CiudadVerde");
+	strcpy(vector[5],"xterm -e ./Proc-Mapa ../../Proc-Pokedex-Cliente/montaje/pokedex IslaCanela");
+	strcpy(vector[6],"xterm -e ./Proc-Mapa ../../Proc-Pokedex-Cliente/montaje/pokedex PuebloLavanda");
+	strcpy(vector[7],"xterm -e ./Proc-Mapa ../../Proc-Pokedex-Cliente/montaje/pokedex PuebloPaleta");
 
 
 

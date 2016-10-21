@@ -974,8 +974,10 @@ int main(int argc, char** argv)
 	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	parametros.dirPokedex = "/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Pokedex-Cliente/montaje/pokedex";
-	parametros.nombreMapa = "PuebloPaleta";
+//	parametros.dirPokedex = "/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Pokedex-Cliente/montaje/pokedex";
+//	parametros.nombreMapa = "PuebloPaleta";
+	parametros.dirPokedex = argv[1];
+	parametros.nombreMapa = argv[2];
 
 	signal(SIGUSR2, sigHandler_reloadMetadata);
 

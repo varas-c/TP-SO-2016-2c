@@ -65,6 +65,9 @@ int encontrarBloqueLibre();
 void marcarBloque(osada_block_pointer, uint8_t);
 void guardarBloque(osada_block, int);
 osada_block_pointer* obtenerPtroBloque(int);
+int nombrarArchivo(int, char*);
+uint8_t sonNombresIguales(unsigned char*, unsigned char*);
+void copiarNombreArchivo(char*, int); //Precondición: destino tiene 18 bytes o más
 int buscarIndice(unsigned char*, int);
 int obtenerPrimerBloque(int);
 int obtenerBloqueSgte(int);
@@ -106,12 +109,46 @@ osada_block_pointer* obtenerPtroBloque(int indice)
 	return inicioDatos+indice;
 }
 
+int nombrarArchivo(int indice, char* nombre)
+{
+	int longNombre = strlen(nombre);
+
+	if (longNombre>17 || indice<0)
+		return 0;
+	if (longNombre<17)
+		longNombre++;
+	memcpy(tablaArchivos[indice].fname, nombre, longNombre);
+	return 1;
+}
+
+uint8_t sonNombresIguales(unsigned char* nombre1, unsigned char* nombre2)
+{
+	int i;
+	uint8_t igualdad=1;
+	for(i=0; i<17 && igualdad ; i++)
+	{
+		if (nombre1[i]!=nombre2[i])
+			igualdad=0;
+		else if (nombre1[i]=='\0' && nombre2[i]=='\0')
+				break;
+	}
+	return igualdad;
+}
+
+void copiarNombreArchivo(char* destino, int archivo) //Precondición: destino tiene 18 bytes o más
+{
+	int i;
+	for (i=0; i<17 && tablaArchivos[archivo].fname[i]!='\0'; destino[i]=tablaArchivos[archivo].fname[i], i++);
+	destino[i]='\0';
+	return;
+}
+
 int buscarIndice(unsigned char* archivo, int dirPadre) //Para ignorar dirPadre, asignarle un negativo.
 {
 	int i;
 	for (i=0;i<2048;i++)
 	{
-		if (!strcmp(tablaArchivos[i].fname, archivo)) //Recordar que strcmp devuelve 0 si son iguales
+		if (sonNombresIguales(tablaArchivos[i].fname, archivo))
 			if (dirPadre < 0 || tablaArchivos[i].parent_directory == dirPadre)
 				return i;
 	}
@@ -224,71 +261,86 @@ int* obtenerBloques(int indice, int* size) //Devuelve en orden los índices de l
 int obtenerArchivo(char* path)
 {
 	int i = 0;
+	int retorno;
 	while(path[i]!=0 && path[i]=='/')
 		i++;
 	if (i==strlen(path))
-		return -1;
+		retorno = -1;
 	else
-		i = 0;
-	char** directorios=NULL;
-	int dirActual=DIRECTORIO_NULO;
-	directorios = string_split(path, "/");
-
-	while(directorios[i]!=NULL)
 	{
-		dirActual = buscarIndice(directorios[i], dirActual);
-		if (dirActual<0)
-			return -1;
-		i++;
-	}
+		i = 0;
+		char** directorios=NULL;
+		int dirActual=DIRECTORIO_NULO;
+		directorios = string_split(path, "/");
 
-	if (!i)
-		return -1;
-	else
-		return dirActual;
+		while(directorios[i]!=NULL)
+		{
+			dirActual = buscarIndice(directorios[i], dirActual);
+			if (dirActual<0)
+			{
+				retorno = -1;
+				break;
+			}
+			i++;
+			//free(directorios[i]);
+		}
+
+		if (!i)
+			retorno = -1;
+		else
+			retorno = dirActual;
+
+		free(directorios);
+	}
+	return retorno;
 }
 
 int obtenerDirectorioPadre(char* path)
 {
 	int i = 0;
+	int retorno = 0;
 	while(path[i]!=0 && path[i]=='/')
 		i++;
 	if (i==strlen(path))
-		return -1;
+		retorno = -1;
 	else
 		i = 0;
 	char** directorios=NULL;
 	int dirActual=DIRECTORIO_NULO;
 	directorios = string_split(path, "/");
 	if (directorios[0]==NULL)
-		return -1;
+		retorno = -1;
 
 	while(directorios[i+1]!=NULL)
 	{
 		dirActual = buscarIndice(directorios[i], dirActual);
 		if (dirActual<0)
-			return -1;
+			retorno = -1;
+		free(directorios[i]);
 		i++;
 	}
-
-	return dirActual;
+	free(directorios[i]);
+	free(directorios);
+	retorno = dirActual;
+	return retorno;
 }
 
 char* obtenerNombreArchivo(char* path) //Nombre del archivo según ruta, no según tabla de archivos. Hacer free de la variable devuelta
 {
 	int i = 0;
+	char* retorno;
 	char* nombre = "\0";
 	while(path[i]!=0 && path[i]=='/')
 		i++;
 	if (i==strlen(path))
-		return nombre;
+		retorno = nombre;
 	else
 		i = 1;
 	char** directorios=NULL;
-	int dirActual=DIRECTORIO_NULO;
+
 	directorios = string_split(path, "/");
 	if (directorios[0]==NULL)
-		return nombre;
+		retorno = nombre;
 
 	while(directorios[i]!=NULL)
 		i++;
@@ -296,7 +348,9 @@ char* obtenerNombreArchivo(char* path) //Nombre del archivo según ruta, no seg�
 	nombre = malloc(strlen(directorios[i-1])+1);
 	strcpy(nombre, directorios[i-1]);
 
-	return nombre;
+	free(directorios);
+	retorno = nombre;
+	return retorno;
 }
 
 int encontrarBloqueLibre()
@@ -363,7 +417,7 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, uint64_t of
 {
 	int retorno = 1;
 	if (tablaArchivos[archivo].state != REGULAR || tablaArchivos[archivo].file_size < offset)
-		retorno = 0;
+		return 0;
 
 	int nroBloques = 0;
 	int bloqueInicial = offset/OSADA_BLOCK_SIZE;
@@ -373,7 +427,11 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, uint64_t of
 	{
 		bloqueInicial = reservarNuevoBloque(bloques[nroBloques-1]);
 		if (bloqueInicial<0)
-			retorno = 0;
+		{
+			if(bloques!=NULL)
+				free(bloques);
+			return 0;
+		}
 	}
 	else
 	{
@@ -390,13 +448,16 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, uint64_t of
 				 bloqueInicial=bloques[bloqueInicial];
 	}
 
-	if (guardarDesdeBloque(bloqueInicial, nuevosDatos, cantidadBytes, offset%OSADA_BLOCK_SIZE))
+	if (retorno)
 	{
-		if (cantidadBytes + offset > tablaArchivos[archivo].file_size)
-			tablaArchivos[archivo].file_size = cantidadBytes + offset;
+		if (guardarDesdeBloque(bloqueInicial, nuevosDatos, cantidadBytes, offset%OSADA_BLOCK_SIZE))
+		{
+			if (cantidadBytes + offset > tablaArchivos[archivo].file_size)
+				tablaArchivos[archivo].file_size = cantidadBytes + offset;
+		}
+		else
+			retorno = 0;
 	}
-	else
-		retorno = 0;
 
 	tablaArchivos[archivo].lastmod = time(NULL);
 	free(bloques);
@@ -432,14 +493,14 @@ int truncarArchivo(int archivo, uint64_t size)
 
 int crearArchivo(int dirPadre, const char* nombre, osada_file_state tipo)
 {
-	if (strlen(nombre)>16)
+	if (strlen(nombre)>17)
 		return -2;
 	if (dirPadre<0)
 		return -1;
 	int i, nuevoIndice = -1;
 	for(i=2047;i>=0;i--)
 	{
-		if (!strcmp(tablaArchivos[i].fname, nombre)  && (tablaArchivos[i].parent_directory == dirPadre) && tablaArchivos[i].state != DELETED)
+		if (sonNombresIguales(tablaArchivos[i].fname, nombre)  && (tablaArchivos[i].parent_directory == dirPadre) && tablaArchivos[i].state != DELETED)
 			return -3;
 		else if (tablaArchivos[i].state==DELETED)
 			nuevoIndice = i;
@@ -451,7 +512,7 @@ int crearArchivo(int dirPadre, const char* nombre, osada_file_state tipo)
 	tablaArchivos[nuevoIndice].state = tipo;
 	tablaArchivos[nuevoIndice].first_block = BLOQUE_NULO;
 	tablaArchivos[nuevoIndice].parent_directory = dirPadre;
-	strcpy(tablaArchivos[nuevoIndice].fname, nombre);
+	nombrarArchivo(nuevoIndice, nombre);
 	tablaArchivos[nuevoIndice].lastmod = time(NULL);
 	tablaArchivos[nuevoIndice].file_size = 0;
 	return 0;
@@ -462,14 +523,13 @@ int renombrarArchivo(int archivo, char* nuevoNombre)
 	if(archivo<0)
 		return -1;
 
-	if (strlen(nuevoNombre)>16)
+	if (strlen(nuevoNombre)>17)
 		return -2;
 
-	strcpy(tablaArchivos[archivo].fname, nuevoNombre);
+	nombrarArchivo(archivo, nuevoNombre);
 	tablaArchivos[archivo].lastmod = time(NULL);
 	return 0;
 }
-
 
 
 void gestionarSocket(void* socket)
@@ -509,15 +569,17 @@ void gestionarSocket(void* socket)
 		case COD_GETATTR:
 				archivo = obtenerArchivo((char*)buffer);
 				free(buffer);
+				buffer = malloc(1);
 				if (archivo<0)
 				{
-					buffer = malloc(1);
-					signed char menosUno = -1;
-					memcpy(buffer, &menosUno, 1);
+					memset(buffer, 0, 1);
 					send(cliente, buffer, 1, 0);
 				}
 				else
 				{
+					memset(buffer, 1, 1);
+					send(cliente, buffer, 1, 0);
+					free(buffer);
 					buffer=malloc(sizeof(osada_file));
 					memcpy(buffer,tablaArchivos+archivo, sizeof(osada_file));
 					send(cliente, buffer, sizeof(osada_file), 0);
@@ -532,6 +594,7 @@ void gestionarSocket(void* socket)
 					archivo = obtenerArchivo((char*)buffer);
 				int i;
 				free(buffer);
+				buffer = malloc(1);
 				if (archivo>=0)
 				{
 					uint8_t primero = 1;
@@ -542,26 +605,27 @@ void gestionarSocket(void* socket)
 							if (primero)
 							{
 								primero = 0;
-								buffer = malloc(1);
 								memset(buffer, 1, 1);
 								send(cliente, buffer, 1, 0);
 								free(buffer);
 							}
-							send(cliente, (void*)tablaArchivos[i].fname, 17, 0);
+							buffer = malloc(OSADA_FILENAME_LENGTH+1);
+							copiarNombreArchivo((char*)buffer, i);
+							send(cliente, buffer, OSADA_FILENAME_LENGTH+1, 0);
+							free(buffer);
 						}
 					}
 
 					if (primero)
 					{
-						buffer = malloc(1);
 						memset(buffer, 0, 1);
 						send(cliente, buffer, 1, 0);
 					}
 					else
 					{
-						buffer = malloc(17);
-						memset(buffer, 0, 17);
-						send(cliente, buffer, 17, 0);
+						buffer = malloc(OSADA_FILENAME_LENGTH+1);
+						memset(buffer, 0, OSADA_FILENAME_LENGTH+1);
+						send(cliente, buffer, OSADA_FILENAME_LENGTH+1, 0);
 					}
 
 				}
@@ -589,12 +653,13 @@ void gestionarSocket(void* socket)
 				uint64_t offsetLectura;
 				memcpy(&offsetLectura, buffer+sizeof(cantLeida), sizeof(offsetLectura));
 				free(buffer);
+				//printf("Archivo: %d -- Size: %d -- Offset: %d\n\n", archivo, cantLeida, offsetLectura);
 				int cantidad = 0;
 				int *bloques = obtenerBloques(archivo, &cantidad);
 				unsigned char* contenidoArchivo;
 
 				buffer = malloc(cantLeida);
-				if (cantidad>0)
+				if (cantidad>0 && offsetLectura<tablaArchivos[archivo].file_size)
 				{
 					contenidoArchivo=concatenarBloques(bloques, cantidad);
 					memcpy(buffer, contenidoArchivo+offsetLectura, cantLeida);
