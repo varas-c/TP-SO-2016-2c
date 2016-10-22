@@ -8,15 +8,12 @@
 #ifndef HEADERS_SERIALIZEENTRENADOR_H_
 #define HEADERS_SERIALIZEENTRENADOR_H_
 
-
 enum codigoOperaciones {
 	TURNO = 0,
 	POKENEST = 1,
 	MOVER = 2,
 	CAPTURAR = 3,
 	FINOBJETIVOS = 4,
-
-
 	SIMBOLO = 10,
 	COORDENADAS = 11,
 	CAPTURA_OK = 12,
@@ -226,7 +223,6 @@ char* dsrlz_BatallaInforme(Paquete* paquete, int fdServer)
 	free(informeBatalla);
 
 	return informeBatalla;
-
 }
 
 #endif /* HEADERS_SERIALIZEENTRENADOR_H_ */
