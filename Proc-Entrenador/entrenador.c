@@ -161,6 +161,25 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 		free(comandoCopiar);
 }
 
+int get_pokemon_mas_fuerte()
+{
+	t_pokemon* mas_fuerte = (t_pokemon*)list_get(entrenador.pokemonesCapturados,0);
+
+	int i;
+	int indicePok = 0;
+
+	for(i=1;i<list_size(entrenador.pokemonesCapturados);i++)
+	{
+		if((((t_pokemon*)list_get(entrenador.pokemonesCapturados,i))->level)>(mas_fuerte->level))
+		{
+			mas_fuerte = (t_pokemon*)list_get(entrenador.pokemonesCapturados,i);
+			indicePok= i;
+		}
+	}
+
+	return indicePok;
+}
+
 
 int recv_turnoConcedido(int fd_server)
 {
@@ -201,6 +220,14 @@ void recv_MoverOK(int fdServer)
 		exit(1);
 	}
 
+}
+
+void recv_BatallaInforme(int fdServer)
+{
+	Paquete paquete;
+	paquete.tam_buffer=size_BATALLA_INFORME;
+	paquete.buffer = malloc(paquete.tam_buffer);
+	recv(fdServer,paquete.buffer,paquete.tam_buffer,0);
 }
 
 void reiniciarEntrenador(Entrenador *entrenador)
@@ -288,13 +315,10 @@ int main(int argc, char** argv)
 	parametros.dirPokedex = "/mnt/pokedex";
 	parametros.nombreEntrenador = "Ash";
 
-
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
-
 
 	metadata mdata;
 	mdata = leerMetadataEntrenador(parametros);
-
 
 	struct tm *local, *local2;
 	time_t t, t2;
@@ -304,7 +328,6 @@ int main(int argc, char** argv)
 	local = localtime(&t);
 	inicio.minutos = local->tm_min;
 	inicio.segundos = local->tm_sec;
-
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
@@ -317,19 +340,16 @@ int main(int argc, char** argv)
 
 	vidas_restantes = entrenador.vidas;
 
-
 	Paquete paquete;
 
 	//Agregamos las funciones que manejaran las señales enmascaras como SIGTERM Y SIGUSR1.
 
 	signal(SIGUSR1, manejar_signals);
 	signal(SIGTERM, manejar_signals);
-
 	signal(SIGINT,sigHandler_endProcess);
 	signal(SIGHUP,sigHandler_endProcess);
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
-
 
 	Pokenest pokenest;
 	char* pokemonDat;
@@ -341,10 +361,8 @@ int main(int argc, char** argv)
 	int auxreintentos;
 	int codOp;
 
-
 	while(nivel.cantNiveles > nivel.nivelActual && flag_seguirJugando == true)
 	{
-
 		mapa.nombre = obtenerNombreMapa(mdata.hojaDeViaje,nivel.nivelActual); //Obtenemos el nombre del mapa numero X
 
 		ConexionEntrenador connect;
@@ -354,10 +372,8 @@ int main(int argc, char** argv)
 		fd_server = get_fdServer(connect.ip,connect.puerto);
 		send_simboloEntrenador(mdata.simbolo, fd_server);
 
-
 		nivel.finNivel = 0;
 		nivel.cantObjetivos = getCantObjetivos(mdata.objetivos[nivel.nivelActual]);
-
 
 		pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
 
@@ -401,9 +417,17 @@ int main(int argc, char** argv)
 						{
 						codOp = recv_codigoOperacion(fd_server);
 
+
 						if(codOp == BATALLA_PELEA)
 						{
-							//CODIGO DE PELEA
+							//TODO CODIGO DE PELEA
+							int pokemonMasFuerte = get_pokemon_mas_fuerte();
+							paquete = srlz_pokemonMasFuerte(pokemonMasFuerte);
+							send_pokemonMasFuerte(&paquete,fd_server);
+
+							paquete=recv_BatallaInforme(fd_server);
+							char* informe = dsrlz_BatallaInforme(&paquete,);
+
 						}
 
 

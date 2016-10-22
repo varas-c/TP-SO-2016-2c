@@ -346,8 +346,6 @@ t_pokemon* pokemon_mayor_nivel(t_list* pokemones)
 
 	return mas_fuerte;
 }
-
-//*************************************************************
 //*************************************************************
 
 Jugador* entrenador_tiene_pokemon(t_list* entrenadores,t_pokemon* poke)
@@ -371,10 +369,6 @@ Jugador* entrenador_tiene_pokemon(t_list* entrenadores,t_pokemon* poke)
 	return 0;
 }
 
-//*************************************************************
-//*************************************************************
-
-
 /*
 void liberar_recursos_entrenador(Jugador* entrenador_perdedor,t_list* pokenests)
 {
@@ -396,7 +390,6 @@ void liberar_recursos_entrenador(Jugador* entrenador_perdedor,t_list* pokenests)
 */
 
 //*************************************************************
-//*************************************************************
 
 Jugador* batalla_deadlock(t_list* posible_deadlock,t_list* pokenests)    //BATALLAS
 {
@@ -411,15 +404,10 @@ Jugador* batalla_deadlock(t_list* posible_deadlock,t_list* pokenests)    //BATAL
 	Jugador*aux1,*aux2,*entrenador_perdedor;
 
 	Pokemon *mayor_nivel1,*mayor_nivel2;
-
 	aux1 = (Jugador*)list_get(posible_deadlock,0);
-
 	mayor_nivel1 = pokemon_mayor_nivel(aux1);
-
 	poke_perdedor = create_pokemon(fabrica, mayor_nivel1->pokemon->species,mayor_nivel1->pokemon->level);
-
 	mayor_nivel1->pokemon = poke_perdedor;
-
 
 	for(i=1;i<cantidad_involucrados;i++)
 	{
@@ -439,7 +427,6 @@ Jugador* batalla_deadlock(t_list* posible_deadlock,t_list* pokenests)    //BATAL
 	return entrenador_perdedor;
 }
 //*************************************************************
-//*************************************************************
 
 bool llego_primero(Jugador* uno,Jugador* otro)
 {
@@ -447,19 +434,15 @@ bool llego_primero(Jugador* uno,Jugador* otro)
 }
 
 //*************************************************************
-//*************************************************************
 
 void ordenar_por_llegada(t_list* entrenadores)
 {
 	list_sort(entrenadores, llego_primero);
 }
-
-//*************************************************************
 //*************************************************************
 
 Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 {
-
     t_list* posibles_deadlock  = list_create();
 
     t_list* entrenadores_aux=list_create();
@@ -519,9 +502,6 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 
 		list_destroy(entrenadores_aux);
 }
-
-
-//*************************************************************
 //*************************************************************
 
 t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
@@ -538,7 +518,6 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 
     if((list_size(pokenests))&&((list_size(entrenadores))>1))
     {
-
 		int** matriz_peticiones = generar_matriz_peticiones(entrenadores_aux, pokenests_aux);
 
 		int** matriz_recursos_asignados = generar_matriz_asignados(entrenadores_aux, pokenests_aux);
@@ -548,17 +527,11 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 		entrenadores_aux = no_pueden_ejecutar(entrenadores_aux,pokenests_aux);
 
 		sacar_inanicion(entrenadores_aux);
-
     }
 
 	list_destroy(pokenests_aux);
 
 	return entrenadores_aux;
 }
-
-
-//*************************************************************
-//*************************************************************
-
 
 #endif /* HEADERS_DEADLOCK_H_ */

@@ -11,7 +11,6 @@
 
 void send_solicitarPokenest(Paquete* paquete, int fd_server)
 {
-
 	send(fd_server, paquete->buffer, paquete->tam_buffer,0);
 }
 //****************************************//****************************************
@@ -21,6 +20,13 @@ void send_capturarPokemon(Paquete *paquete,int server)
 	send(server,paquete->buffer,paquete->tam_buffer,0);
 }
 //****************************************//****************************************
+
+void send_pokemonMasFuerte(Paquete *paquete, int socket)
+{
+	send(socket, paquete->buffer,paquete->tam_buffer,0);
+		free(paquete->buffer);
+}
+//*********************************************************************************
 
 void send_movEntrenador(Paquete *paquete, int socket)
 {
