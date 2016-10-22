@@ -997,19 +997,7 @@ void* thread_planificador()
 
 	while(!list_is_empty(global_listaJugadoresSistema))
 	{
-		//Desbloqueamos jugadores
 
-		if(listaDeadlock != NULL)
-		{
-			jugadorDeadlock = pelearEntrenadores();
-
-		}
-
-
-
-		pthread_mutex_lock(&mutex_hiloDeadlock);
-		desbloquearJugadores(lista_jugadoresBloqueados);
-		pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 		if(!list_is_empty(listaListos))
 		{
@@ -1178,6 +1166,7 @@ void* thread_planificador()
 		}
 
 		}
+
 		if(flag_DESCONECTADO == TRUE)
 		{
 		lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
@@ -1190,6 +1179,36 @@ void* thread_planificador()
 		quantum = 0;
 		flag_DESCONECTADO = TRUE;
 		}
+
+		//Desbloqueamos jugadores
+		pthread_mutex_lock(&mutex_hiloDeadlock);
+		desbloquearJugadores(lista_jugadoresBloqueados);
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
+
+		if(listaDeadlock != NULL)
+		{
+			jugadorDeadlock = pelearEntrenadores();
+			lista_jugadoresBloqueados = expropiarPokemones(jugadorDeadlock->pokemonCapturados);
+
+			pthread_mutex_lock(&mutex_hiloDeadlock);
+			borrarJugadorSistema(jugador);
+			pthread_mutex_unlock(&mutex_hiloDeadlock);
+
+			desconectarJugador(jugador);
+
+			pthread_mutex_lock(&mutex_hiloDeadlock);
+			desbloquearJugadores(lista_jugadoresBloqueados);
+			pthread_mutex_unlock(&mutex_hiloDeadlock);
+
+		}
+
+
+
+
+
+
+
+
 		flag_DESCONECTADO = FALSE;
 	}
 	} //While global
