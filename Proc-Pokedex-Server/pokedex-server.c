@@ -276,16 +276,13 @@ int obtenerArchivo(char* path)
 		while(directorios[i]!=NULL)
 		{
 			dirActual = buscarIndice(directorios[i], dirActual);
+			free(directorios[i]);
 			if (dirActual<0)
-			{
 				retorno = -1;
-				break;
-			}
 			i++;
-			//free(directorios[i]);
 		}
 
-		if (!i)
+		if (!i || retorno==-1)
 			retorno = -1;
 		else
 			retorno = dirActual;
@@ -304,52 +301,61 @@ int obtenerDirectorioPadre(char* path)
 	if (i==strlen(path))
 		retorno = -1;
 	else
-		i = 0;
-	char** directorios=NULL;
-	int dirActual=DIRECTORIO_NULO;
-	directorios = string_split(path, "/");
-	if (directorios[0]==NULL)
-		retorno = -1;
-
-	while(directorios[i+1]!=NULL)
 	{
-		dirActual = buscarIndice(directorios[i], dirActual);
-		if (dirActual<0)
+		i = 0;
+		char** directorios=NULL;
+		int dirActual=DIRECTORIO_NULO;
+		directorios = string_split(path, "/");
+		if (directorios[0]==NULL)
 			retorno = -1;
-		free(directorios[i]);
-		i++;
+		else
+		{
+			while(directorios[i+1]!=NULL)
+			{
+				dirActual = buscarIndice(directorios[i], dirActual);
+				free(directorios[i]);
+				if (dirActual<0)
+					retorno = -1;
+				i++;
+			}
+			free(directorios[i]);
+			retorno = retorno<0 ? -1 : dirActual;
+		}
+		free(directorios);
 	}
-	free(directorios[i]);
-	free(directorios);
-	retorno = dirActual;
 	return retorno;
 }
 
 char* obtenerNombreArchivo(char* path) //Nombre del archivo según ruta, no según tabla de archivos. Hacer free de la variable devuelta
 {
 	int i = 0;
-	char* retorno;
+	char* retorno=NULL;
 	char* nombre = "\0";
 	while(path[i]!=0 && path[i]=='/')
 		i++;
 	if (i==strlen(path))
 		retorno = nombre;
 	else
+	{
 		i = 1;
-	char** directorios=NULL;
+		char** directorios=NULL;
 
-	directorios = string_split(path, "/");
-	if (directorios[0]==NULL)
-		retorno = nombre;
+		directorios = string_split(path, "/");
+		if (directorios[0]==NULL)
+			retorno = nombre;
+		else
+		{
+			while(directorios[i]!=NULL)
+				i++;
 
-	while(directorios[i]!=NULL)
-		i++;
-
-	nombre = malloc(strlen(directorios[i-1])+1);
-	strcpy(nombre, directorios[i-1]);
-
-	free(directorios);
-	retorno = nombre;
+			nombre = malloc(strlen(directorios[i-1])+1);
+			strcpy(nombre, directorios[i-1]);
+			retorno = nombre;
+			for(i=0;directorios[i]!=NULL;i++)
+				free(directorios[i]);
+		}
+		free(directorios);
+	}
 	return retorno;
 }
 
@@ -454,12 +460,12 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, uint64_t of
 		{
 			if (cantidadBytes + offset > tablaArchivos[archivo].file_size)
 				tablaArchivos[archivo].file_size = cantidadBytes + offset;
+			tablaArchivos[archivo].lastmod = time(NULL);
 		}
 		else
 			retorno = 0;
 	}
 
-	tablaArchivos[archivo].lastmod = time(NULL);
 	free(bloques);
 	return retorno;
 }
@@ -657,7 +663,11 @@ void gestionarSocket(void* socket)
 				int cantidad = 0;
 				int *bloques = obtenerBloques(archivo, &cantidad);
 				unsigned char* contenidoArchivo;
-
+				if (cantLeida+offsetLectura>tablaArchivos[archivo].file_size)
+					cantLeida = tablaArchivos[archivo].file_size - offsetLectura;
+				if (offsetLectura>tablaArchivos[archivo].file_size)
+					cantLeida=0;
+				send(cliente, &cantLeida, sizeof(cantLeida), 0);
 				buffer = malloc(cantLeida);
 				if (cantidad>0 && offsetLectura<tablaArchivos[archivo].file_size)
 				{

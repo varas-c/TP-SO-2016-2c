@@ -191,11 +191,11 @@ static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 	return retorno;
 }
 
-static int osada_read(const char *path, char *buf, size_t size, off_t offset,
+static size_t osada_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi) {
 
 	void* buffer;
-	int retorno = size;
+	size_t retorno = size;
 	int res=0;
 
 	//ATENCIÓN: off_t ocupa 8 bytes acá, y 4 en el servidor. Tener en cuenta al hacer sizeof(off_t)
@@ -207,7 +207,13 @@ static int osada_read(const char *path, char *buf, size_t size, off_t offset,
 	memcpy(buffer+sizeof(size), &offset, sizeof(offset));
 	send(fd_server, buffer, sizeof(size)+sizeof(offset), 0);
 	free(buffer);
-	buffer = malloc(size);
+
+	if ((res = recv(fd_server, &retorno, sizeof(size), 0))<=0)
+	{
+		printf("El servidor se encuentra desconectado.\n");
+		retorno = 0;
+	}
+	buffer = malloc(retorno);
 	if ((res = recv(fd_server, buffer, size, 0))<=0)
 	{
 		printf("El servidor se encuentra desconectado.\n");

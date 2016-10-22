@@ -244,7 +244,7 @@ Jugador* desbloquearJugador(char simboloPokenest)
 	return jugadorDesbloqueado;
 }
 //****************************************************************************************************************
-
+/*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!*/
 int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
