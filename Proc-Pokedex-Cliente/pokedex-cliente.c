@@ -180,7 +180,8 @@ static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 				printf("El servidor se encuentra desconectado.\n");
 				retorno = -ENOENT;
 			}
-			filler(buf, buffer, NULL, 0);
+			if (strlen(buffer)>0)
+				filler(buf, buffer, NULL, 0);
 		}while(strlen(buffer)>0);
 	}
 	else if ((signed char) *(signed char*)buffer==-1)
