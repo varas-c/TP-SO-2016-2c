@@ -222,12 +222,13 @@ void recv_MoverOK(int fdServer)
 
 }
 
-void recv_BatallaInforme(int fdServer)
+Paquete recv_BatallaInforme(int fdServer)
 {
 	Paquete paquete;
 	paquete.tam_buffer=size_BATALLA_INFORME;
 	paquete.buffer = malloc(paquete.tam_buffer);
 	recv(fdServer,paquete.buffer,paquete.tam_buffer,0);
+	return paquete;
 }
 
 void reiniciarEntrenador(Entrenador *entrenador)
@@ -420,13 +421,13 @@ int main(int argc, char** argv)
 
 						if(codOp == BATALLA_PELEA)
 						{
-							//TODO CODIGO DE PELEA
+							//CODIGO DE PELEA
 							int pokemonMasFuerte = get_pokemon_mas_fuerte();
 							paquete = srlz_pokemonMasFuerte(pokemonMasFuerte);
 							send_pokemonMasFuerte(&paquete,fd_server);
 
 							paquete=recv_BatallaInforme(fd_server);
-							char* informe = dsrlz_BatallaInforme(&paquete,);
+							 dsrlz_BatallaInforme(&paquete, fd_server);
 
 						}
 

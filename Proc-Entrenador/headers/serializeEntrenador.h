@@ -192,10 +192,9 @@ int dsrlz_MoverOK(void* buffer)
 	return codOp;
 }
 
-char* dsrlz_BatallaInforme(Paquete* paquete)
+char* dsrlz_BatallaInforme(Paquete* paquete, int fdServer)
 {
 	int codOp =0;
-	int tamOp =0;
 	int tamInforme=0;
 	char* informeBatalla;
 
@@ -207,21 +206,24 @@ char* dsrlz_BatallaInforme(Paquete* paquete)
 		exit(1);
 	}
 
-	memcpy(&tamOp,paquete->buffer+sizeof(int),sizeof(int));
+	memcpy(&tamInforme,paquete->buffer+sizeof(int),sizeof(int));
 
-	informeBatalla = malloc(sizeof(char)*tamOp+1);
+	free(paquete->buffer);
 
-	memcpy(informeBatalla,paquete->buffer+sizeof(int)*2,sizeof(char)*tamOp);
-	memcpy(&tamInforme,paquete->buffer+sizeof(int)*2+sizeof(char)*tamOp,sizeof(int));
+	recv(fdServer,paquete->buffer,tamInforme,0);
+
+	informeBatalla = malloc(sizeof(char)*tamInforme+1);
+
+	memcpy(informeBatalla,paquete->buffer+sizeof(int)*2,sizeof(char)*tamInforme);
+	memcpy(&tamInforme,paquete->buffer+sizeof(int)*2+sizeof(char)*tamInforme,sizeof(int));
 
 	informeBatalla = malloc(tamInforme);
 
-	memcpy(informeBatalla,paquete->buffer+sizeof(int)*2+sizeof(char)*tamOp+sizeof(int),sizeof(char)*tamInforme);
+	memcpy(informeBatalla,paquete->buffer,sizeof(char)*tamInforme);
 
 	printf("%s", informeBatalla);
 
 	free(informeBatalla);
-
 
 	return informeBatalla;
 

@@ -21,7 +21,7 @@ El tamaño máximo del buffer es 17, ya que es el máximo tamaño que puede toma
 -------------------------------------------------------------------------
 3 - read
 El cliente envía el tamaño del buffer, la cantidad de bytes a leer y el desplazamiento, cada uno representado por un su resectivo tipo (size_t - 4 bytes, y off_t - 8 bytes).
-El servidor responde enviando el buffer lleno(el tamaño ya está definido por el cliente).
+El servidor responde enviando la cantidad leída (puede ser menor a la pedida, si el archivo es más pequeño) y luego el buffer lleno.
 -------------------------------------------------------------------------
 4 - truncate
 El cliente envía el nuevo tamaño del archivo. De momento el servidor no devuelve nada.
