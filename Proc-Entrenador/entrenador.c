@@ -360,6 +360,10 @@ int main(int argc, char** argv)
 	Entrenador entrenador_estadoInicial = entrenador;
 	int auxcantNiveles;
 	int auxreintentos;
+
+	int cantDeadlock=0;
+	int cantDeadlocksPerdidos=0;
+
 	int codOp;
 
 	while(nivel.cantNiveles > nivel.nivelActual && flag_seguirJugando == true)
@@ -427,12 +431,12 @@ int main(int argc, char** argv)
 							send_pokemonMasFuerte(&paquete,fd_server);
 
 							paquete=recv_BatallaInforme(fd_server);
-							 dsrlz_BatallaInforme(&paquete, fd_server);
+							dsrlz_BatallaInforme(&paquete, fd_server);
 
+							cantDeadlock++;
 						}
-
-
-						}while(codOp != CAPTURA_OK || codOp !=BATALLA_PERDIDA);
+						}
+						while(codOp != CAPTURA_OK || codOp !=BATALLA_PERDIDA);
 
 						if(codOp == CAPTURA_OK)
 						{
@@ -443,6 +447,7 @@ int main(int argc, char** argv)
 
 						else if(codOp == MUERTE)
 						{
+							cantDeadlocksPerdidos++;
 							flag_SIGNALMUERTE = true;
 						}
 					}
@@ -488,6 +493,8 @@ int main(int argc, char** argv)
 
 	tardado = tiempoTardado(inicio, fin);
 	printf("Ganaste el Juego. Tu tiempo: %d minutos y %d segundos\n", tardado.minutos, tardado.segundos);
+	printf("Pasó %d segundos bloqueado en Pokenests");//TODO
+	printf("Estuvo involucrado en: %d deadlocks, y fue victima en: %d",cantDeadlock,cantDeadlocksPerdidos);
 	//free(paquete.buffer);
 	return 0;
 }

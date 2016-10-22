@@ -18,8 +18,6 @@ enum codigoOperaciones {
 	CAPTURAR = 3,
 	FINOBJETIVOS = 4,
 
-
-
 	SIMBOLO = 10,
 	COORDENADAS = 11,
 	CAPTURA_OK = 12,
