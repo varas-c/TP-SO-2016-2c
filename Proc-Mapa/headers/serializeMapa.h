@@ -28,6 +28,9 @@ enum codigoOperaciones {
 	BATALLA_PERDIDA = 15,
 	BATALLA_PELEA = 16,
 	MUERTE = 17,
+	PEDIR_POKEMON_MAS_FUERTE = 18,
+	BATALLA_INFORME = 19,
+	BATALLA_MUERTE = 20,
 };
 
 //****************************************************************************************************************
@@ -44,6 +47,10 @@ enum sizeofBuffer
 	size_COORDENADAS = sizeof(int)+sizeof(int)+sizeof(int),
 	size_CAPTURA_OK = sizeof(int)+sizeof(int) + sizeof(t_pokemon),
 	size_MOVER_OK = sizeof(int),
+	size_BATALLA_PELEA = sizeof(int),
+	size_PEDIR_POKEMON_MAS_FUERTE = sizeof(int) + sizeof(int),
+	size_BATALLA_INFORME = sizeof(int)+sizeof(int),
+	size_BATALLA_MUERTE = sizeof(int),
 };
 
 

@@ -752,6 +752,212 @@ int send_codigoOperacion(int socket,int operacion)
 	return retval;
 }
 
+
+
+Paquete srlz_pedirPokemon()
+{
+	Paquete paquete;
+	paquete.tam_buffer = size_BATALLA_PELEA;
+	paquete.buffer = malloc(paquete.tam_buffer);
+
+	int cod = BATALLA_PELEA;
+
+	memcpy(paquete.buffer,&cod,sizeof(int));
+
+	return paquete;
+
+
+}
+int send_pedirPokemonMasFuerte(Jugador* jugador)
+{
+	int retval;
+	Paquete paquete;
+	paquete = srlz_pedirPokemon();
+
+	retval = send(jugador->socket,paquete.buffer,paquete.tam_buffer,0);
+
+	free(paquete.buffer);
+
+	return retval;
+
+}
+
+
+Paquete recv_pedirPokemonMasFuerte(Jugador* jugador, int* retval)
+{
+	Paquete paquete;
+	paquete.tam_buffer = size_PEDIR_POKEMON_MAS_FUERTE;
+	paquete.buffer = malloc(paquete.tam_buffer);
+
+	*retval = recv(jugador->socket,paquete.buffer,paquete.tam_buffer,0);
+
+	return paquete;
+
+}
+
+int dsrlz_pedirPokemonMasFuerte(Paquete* paquete)
+{
+	int indicePoke;
+	int codop;
+
+
+	memcpy(&codop,paquete->buffer,sizeof(int));
+
+	if(codop != PEDIR_POKEMON_MAS_FUERTE)
+	{
+		printf("Error: %s - Linea %d --- codigo invalido de PEDIR_POKEMON_MAS_FUERTE", __func__,__LINE__);
+		exit(1);
+	}
+
+	memcpy(&indicePoke,paquete->buffer + sizeof(int),sizeof(int));
+
+	return indicePoke;
+
+}
+
+char* generarInformeBatalla(Jugador* jugador1, Jugador* jugador2,t_pokemon* pokemon1, t_pokemon* pokemon2)
+{
+	char* informeBatalla = malloc(sizeof(char)*256);
+
+	sprintf(informeBatalla,"Resultado Pelea\nEntrenador1: %c - Entrenador2: %c\nPokemon1: %s - Nivel %i\nPokemon2: %s - Nivel %i\nGanador: ",
+						jugador1->entrenador.simbolo,jugador2->entrenador.simbolo,pokemon1->species,pokemon1->level,pokemon2->species,pokemon2->level);
+
+	return informeBatalla;
+}
+
+void send_informeBatalla(int socket_j1,int socket_j2,char* informeBatalla)
+{
+
+	int tamCadena = strlen(informeBatalla)+1;
+	Paquete paquete;
+	paquete.tam_buffer = sizeof(char)*tamCadena;
+	paquete.buffer = malloc(paquete.tam_buffer);
+
+	send(socket_j1,paquete.buffer,paquete.tam_buffer,0);
+	send(socket_j2,paquete.buffer,paquete.tam_buffer,0);
+
+
+	free(paquete.buffer);
+}
+
+void send_BatallaMuerte(int socket)
+{
+	Paquete paquete;
+	paquete.tam_buffer = size_BATALLA_MUERTE;
+	paquete.buffer = malloc(paquete.tam_buffer);
+
+	int codop = BATALLA_MUERTE;
+
+	memcpy(paquete.buffer,&codop,sizeof(int));
+
+	send(socket,paquete.buffer,paquete.tam_buffer,0);
+
+}
+Jugador* pelearEntrenadores()
+{
+	int retval;
+	Jugador* jugador1 = NULL;
+	Jugador* jugador2 = NULL;
+	t_pokemon* pokemon1 = NULL;
+	t_pokemon* pokemon2 = NULL;
+	int indicePoke;
+	Paquete paquete;
+	char* informeBatalla = NULL;
+	Jugador* perdedor = NULL;
+	char* cadenaAux = malloc(sizeof(char)*2);
+	cadenaAux[1] = '\0';
+
+	t_pokemon* pokemonPerdedor = NULL;
+
+	jugador1 = list_remove(listaDeadlock,0);
+
+	while(list_size(listaDeadlock) > 0)
+	{
+		jugador2 = list_remove(listaDeadlock,0);
+
+		retval = send_pedirPokemonMasFuerte(jugador1);
+
+		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
+		{
+			return jugador1;
+		}
+
+		retval = send_pedirPokemonMasFuerte(jugador2);
+
+		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
+		{
+			return jugador2;
+		}
+
+
+		//Si ninguno se fue, seguimos jugando
+
+		paquete = recv_pedirPokemonMasFuerte(jugador1, &retval);
+
+		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
+		{
+			return jugador1;
+		}
+
+		indicePoke = dsrlz_pedirPokemonMasFuerte(&paquete);
+		free(paquete.buffer);
+		pokemon1 = list_get(jugador1->pokemonCapturados,indicePoke);
+
+		//----
+		paquete = recv_pedirPokemonMasFuerte(jugador2, &retval);
+
+		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
+		{
+			return jugador2;
+		}
+
+		indicePoke = dsrlz_pedirPokemonMasFuerte(&paquete);
+		free(paquete.buffer);
+		pokemon2 = list_get(jugador2->pokemonCapturados,indicePoke);
+
+		//HAY PELEA!
+
+		pokemonPerdedor = pkmn_battle(pokemon1,pokemon2);
+
+
+
+		if(pokemon1 == pokemonPerdedor) //Si el 1 perdió
+		{
+			informeBatalla = generarInformeBatalla(jugador1,jugador2,pokemon1,pokemon2);
+			cadenaAux[0] = jugador2->entrenador.simbolo;
+			strcat(informeBatalla,cadenaAux);
+			send_informeBatalla(jugador1->socket,jugador2->socket,informeBatalla);
+			free(informeBatalla);
+			perdedor = jugador1;
+		}
+
+		else if(pokemon2 == pokemonPerdedor) //Si el 2 perdió
+		{
+			informeBatalla = generarInformeBatalla(jugador1,jugador2,pokemon1,pokemon2);
+			cadenaAux[0] = jugador1->entrenador.simbolo;
+			strcat(informeBatalla,cadenaAux);
+			send_informeBatalla(jugador1->socket,jugador2->socket,informeBatalla);
+			free(informeBatalla);
+			perdedor = jugador2;
+		}
+
+		else
+		{
+			printf("Linea: %s - Linea: %d - Error De Deadlock, no se puede definir quien gano/perdio",__func__,__LINE__);
+			exit(1);
+		}
+
+	}
+
+	free(cadenaAux);
+
+	send_BatallaMuerte(perdedor->socket);
+
+
+	return perdedor;
+}
+
+
 void* thread_planificador()
 {
 	nivel_gui_inicializar();
@@ -776,6 +982,8 @@ void* thread_planificador()
 	t_list* lista_jugadoresBloqueados = NULL;
 	pid_t pid= getpid();
 
+	Jugador* jugadorDeadlock = NULL;
+
 	while(1)
 	{
 	nivel_gui_dibujar(gui_items,"                                                           ");
@@ -790,6 +998,14 @@ void* thread_planificador()
 	while(!list_is_empty(global_listaJugadoresSistema))
 	{
 		//Desbloqueamos jugadores
+
+		if(listaDeadlock != NULL)
+		{
+			jugadorDeadlock = pelearEntrenadores();
+
+		}
+
+
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 		desbloquearJugadores(lista_jugadoresBloqueados);
@@ -964,7 +1180,7 @@ void* thread_planificador()
 		}
 		if(flag_DESCONECTADO == TRUE)
 		{
-			lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
+		lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 		borrarJugadorSistema(jugador);
@@ -983,6 +1199,7 @@ void* thread_planificador()
 void* thread_deadlock()
 {
 	t_list * entrenadores_aux;
+
 	while(1)
 	{
 		usleep(mdataMapa.tiempoChequeoDeadlock*100000); //EXAGERO PARA PROBAR
@@ -999,28 +1216,6 @@ void* thread_deadlock()
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
-	/*
-	 * NOTAS!!!
-	 * El semaforo que deberias usar es mutex_deadlock
-	 *
-	 * mutex_deadlock evita que el planificador y el mapa te pisen la lista de entrenadores (en teoria lo hice bien)
-	 *
-	 * Usalo vos tambien para cuando quieras acceder a esa lista, yo te recomendaria hacer un mutex desde el principio
-	 * y cuando terminas todo, haces el signal.
-	 *
-	 *las listas que deberias usar son "global_listaJugadoresSistema" y "listaPokenest"
-	 *las listas son globales, asi que no hace falta pasarlas por parametros, leelas directamente
-	 *
-	 *Deberías leer el archivo mdataMapa para ver cada cuanto tiempo ejecutas este hilo, supongo que si haces sleep de este hilo durante ese
-	 *tiempo, no deberia pasar nada. EL problema es que no se si duerme a los otros hilos tambien
-	 *
-	 *Cualquier cosa avisame :)
-	 *
-	 *Ah ya te hice el header deadlock, la unica que diferencia es que vos usabas la funcion buscar_Pokenest vieja (fijate que la comenté
-	 *deadlock.h) la nueva (la que tenes que usar) está aca en el mapa, buscala. la dif es que antes te devolvia un contenido, ahora te devuelve
-	 *el puntero a ese contenido, deberias cambiar eso a menos que le cambies el nombre a TU funcion porque si no se chocan, depende que necesites
-	 *
-	 */
 }
 
 int main(int argc, char** argv)
