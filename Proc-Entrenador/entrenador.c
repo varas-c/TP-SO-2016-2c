@@ -161,6 +161,25 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 		free(comandoCopiar);
 }
 
+int get_pokemon_mas_fuerte()
+{
+	t_pokemon* mas_fuerte = (t_pokemon*)list_get(entrenador.pokemonesCapturados,0);
+
+	int i;
+	int indicePok = 0;
+
+	for(i=1;i<list_size(entrenador.pokemonesCapturados);i++)
+	{
+		if((((t_pokemon*)list_get(entrenador.pokemonesCapturados,i))->level)>(mas_fuerte->level))
+		{
+			mas_fuerte = (t_pokemon*)list_get(entrenador.pokemonesCapturados,i);
+			indicePok= i;
+		}
+	}
+
+	return indicePok;
+}
+
 
 int recv_turnoConcedido(int fd_server)
 {
@@ -201,6 +220,15 @@ void recv_MoverOK(int fdServer)
 		exit(1);
 	}
 
+}
+
+Paquete recv_BatallaInforme(int fdServer)
+{
+	Paquete paquete;
+	paquete.tam_buffer=size_BATALLA_INFORME;
+	paquete.buffer = malloc(paquete.tam_buffer);
+	recv(fdServer,paquete.buffer,paquete.tam_buffer,0);
+	return paquete;
 }
 
 void reiniciarEntrenador(Entrenador *entrenador)
@@ -288,13 +316,10 @@ int main(int argc, char** argv)
 	parametros.dirPokedex = "/mnt/pokedex";
 	parametros.nombreEntrenador = "Ash";
 
-
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
-
 
 	metadata mdata;
 	mdata = leerMetadataEntrenador(parametros);
-
 
 	struct tm *local, *local2;
 	time_t t, t2;
@@ -304,7 +329,6 @@ int main(int argc, char** argv)
 	local = localtime(&t);
 	inicio.minutos = local->tm_min;
 	inicio.segundos = local->tm_sec;
-
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
 
@@ -317,19 +341,16 @@ int main(int argc, char** argv)
 
 	vidas_restantes = entrenador.vidas;
 
-
 	Paquete paquete;
 
 	//Agregamos las funciones que manejaran las señales enmascaras como SIGTERM Y SIGUSR1.
 
 	signal(SIGUSR1, manejar_signals);
 	signal(SIGTERM, manejar_signals);
-
 	signal(SIGINT,sigHandler_endProcess);
 	signal(SIGHUP,sigHandler_endProcess);
 
 	//A partir de aca, comienza el juego, es decir hacer acciones en el mapa
-
 
 	Pokenest pokenest;
 	char* pokemonDat;
@@ -339,12 +360,14 @@ int main(int argc, char** argv)
 	Entrenador entrenador_estadoInicial = entrenador;
 	int auxcantNiveles;
 	int auxreintentos;
-	int codOp;
 
+	int cantDeadlock=0;
+	int cantDeadlocksPerdidos=0;
+
+	int codOp;
 
 	while(nivel.cantNiveles > nivel.nivelActual && flag_seguirJugando == true)
 	{
-
 		mapa.nombre = obtenerNombreMapa(mdata.hojaDeViaje,nivel.nivelActual); //Obtenemos el nombre del mapa numero X
 
 		ConexionEntrenador connect;
@@ -354,10 +377,8 @@ int main(int argc, char** argv)
 		fd_server = get_fdServer(connect.ip,connect.puerto);
 		send_simboloEntrenador(mdata.simbolo, fd_server);
 
-
 		nivel.finNivel = 0;
 		nivel.cantObjetivos = getCantObjetivos(mdata.objetivos[nivel.nivelActual]);
-
 
 		pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
 
@@ -401,13 +422,21 @@ int main(int argc, char** argv)
 						{
 						codOp = recv_codigoOperacion(fd_server);
 
+
 						if(codOp == BATALLA_PELEA)
 						{
 							//CODIGO DE PELEA
+							int pokemonMasFuerte = get_pokemon_mas_fuerte();
+							paquete = srlz_pokemonMasFuerte(pokemonMasFuerte);
+							send_pokemonMasFuerte(&paquete,fd_server);
+
+							paquete=recv_BatallaInforme(fd_server);
+							dsrlz_BatallaInforme(&paquete, fd_server);
+
+							cantDeadlock++;
 						}
-
-
-						}while(codOp != CAPTURA_OK || codOp !=BATALLA_PERDIDA);
+						}
+						while(codOp != CAPTURA_OK || codOp !=BATALLA_PERDIDA);
 
 						if(codOp == CAPTURA_OK)
 						{
@@ -418,6 +447,7 @@ int main(int argc, char** argv)
 
 						else if(codOp == MUERTE)
 						{
+							cantDeadlocksPerdidos++;
 							flag_SIGNALMUERTE = true;
 						}
 					}
@@ -463,6 +493,8 @@ int main(int argc, char** argv)
 
 	tardado = tiempoTardado(inicio, fin);
 	printf("Ganaste el Juego. Tu tiempo: %d minutos y %d segundos\n", tardado.minutos, tardado.segundos);
+	printf("Pasó %d segundos bloqueado en Pokenests");//TODO
+	printf("Estuvo involucrado en: %d deadlocks, y fue victima en: %d",cantDeadlock,cantDeadlocksPerdidos);
 	//free(paquete.buffer);
 	return 0;
 }

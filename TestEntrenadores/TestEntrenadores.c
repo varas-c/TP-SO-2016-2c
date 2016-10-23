@@ -17,37 +17,150 @@
 #include <string.h>
 #include <unistd.h>
 
+//#define MAX_ENTRENADORES 28
+
 int main(int argc, char** argv)
 {
+	int MAX_ENTRENADORES = 0;
 
-	int cantEntrenadores = atoi(argv[1]);
-	int delay = atoi(argv[2]);
+	char* rutaPokedex = strdup(argv[1]);
+	MAX_ENTRENADORES = atoi(argv[2]);
+	int delay = atoi(argv[3]);
+
+	char** entrenadores;
+	entrenadores = malloc(sizeof(char*)*30);
+	int i;
+
+
+	for(i=0;i<MAX_ENTRENADORES;i++)
+	{
+		entrenadores[i] = malloc(sizeof(char)*50);
+	}
+
+	for(i=0;i<MAX_ENTRENADORES;i++)
+	{
+		switch(i)
+		{
+			case 0:
+				strcpy(entrenadores[i],"Ash");
+				break;
+			case 1:
+				strcpy(entrenadores[i],"Brock");
+				break;
+			case 2:
+				strcpy(entrenadores[i],"Misty");
+				break;
+			case 3:
+				strcpy(entrenadores[i],"Rojo");
+				break;
+			case 4:
+				strcpy(entrenadores[i],"Chris");
+				break;
+			case 5:
+				strcpy(entrenadores[i],"Fede");
+				break;
+			case 6:
+				strcpy(entrenadores[i],"Mati");
+				break;
+			case 7:
+				strcpy(entrenadores[i],"Estefi");
+				break;
+			case 8:
+				strcpy(entrenadores[i],"Seba");
+				break;
+			case 9:
+				strcpy(entrenadores[i],"Red");
+				break;
+			case 10:
+				strcpy(entrenadores[i],"Lance");
+				break;
+			case 11:
+				strcpy(entrenadores[i],"James");
+				break;
+			case 12:
+				strcpy(entrenadores[i],"Jessie");
+				break;
+			case 13:
+				strcpy(entrenadores[i],"Joy");
+				break;
+			case 14:
+				strcpy(entrenadores[i],"May");
+				break;
+			case 15:
+				strcpy(entrenadores[i],"Max");
+				break;
+			case 16:
+				strcpy(entrenadores[i],"Blue");
+				break;
+			case 17:
+				strcpy(entrenadores[i],"Lt. Surge");
+				break;
+			case 18:
+				strcpy(entrenadores[i],"Erika");
+				break;
+			case 19:
+				strcpy(entrenadores[i],"Sabrina");
+				break;
+			case 20:
+				strcpy(entrenadores[i],"Koga");
+				break;
+			case 21:
+				strcpy(entrenadores[i],"Blaine");
+				break;
+			case 22:
+				strcpy(entrenadores[i],"Giovanni");
+				break;
+			case 23:
+				strcpy(entrenadores[i],"Panchito");
+				break;
+			case 24:
+				strcpy(entrenadores[i],"Gary");
+				break;
+			case 25:
+				strcpy(entrenadores[i],"Norman");
+				break;
+			case 26:
+				strcpy(entrenadores[i],"Winona");
+				break;
+			case 27:
+				strcpy(entrenadores[i],"Volkner");
+				break;
+		}
+
+	}
+
+	for(i=0;i<MAX_ENTRENADORES;i++)
+	{
+		printf("%s \n",entrenadores[i]);
+	}
 
 
 	char** vector;
-	vector = malloc(sizeof(char*)*4);
+	vector = malloc(sizeof(char*)*28);
 
 
-	int cantMaxEntrenadores = 4;
+	int cantMaxEntrenadores = 28;
 	int j;
 
 	for(j=0;j<cantMaxEntrenadores;j++)
 	{
-		vector[j] = malloc(sizeof(char)*256);
+		vector[j] = malloc(sizeof(char)*512);
+		sprintf(vector[j],"xterm -hold -e ./Proc-Entrenador %s %s", rutaPokedex, entrenadores[j]);
 	}
 
-	strcpy(vector[0],"xterm -e ./Proc-Entrenador /mnt/pokedex Ash");
-	strcpy(vector[1],"xterm -e ./Proc-Entrenador /mnt/pokedex Brock");
-	strcpy(vector[2],"xterm -e ./Proc-Entrenador /mnt/pokedex Misty");
-	strcpy(vector[3],"xterm -e ./Proc-Entrenador /mnt/pokedex Rojo");
+	for(j=0;j<cantMaxEntrenadores;j++)
+	{
+		printf("%s \n", vector[j]);
+	}
 
-	int i;
+
+
 	int pid;
 
-	for(i=0;i<cantEntrenadores;i++)
+	for(i=0;i<MAX_ENTRENADORES;i++)
 	{
 		if(pid = fork() == 0){
-			system(delay);
+			sleep(delay);
 			system(vector[i]);
 			break;
 		}
