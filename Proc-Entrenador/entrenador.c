@@ -418,11 +418,10 @@ int main(int argc, char** argv)
 						printf("Entrenador Bloqueado! \n");
 						codOp = -1;
 
-						while(codOp != CAPTURA_OK || codOp !=BATALLA_MUERTE)
+						while(codOp != CAPTURA_OK && codOp !=BATALLA_MUERTE)
 						{
 
 							codOp = recv_codigoOperacion(fd_server);
-
 
 							if(codOp == BATALLA_PELEA)
 							{
@@ -459,7 +458,11 @@ int main(int argc, char** argv)
 					{
 						printf("Fin Nivel\n");
 						close(fd_server);
-						avanzarNivel(&nivel,&entrenador);
+
+						if(flag_SIGNALMUERTE == false)
+						{
+							avanzarNivel(&nivel,&entrenador);
+						}
 					}
 
 					else

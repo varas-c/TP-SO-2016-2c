@@ -1086,7 +1086,7 @@ Jugador* pelearEntrenadores()
 
 void* thread_planificador()
 {
-	//nivel_gui_inicializar();
+	nivel_gui_inicializar();
 
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
@@ -1251,6 +1251,7 @@ void* thread_planificador()
 						{
 							jugador->estado = 1;
 							jugador->peticion = pokenestPedida;
+							jugador->conocePokenest = false;
 							bloquearJugador(jugador,pokenestPedida);
 							//log_info(infoLogger,"El Jugador %c ha entrado a la cola de Bloqueados del mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
 						}
