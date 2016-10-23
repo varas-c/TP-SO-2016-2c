@@ -69,16 +69,22 @@ int cantidad_obtenidos_de_un_tipo(Jugador* entrenador,char simbolo)//CANT DE POK
 	int i=0,cantidad_total,cantidad=0;
 	Pokemon* pokemon_aux;
 	cantidad_total = list_size(entrenador->pokemonCapturados);
-	while(i<cantidad_total)
+
+	if(cantidad_total)
 	{
-		pokemon_aux=(Pokemon*)list_get(entrenador->pokemonCapturados,i);
-		if(letra_pokenest(pokemon_aux->pokemon->species)==simbolo) //SI ESE POKEMON ES DE ESA POKENEST
+		while(i<cantidad_total)
 		{
-			cantidad++;
+			pokemon_aux=(Pokemon*)list_get(entrenador->pokemonCapturados,i);
+			if(pokemon_aux->nombre[0]==simbolo) //SI ESE POKEMON ES DE ESA POKENEST
+			{
+				cantidad++;
+			}
+			i++;
 		}
-		i++;
+		return cantidad;
 	}
-	return cantidad;
+	else
+		return 0;
 }
 
 int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
@@ -92,7 +98,6 @@ int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 
 	int** matriz= inicializar_matriz(cant_entrenadores, cant_pokenests);//DEVUELVE MATRIZ CON TODOS 0
 
-
 	i = 0;
 
 	if(cant_entrenadores)
@@ -105,7 +110,7 @@ int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 			while(j<cant_pokenests)
 			{
 				pokenest_aux = (MetadataPokenest*)list_get(pokenests,j);
-				if(toupper(entrenador_aux->peticion) == toupper(pokenest_aux->simbolo))
+				if(entrenador_aux->peticion == pokenest_aux->simbolo)
 				{
 					matriz[i][j]=1;
 					j=cant_pokenests;
@@ -116,8 +121,8 @@ int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 			i++;
 		}
 
-		if(cant_entrenadores == 2)
-		log_info(infoLogger, "Matriz de Peticiones: %i %i %i %i",matriz[0][0],matriz[0][1],matriz[1][0],matriz[1][1] );
+		//if(cant_entrenadores == 2)
+		//log_info(infoLogger, "Matriz de Peticiones: %i %i %i %i",matriz[0][0],matriz[0][1],matriz[1][0],matriz[1][1] );
 
 		return matriz;
 	}
@@ -125,6 +130,7 @@ int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 	{
 		return NULL;
 	}
+
 }
 
 
@@ -161,8 +167,8 @@ int** generar_matriz_asignados(t_list* entrenadores, t_list* pokenests)
 			i++;
 		}
 
-		if(cant_entrenadores == 2)
-		log_info(infoLogger, "Matriz de Recursos Asignados: %i %i %i %i",matriz[0][0],matriz[0][1],matriz[1][0],matriz[1][1] );
+		//if(cant_entrenadores == 2)
+		//log_info(infoLogger, "Matriz de Recursos Asignados: %i %i %i %i",matriz[0][0],matriz[0][1],matriz[1][0],matriz[1][1] );
 		return matriz;
 	}
 	else
@@ -183,8 +189,8 @@ int* generar_vector_recursos_disponibles(t_list* pokenests)
 		i++;
 	}
 
-	if(tamanio == 2)
-	log_info(infoLogger, "Vector de Recursos Disponibles: %i %i",vector[0],vector[1] );
+	//if(tamanio == 2)
+	//log_info(infoLogger, "Vector de Recursos Disponibles: %i %i",vector[0],vector[1] );
 
 	return vector;
 }
@@ -536,7 +542,7 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 }
 //*************************************************************
 
-t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
+t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* infoLogger)
 {
 
     if(list_size(entrenadores) > 0)
@@ -550,15 +556,44 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 
         list_add_all(pokenests_aux,pokenests);
 
+        //REVISA POR ACA, TIENE QUE HABER ALGUN ERROR
     	int** matriz_peticiones = generar_matriz_peticiones(entrenadores_aux, pokenests_aux);
 
     	int** matriz_recursos_asignados = generar_matriz_asignados(entrenadores_aux, pokenests_aux);
 
     	int* recursos_disponibles = generar_vector_recursos_disponibles(pokenests_aux);
 
+    	log_info(infoLogger, "    PETICIONES");
+
+    	loggear_matriz(matriz_peticiones,pokenests_aux,entrenadores,infoLogger);
+
+    	log_info(infoLogger, "    ASIGNADOS");
+
+    	loggear_matriz(matriz_recursos_asignados,pokenests_aux,entrenadores,infoLogger);
+
+    	log_info(infoLogger, "    DISPONIBLES");
+
+    	loggear_vector(recursos_disponibles,pokenests_aux,infoLogger);
+
 		entrenadores_aux = no_pueden_ejecutar(entrenadores_aux,pokenests_aux,matriz_peticiones,matriz_recursos_asignados,recursos_disponibles);
 
 		sacar_inanicion(entrenadores_aux);
+
+		if(list_size(entrenadores_aux)>1)
+		{
+			log_info(infoLogger, "    ENTRENADORES EN DEADLOCK");
+
+			loggear_entrenadores_en_deadlock(entrenadores_aux,infoLogger);
+		}
+
+		else
+			log_info(infoLogger, "    NO HAY DEADLOCK");
+
+		free(matriz_peticiones);
+
+		free(matriz_recursos_asignados);
+
+		free(recursos_disponibles);
 
 		if(entrenadores_aux!=NULL)
 		{
@@ -580,15 +615,13 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 
 void loggear_entrenadores_en_deadlock(t_list* entrenadores,t_log* infoLogger)
 {
-	int i=0,k=0,cantidad = list_size(entrenadores),cantidad_con_espacios=cantidad*4;
+	int i=0,k=0,cantidad = list_size(entrenadores),cantidad_con_espacios=cantidad*2;
 	char* aux= malloc((sizeof(char)*(cantidad_con_espacios))+1);
 	for(i=0;i<cantidad;i++)
 	{
 		aux[k] = ((Jugador*)list_get(entrenadores,i))->entrenador.simbolo;
 		aux[k+1] =' ';
-		aux[k+2] =' ';
-		aux[k+3] =' ';
-		k+=4;
+		k+=2;
 	}
 	aux[cantidad_con_espacios]='\0';
 	log_info(infoLogger, "       %s",aux);
@@ -600,7 +633,7 @@ void loggear_entrenadores_en_deadlock(t_list* entrenadores,t_log* infoLogger)
 void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* infoLogger)
 {
 	int columnas=list_size(pokenests),filas=list_size(entrenadores);
-	int i,j,k=0,filas_con_espacios=filas*2,columnas_con_espacios = columnas*4;
+	int i,j,k=0,filas_con_espacios=filas*2,columnas_con_espacios = columnas*2;
 	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
 
 	k=0;
@@ -608,9 +641,7 @@ void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* 
 	{
 		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
 		aux[k+1] =' ';
-		aux[k+2] =' ';
-		aux[k+3] =' ';
-		k+=4;
+		k+=2;
 	}
 	aux[columnas_con_espacios]='\0';
 
@@ -621,23 +652,20 @@ void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* 
 		k=0;
 		for(j=0;j<columnas;j++)
 		{
-			aux[k] = matriz[i][j]+48;
+			aux[k] = (matriz[i][j]+48);
 			aux[k+1]=' ';
-			aux[k+2]=' ';
-			aux[k+3]=' ';
-			k+=4;
+			k+=2;
 		}
 		log_info(infoLogger, "%c    %s",((Jugador*)list_get(entrenadores,i))->entrenador.simbolo,aux);
 	}
 	free(aux);
 }
-
 //*************************************************************
 
 void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
 {
 	int columnas=list_size(pokenests);
-	int i,k=0,columnas_con_espacios = columnas*4;
+	int i,k=0,columnas_con_espacios = columnas*2;
 	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
 
 	k=0;
@@ -645,9 +673,7 @@ void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
 	{
 		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
 		aux[k+1] =' ';
-		aux[k+2] =' ';
-		aux[k+3] =' ';
-		k+=4;
+		k+=2;
 	}
 	aux[columnas_con_espacios]='\0';
 
@@ -658,9 +684,7 @@ void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
 	{
 		aux[k] = vector[i]+48;
 		aux[k+1]=' ';
-		aux[k+2]=' ';
-		aux[k+3]=' ';
-		k+=4;
+		k+=2;
 	}
 	log_info(infoLogger, "    %s",aux);
 	free(aux);
