@@ -198,11 +198,7 @@ char* getRutaMetadata(ParametrosConsola parametros)
 	strcat(rutaALeer,slash);
 	strcat(rutaALeer,pathMetadata);
 
-
 	return rutaALeer;
-
-
-
 }
 //******************************************
 
@@ -305,7 +301,5 @@ Paquete recv_capturarPokemon(int fd_server)
 
 	return paquete;
 }
-
-
 
 #endif /* HEADERS_CONFIGENTRENADOR_H_ */

@@ -71,7 +71,6 @@ void leerObjetivos(char* objetivos, t_config* config, int cantViajes,char** hoja
 }
 */
 
-
 void copiarPokemon(char *archivoPokemon, ParametrosConsola parametros, char* nombreMapa){
 	char *origen, *destino, *nombre, *comandoCopiar;
 	int tamanio;
@@ -179,7 +178,6 @@ int get_pokemon_mas_fuerte()
 
 	return indicePok;
 }
-
 
 int recv_turnoConcedido(int fd_server)
 {
@@ -447,6 +445,8 @@ int main(int argc, char** argv)
 
 						else if(codOp == MUERTE)
 						{
+							printf("Ha sido elegido como víctima durante una batalla pokemon");
+							borrarPokemones(parametros);
 							cantDeadlocksPerdidos++;
 							flag_SIGNALMUERTE = true;
 						}

@@ -18,7 +18,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-
 int fd_server;
 int vidas_restantes;
 
@@ -88,7 +87,6 @@ void manejar_signals(int operacion){
 		}
 	}
 }
-
 //******************************************
 
 void sigHandler_endProcess(int signal)
@@ -103,9 +101,5 @@ void sigHandler_endProcess(int signal)
 
 	}
 }
-
-//---------------------------------------
-//-----------------------------
-
 
 #endif /* HEADERS_SOCKET_H_ */
