@@ -565,4 +565,95 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 
 }
 
+//*************************************************************
+
+void loggear_entrenadores_en_deadlock(t_list* entrenadores,t_log* infoLogger)
+{
+	int i=0,k=0,cantidad = list_size(entrenadores),cantidad_con_espacios=cantidad*4;
+	char* aux= malloc((sizeof(char)*(cantidad_con_espacios))+1);
+	for(i=0;i<cantidad;i++)
+	{
+		aux[k] = ((Jugador*)list_get(entrenadores,i))->entrenador.simbolo;
+		aux[k+1] =' ';
+		aux[k+2] =' ';
+		aux[k+3] =' ';
+		k+=4;
+	}
+	aux[cantidad_con_espacios]='\0';
+	log_info(infoLogger, "       %s",aux);
+	free(aux);
+}
+
+//*************************************************************
+
+void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* infoLogger)
+{
+	int columnas=list_size(pokenests),filas=list_size(entrenadores);
+	int i,j,k=0,filas_con_espacios=filas*2,columnas_con_espacios = columnas*4;
+	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
+
+	k=0;
+	for(i=0;i<columnas;i++)
+	{
+		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
+		aux[k+1] =' ';
+		aux[k+2] =' ';
+		aux[k+3] =' ';
+		k+=4;
+	}
+	aux[columnas_con_espacios]='\0';
+
+	log_info(infoLogger, "       %s",aux);
+
+	for(i=0;i<filas;i++)
+	{
+		k=0;
+		for(j=0;j<columnas;j++)
+		{
+			aux[k] = matriz[i][j]+48;
+			aux[k+1]=' ';
+			aux[k+2]=' ';
+			aux[k+3]=' ';
+			k+=4;
+		}
+		log_info(infoLogger, "%c    %s",((Jugador*)list_get(entrenadores,i))->entrenador.simbolo,aux);
+	}
+	free(aux);
+}
+
+//*************************************************************
+
+void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
+{
+	int columnas=list_size(pokenests);
+	int i,k=0,columnas_con_espacios = columnas*4;
+	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
+
+	k=0;
+	for(i=0;i<columnas;i++)
+	{
+		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
+		aux[k+1] =' ';
+		aux[k+2] =' ';
+		aux[k+3] =' ';
+		k+=4;
+	}
+	aux[columnas_con_espacios]='\0';
+
+	log_info(infoLogger, "     %s",aux);
+
+	k=0;
+	for(i=0;i<columnas;i++)
+	{
+		aux[k] = vector[i]+48;
+		aux[k+1]=' ';
+		aux[k+2]=' ';
+		aux[k+3]=' ';
+		k+=4;
+	}
+	log_info(infoLogger, "    %s",aux);
+	free(aux);
+}
+
+//*************************************************************
 #endif /* HEADERS_DEADLOCK_H_ */
