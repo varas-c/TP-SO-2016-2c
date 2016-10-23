@@ -1298,10 +1298,10 @@ void* thread_planificador()
 			lista_jugadoresBloqueados = expropiarPokemones(jugadorDeadlock->pokemonCapturados);
 
 			pthread_mutex_lock(&mutex_hiloDeadlock);
-			borrarJugadorSistema(jugador);
+			borrarJugadorSistema(jugadorDeadlock);
 			pthread_mutex_unlock(&mutex_hiloDeadlock);
 
-			desconectarJugador(jugador);
+			desconectarJugador(jugadorDeadlock);
 
 			pthread_mutex_lock(&mutex_hiloDeadlock);
 			desbloquearJugadores(lista_jugadoresBloqueados);
@@ -1335,6 +1335,8 @@ void* thread_deadlock()
 		entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema);
 
 		list_clean(listaDeadlock);
+
+		listaDeadlock = list_create();
 
 		list_add_all(listaDeadlock,entrenadores_aux);
 
