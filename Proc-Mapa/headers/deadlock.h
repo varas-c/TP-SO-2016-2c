@@ -95,25 +95,38 @@ int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 
 	i = 0;
 
-	while(i<cant_entrenadores)
+	if(cant_entrenadores)
 	{
-		entrenador_aux = (Jugador*)list_get(entrenadores,i);
-		j = 0;
-		while(j<cant_pokenests)
-		{
-			pokenest_aux = (MetadataPokenest*)list_get(pokenests,j);
-			if(entrenador_aux->peticion == pokenest_aux->simbolo)
-			{
-				matriz[i][j]=1;
-				j=cant_pokenests;
-			}
 
-				j++;
+		while(i<cant_entrenadores)
+		{
+			entrenador_aux = (Jugador*)list_get(entrenadores,i);
+			j = 0;
+			while(j<cant_pokenests)
+			{
+				pokenest_aux = (MetadataPokenest*)list_get(pokenests,j);
+				if(toupper(entrenador_aux->peticion) == toupper(pokenest_aux->simbolo))
+				{
+					matriz[i][j]=1;
+					j=cant_pokenests;
+				}
+
+					j++;
+			}
+			i++;
 		}
-		i++;
+
+		if(cant_entrenadores == 2)
+		log_info(infoLogger, "Matriz de Peticiones: %i %i %i %i",matriz[0][0],matriz[0][1],matriz[1][0],matriz[1][1] );
+
+		return matriz;
 	}
-	return matriz;
+	else
+	{
+		return NULL;
+	}
 }
+
 
 //*************************************************************
 //*************************************************************
@@ -130,22 +143,30 @@ int** generar_matriz_asignados(t_list* entrenadores, t_list* pokenests)
 
 	int** matriz= inicializar_matriz(cant_entrenadores, cant_pokenests);//DEVUELVE MATRIZ CON TODOS 0
 
-	while(i<cant_entrenadores)
+	if(cant_entrenadores)
 	{
-		cantidad_recursos = 0;
-		entrenador_aux = (Jugador*)list_get(entrenadores,i);
-
-		j=0;
-		while(j<cant_pokenests)
+		while(i<cant_entrenadores)
 		{
-			pokenest_aux = (MetadataPokenest*)list_get(pokenests,j);
-			cantidad_recursos = cantidad_obtenidos_de_un_tipo(entrenador_aux, pokenest_aux->simbolo); //CANT DE POKEMONES ASIGNADOS A ESE ENTRENADOR DE ESA POKENEST
-			matriz[i][j]=cantidad_recursos;
-			j++;
+			cantidad_recursos = 0;
+			entrenador_aux = (Jugador*)list_get(entrenadores,i);
+
+			j=0;
+			while(j<cant_pokenests)
+			{
+				pokenest_aux = (MetadataPokenest*)list_get(pokenests,j);
+				cantidad_recursos = cantidad_obtenidos_de_un_tipo(entrenador_aux, pokenest_aux->simbolo); //CANT DE POKEMONES ASIGNADOS A ESE ENTRENADOR DE ESA POKENEST
+				matriz[i][j]=cantidad_recursos;
+				j++;
+			}
+			i++;
 		}
-		i++;
+
+		if(cant_entrenadores == 2)
+		log_info(infoLogger, "Matriz de Recursos Asignados: %i %i %i %i",matriz[0][0],matriz[0][1],matriz[1][0],matriz[1][1] );
+		return matriz;
 	}
-	return matriz;
+	else
+		return NULL;
 }
 
 //*************************************************************
@@ -161,94 +182,98 @@ int* generar_vector_recursos_disponibles(t_list* pokenests)
 		vector[i]=((MetadataPokenest*)list_get(pokenests,i))->cantPokemon;
 		i++;
 	}
+
+	if(tamanio == 2)
+	log_info(infoLogger, "Vector de Recursos Disponibles: %i %i",vector[0],vector[1] );
+
 	return vector;
 }
 
 //*************************************************************
 //*************************************************************
 
-t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests)
+t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_peticiones,int**matriz_recursos_asignados,int*recursos_disponibles)
 {
-	int **matriz_peticiones,**matriz_recursos_asignados,*recursos_disponibles,cant_entrenadores, cant_pokenests;
-	bool tiene_recursos = false,entrenador_satisfecho = false;
-	cant_entrenadores = list_size(entrenadores);
-	cant_pokenests = list_size(pokenests);
-	int posible_deadlock[cant_entrenadores];
-	int i,j,k;
-
-	matriz_peticiones = generar_matriz_peticiones(entrenadores, pokenests);
-
-	matriz_recursos_asignados = generar_matriz_asignados(entrenadores,pokenests);
-
-	recursos_disponibles = generar_vector_recursos_disponibles(pokenests);
-
-	t_list* no_puede_ejecutar = list_create();
-
-    for(i=0;i<cant_entrenadores;i++)
-    {
-    	posible_deadlock[i]=1;
-    }
-
-    //VEMOS QUIEN NO TIENE RECURSOS
-
-    for(i=0;i<cant_entrenadores;i++)  //RECORRO CADA ENTRENADOR
+	if(((list_size(entrenadores))>1)&&(matriz_peticiones!=NULL)&&(matriz_recursos_asignados!=NULL))
 	{
-		tiene_recursos = false;
-		for(j=0;j<cant_pokenests;j++)  //RECORRO CADA POKENEST (RECURSO)
+		int cant_entrenadores, cant_pokenests;
+		bool tiene_recursos = false,entrenador_satisfecho = false;
+		cant_entrenadores = list_size(entrenadores);
+		cant_pokenests = list_size(pokenests);
+		int posible_deadlock[cant_entrenadores];
+		int i,j,k;
+
+		t_list* no_puede_ejecutar = list_create();
+
+		for(i=0;i<cant_entrenadores;i++)
 		{
-			if(matriz_recursos_asignados[i][j])
-				tiene_recursos=true;
+			posible_deadlock[i]=1;
 		}
 
-		if(!tiene_recursos)
-			posible_deadlock[i]=0;
-	}
+		//VEMOS QUIEN NO TIENE RECURSOS
 
-    for(i=0;i<cant_entrenadores;i++)
-	{
-		if(posible_deadlock[i])
+		for(i=0;i<cant_entrenadores;i++)  //RECORRO CADA ENTRENADOR
 		{
-			entrenador_satisfecho = true;
-			for(j=0;j<cant_pokenests;j++)
+			tiene_recursos = false;
+			for(j=0;j<cant_pokenests;j++)  //RECORRO CADA POKENEST (RECURSO)
 			{
-				if((matriz_peticiones[i][j] > recursos_disponibles[j])&&(entrenador_satisfecho))
-				{
-					entrenador_satisfecho = false;
-				}
-
+				if(matriz_recursos_asignados[i][j])
+					tiene_recursos=true;
 			}
-			if(entrenador_satisfecho)
+
+			if(!tiene_recursos)
+				posible_deadlock[i]=0;
+		}
+
+		for(i=0;i<cant_entrenadores;i++)
+		{
+			if(posible_deadlock[i])
 			{
-				posible_deadlock[i] = 0;
-				for(k=0;k<cant_pokenests;k++)  //NO ESTA EN DEADLOCK, "DEVUELVE" SUS RECURSOS
+				entrenador_satisfecho = true;
+				for(j=0;j<cant_pokenests;j++)
 				{
-					recursos_disponibles[k] += matriz_recursos_asignados[i][k];
+					if((matriz_peticiones[i][j] > recursos_disponibles[j])&&(entrenador_satisfecho))
+					{
+						entrenador_satisfecho = false;
+					}
+
 				}
-				j=cant_pokenests;
-				i=0;
+				if(entrenador_satisfecho)
+				{
+					posible_deadlock[i] = 0;
+					for(k=0;k<cant_pokenests;k++)  //NO ESTA EN DEADLOCK, "DEVUELVE" SUS RECURSOS
+					{
+						recursos_disponibles[k] += matriz_recursos_asignados[i][k];
+					}
+					j=cant_pokenests;
+					i=0;
+				}
 			}
 		}
-	}
 
 
-	for(i=0;i<cant_entrenadores;i++)
-	{
-		if(posible_deadlock[i])
+		for(i=0;i<cant_entrenadores;i++)
 		{
-			list_add(no_puede_ejecutar,list_get(entrenadores,i)); // DEVUELVO LISTA CON LOS QUE PUEDEN ESTAR EN DL
+			if(posible_deadlock[i])
+			{
+				list_add(no_puede_ejecutar,list_get(entrenadores,i)); // DEVUELVO LISTA CON LOS QUE PUEDEN ESTAR EN DL
+			}
 		}
-	}
 
 
-	return no_puede_ejecutar; //DEVUELVO LOS QUE NO PUEDEN EJECUTAR, FALTA EVALUAR LA ESPERA CIRCULAR
+		return no_puede_ejecutar; //DEVUELVO LOS QUE NO PUEDEN EJECUTAR, FALTA EVALUAR LA ESPERA CIRCULAR
+		}
+	else
+		return NULL;
 }
+
 
 //*************************************************************
 //*************************************************************
 
 int letra_pokenest(char *species)
 {
-	return tolower(species[0]);
+	return toupper(species[0]);
 }
 
 
@@ -311,22 +336,29 @@ bool sacar_inanicion(t_list* entrenadores)
 	int i;
 	Jugador* aux;
 
-
-	for(i=0;i<list_size(entrenadores);i++)
+	if(entrenadores!=NULL)
 	{
-		aux=list_get(entrenadores,i);
-		if(esta_en_inanicion(aux,entrenadores))
+		if(list_size(entrenadores)>1)
 		{
-			list_remove(entrenadores,i);
-			se_encontro = true;
-			i=0;
+			for(i=0;i<list_size(entrenadores);i++)
+			{
+				aux=list_get(entrenadores,i);
+				if(esta_en_inanicion(aux,entrenadores))
+				{
+					list_remove(entrenadores,i);
+					se_encontro = true;
+					i=0;
+				}
+			}
+			return se_encontro;
 		}
+
+		else
+			return NULL;
 	}
-
-
-	return se_encontro;
+	else
+		return NULL;
 }
-
 
 //*************************************************************
 //*************************************************************
@@ -471,7 +503,7 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 
 	 if((list_size(entrenadores_aux)>1)&&(list_size(pokenests_aux)))
 	 {
-		posibles_deadlock = no_pueden_ejecutar(entrenadores_aux,pokenests_aux);
+		posibles_deadlock = no_pueden_ejecutar(entrenadores_aux,pokenests_aux,matriz_peticiones,matriz_recursos_asignados,recursos_disponibles);
 
 		printf("Cantidad de entrenadores en deadlock o inanicion: %d\n\n",list_size(posibles_deadlock));
 
@@ -506,32 +538,133 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 
 t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 {
-	t_list* entrenadores_aux=list_create();
 
-	t_list* pokenests_aux=list_create();
-
-    Jugador* perdedor =0;
-
-    list_add_all(entrenadores_aux,entrenadores);
-
-    list_add_all(pokenests_aux,pokenests);
-
-    if((list_size(pokenests))&&((list_size(entrenadores))>1))
+    if(list_size(entrenadores) > 0)
     {
-		int** matriz_peticiones = generar_matriz_peticiones(entrenadores_aux, pokenests_aux);
 
-		int** matriz_recursos_asignados = generar_matriz_asignados(entrenadores_aux, pokenests_aux);
+    	t_list* entrenadores_aux=list_create();
 
-		int* recursos_disponibles = generar_vector_recursos_disponibles(pokenests_aux);
+    	t_list* pokenests_aux=list_create();
 
-		entrenadores_aux = no_pueden_ejecutar(entrenadores_aux,pokenests_aux);
+        list_add_all(entrenadores_aux,entrenadores);
+
+        list_add_all(pokenests_aux,pokenests);
+
+    	int** matriz_peticiones = generar_matriz_peticiones(entrenadores_aux, pokenests_aux);
+
+    	int** matriz_recursos_asignados = generar_matriz_asignados(entrenadores_aux, pokenests_aux);
+
+    	int* recursos_disponibles = generar_vector_recursos_disponibles(pokenests_aux);
+
+		entrenadores_aux = no_pueden_ejecutar(entrenadores_aux,pokenests_aux,matriz_peticiones,matriz_recursos_asignados,recursos_disponibles);
 
 		sacar_inanicion(entrenadores_aux);
+
+		if(entrenadores_aux!=NULL)
+		{
+			if(list_size(entrenadores_aux)>1)
+			{
+				return entrenadores_aux;
+			}
+		}
+		else
+			return NULL;
+
     }
+    else
+    	return NULL;
 
-	list_destroy(pokenests_aux);
-
-	return entrenadores_aux;
 }
 
+//*************************************************************
+
+void loggear_entrenadores_en_deadlock(t_list* entrenadores,t_log* infoLogger)
+{
+	int i=0,k=0,cantidad = list_size(entrenadores),cantidad_con_espacios=cantidad*4;
+	char* aux= malloc((sizeof(char)*(cantidad_con_espacios))+1);
+	for(i=0;i<cantidad;i++)
+	{
+		aux[k] = ((Jugador*)list_get(entrenadores,i))->entrenador.simbolo;
+		aux[k+1] =' ';
+		aux[k+2] =' ';
+		aux[k+3] =' ';
+		k+=4;
+	}
+	aux[cantidad_con_espacios]='\0';
+	log_info(infoLogger, "       %s",aux);
+	free(aux);
+}
+
+//*************************************************************
+
+void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* infoLogger)
+{
+	int columnas=list_size(pokenests),filas=list_size(entrenadores);
+	int i,j,k=0,filas_con_espacios=filas*2,columnas_con_espacios = columnas*4;
+	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
+
+	k=0;
+	for(i=0;i<columnas;i++)
+	{
+		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
+		aux[k+1] =' ';
+		aux[k+2] =' ';
+		aux[k+3] =' ';
+		k+=4;
+	}
+	aux[columnas_con_espacios]='\0';
+
+	log_info(infoLogger, "       %s",aux);
+
+	for(i=0;i<filas;i++)
+	{
+		k=0;
+		for(j=0;j<columnas;j++)
+		{
+			aux[k] = matriz[i][j]+48;
+			aux[k+1]=' ';
+			aux[k+2]=' ';
+			aux[k+3]=' ';
+			k+=4;
+		}
+		log_info(infoLogger, "%c    %s",((Jugador*)list_get(entrenadores,i))->entrenador.simbolo,aux);
+	}
+	free(aux);
+}
+
+//*************************************************************
+
+void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
+{
+	int columnas=list_size(pokenests);
+	int i,k=0,columnas_con_espacios = columnas*4;
+	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
+
+	k=0;
+	for(i=0;i<columnas;i++)
+	{
+		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
+		aux[k+1] =' ';
+		aux[k+2] =' ';
+		aux[k+3] =' ';
+		k+=4;
+	}
+	aux[columnas_con_espacios]='\0';
+
+	log_info(infoLogger, "     %s",aux);
+
+	k=0;
+	for(i=0;i<columnas;i++)
+	{
+		aux[k] = vector[i]+48;
+		aux[k+1]=' ';
+		aux[k+2]=' ';
+		aux[k+3]=' ';
+		k+=4;
+	}
+	log_info(infoLogger, "    %s",aux);
+	free(aux);
+}
+
+//*************************************************************
 #endif /* HEADERS_DEADLOCK_H_ */

@@ -8,8 +8,6 @@
 #ifndef HEADERS_DEADLOCK_H_
 #define HEADERS_DEADLOCK_H_
 
-//*************************************************************
-//*************************************************************
 
 t_pokemon* pokemon_mayor_nivel(t_list* pokemones)
 {
@@ -26,10 +24,6 @@ t_pokemon* pokemon_mayor_nivel(t_list* pokemones)
 
 	return mas_fuerte;
 }
-
-
-//*************************************************************
-//*************************************************************
 
 
 #endif /* HEADERS_DEADLOCK_H_ */

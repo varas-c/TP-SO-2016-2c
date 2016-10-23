@@ -83,6 +83,113 @@ t_list* global_listaJugadoresSistema;
 /****************************************************************************************************************
 			FUNCIONES DE LECTURA DE PARAMETROS POR CONSOLA (LOS QUE SE RECIBEN POR **ARGV)
 ****************************************************************************************************************/
+
+void loggearListaListos()
+{
+		pthread_mutex_lock(&mutex_Listos); //Mutex de listas
+		int tamLista = list_size(listaListos);
+		char* simbolos = malloc(sizeof(char)*tamLista*2+1);
+		strcpy(simbolos," ");
+		Jugador* jugador;
+
+		int i;
+
+		if(tamLista > 0)
+		{
+
+			char* aux = malloc(sizeof(char)*2+1); //Pedimos memoria para un string auxiliar que nos sirve para copiar el simbolo
+			aux[1] = '\0';
+
+			for(i=0;i<tamLista;i++) //Recorremos la lista buscando todos los entrenadores y copiamos su simbolo
+			{
+				jugador = list_get(listaListos,i);
+				aux[0] = jugador->entrenador.simbolo;
+				strcat(simbolos,aux);
+			}
+
+			log_info(infoLogger, "Jugadores en cola Listos: %s", simbolos);
+			free(aux);
+		}
+
+		else
+		{
+			log_info(infoLogger, "Cola Listos vacia.");
+		}
+
+		pthread_mutex_unlock(&mutex_Listos);
+}
+
+void loggearColaBloqueados()
+{
+	pthread_mutex_lock(&mutex_Bloqueados);
+	int i,k;
+	int cantEntrenadores = 0;
+
+	t_queue* colaAux = queue_create(); //Cola auxiliar
+
+	for(i=0;i<colasBloqueados.cant;i++)
+	{
+		cantEntrenadores += queue_size(colasBloqueados.cola[i]); //Contamos cuantos entrenadores hay en todas las listas
+	}
+
+	if(cantEntrenadores > 0) //si hay entrenadores, los informamos
+	{
+	char* simbolos = malloc(sizeof(char)*cantEntrenadores*2+1); //reservamos memoria para los simbolos
+	char* aux = malloc(sizeof(char)*2); //auxiliar para convertir el simbolo en un string
+	aux[1] = '\0';
+	strcpy(simbolos," "); //inicializamos el string de simbolos
+
+	int tam = 0;
+	int j=0;
+	Jugador* jugador = NULL;
+
+	for(i=0;i<colasBloqueados.cant;i++) //Recorremos todas las colas
+	{
+		tam = queue_size(colasBloqueados.cola[i]); //me fijo cuantos entrenadores tiene esa cola
+
+		for(j=0;j<tam;j++)
+		{
+			jugador = queue_pop(colasBloqueados.cola[i]); //saco al jugador
+			aux[0] = jugador->entrenador.simbolo; //copio su simbolo
+			strcat(simbolos,aux);//lo agrego al string auxiliar
+			queue_push(colaAux,jugador);//guardamos al jugador en una cola auxiliar
+		}
+
+		while(queue_size(colaAux) > 0) //Devolvemos a todos los jugadores de la colaAux a la cola en la que estaban
+		{
+			queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
+		}
+
+	}
+
+	log_info(infoLogger, "Jugadores en cola Bloqueados: %s", simbolos);
+	}
+
+	else
+	{
+		log_info(infoLogger, "No hay jugadores en colas de bloqueados");
+	}
+
+	pthread_mutex_unlock(&mutex_Bloqueados);
+
+
+}
+
+void loggearColas(void)
+{
+	loggearListaListos();
+	loggearColaBloqueados();
+
+
+
+
+
+
+
+}
+
+
+
 /*
 void loggearColas(void){
 	t_queue *auxLista;
@@ -100,7 +207,7 @@ void loggearColas(void){
 		jugador = (Jugador*)list_get(listaListos,0);
 		while(jugador!=NULL)
 		{
-			cantListos= cantListos + 2;
+			cantListos = cantListos + 2;
 			simbolos=realloc(simbolos,cantListos);
 			simbolos[indice++]= jugador->entrenador.simbolo;
 			simbolos[indice++]= '-';
@@ -438,7 +545,7 @@ void gui_crearPokenests()
 	}
 }
 
-
+/*
 void gui_liberarPokemons(Jugador *jugador)
 {
 	int cantPokenest = list_size(listaPokenest);
@@ -459,6 +566,8 @@ void gui_liberarPokemons(Jugador *jugador)
 		}
 	}
 }
+
+*/
 
 /*
 void printfLista()
@@ -960,7 +1069,7 @@ Jugador* pelearEntrenadores()
 
 void* thread_planificador()
 {
-	nivel_gui_inicializar();
+	//nivel_gui_inicializar();
 
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
@@ -1085,6 +1194,7 @@ void* thread_planificador()
 
 						if(flag_DESCONECTADO == FALSE)
 						{
+							pokenest->cantPokemon--;
 							list_add(jugador->pokemonCapturados,pokemon);
 							restarRecurso(gui_items,pokenest->simbolo);
 							jugador->conocePokenest = false;
@@ -1202,13 +1312,6 @@ void* thread_planificador()
 
 		}
 
-
-
-
-
-
-
-
 		flag_DESCONECTADO = FALSE;
 	}
 	} //While global
@@ -1221,19 +1324,26 @@ void* thread_deadlock()
 
 	while(1)
 	{
-		usleep(mdataMapa.tiempoChequeoDeadlock*100000); //EXAGERO PARA PROBAR
+		usleep(mdataMapa.tiempoChequeoDeadlock); //EXAGERO PARA PROBAR
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 
-		entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema);
+		if(list_size(global_listaJugadoresSistema) > 0)
+		{
+			entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema);
 
-		list_clean(listaDeadlock);
+			if(entrenadores_aux != NULL)
+			{
+				//listaDeadlock = list_create();
 
-		listaDeadlock = list_create();
+				//list_add_all(listaDeadlock,entrenadores_aux);
 
-		list_add_all(listaDeadlock,entrenadores_aux);
+				list_destroy(entrenadores_aux);
 
-		list_destroy(entrenadores_aux);
+			}
+
+
+		}
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
@@ -1244,10 +1354,9 @@ int main(int argc, char** argv)
 	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-//	parametros.dirPokedex = "/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Pokedex-Cliente/montaje/pokedex";
-//	parametros.nombreMapa = "PuebloPaleta";
-	parametros.dirPokedex = argv[1];
-	parametros.nombreMapa = argv[2];
+	parametros.dirPokedex = "/mnt/pokedex";
+	parametros.nombreMapa = "PuebloPaleta";
+
 
 
 	signal(SIGUSR2, sigHandler_reloadMetadata);
@@ -1312,7 +1421,7 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-	/*
+
 	pthread_t hiloDeadlock;
 
 	valorHilo = pthread_create(&hiloDeadlock,NULL,thread_deadlock,NULL);
@@ -1322,7 +1431,7 @@ int main(int argc, char** argv)
 		perror("Error al crear hilo Deadlock");
 		exit(1);
 	}
-	*/
+
 
 	Jugador nuevoJugador;
 	Jugador *aux;
