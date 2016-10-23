@@ -545,7 +545,7 @@ void gui_crearPokenests()
 	}
 }
 
-
+/*
 void gui_liberarPokemons(Jugador *jugador)
 {
 	int cantPokenest = list_size(listaPokenest);
@@ -566,6 +566,8 @@ void gui_liberarPokemons(Jugador *jugador)
 		}
 	}
 }
+
+*/
 
 /*
 void printfLista()
@@ -1192,6 +1194,7 @@ void* thread_planificador()
 
 						if(flag_DESCONECTADO == FALSE)
 						{
+							pokenest->cantPokemon--;
 							list_add(jugador->pokemonCapturados,pokemon);
 							restarRecurso(gui_items,pokenest->simbolo);
 							jugador->conocePokenest = false;
@@ -1331,12 +1334,15 @@ void* thread_deadlock()
 
 			if(entrenadores_aux != NULL)
 			{
-				listaDeadlock = list_create();
+				//listaDeadlock = list_create();
 
-				list_add_all(listaDeadlock,entrenadores_aux);
+				//list_add_all(listaDeadlock,entrenadores_aux);
 
 				list_destroy(entrenadores_aux);
+
 			}
+
+
 		}
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);

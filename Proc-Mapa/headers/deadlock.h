@@ -105,7 +105,7 @@ int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 			while(j<cant_pokenests)
 			{
 				pokenest_aux = (MetadataPokenest*)list_get(pokenests,j);
-				if(entrenador_aux->peticion == pokenest_aux->simbolo)
+				if(toupper(entrenador_aux->peticion) == toupper(pokenest_aux->simbolo))
 				{
 					matriz[i][j]=1;
 					j=cant_pokenests;
@@ -115,6 +115,10 @@ int** generar_matriz_peticiones(t_list* entrenadores, t_list* pokenests)
 			}
 			i++;
 		}
+
+		if(cant_entrenadores == 2)
+		log_info(infoLogger, "Matriz de Peticiones: %i %i %i %i",matriz[0][0],matriz[0][1],matriz[1][0],matriz[1][1] );
+
 		return matriz;
 	}
 	else
@@ -156,6 +160,9 @@ int** generar_matriz_asignados(t_list* entrenadores, t_list* pokenests)
 			}
 			i++;
 		}
+
+		if(cant_entrenadores == 2)
+		log_info(infoLogger, "Matriz de Recursos Asignados: %i %i %i %i",matriz[0][0],matriz[0][1],matriz[1][0],matriz[1][1] );
 		return matriz;
 	}
 	else
@@ -175,6 +182,10 @@ int* generar_vector_recursos_disponibles(t_list* pokenests)
 		vector[i]=((MetadataPokenest*)list_get(pokenests,i))->cantPokemon;
 		i++;
 	}
+
+	if(tamanio == 2)
+	log_info(infoLogger, "Vector de Recursos Disponibles: %i %i",vector[0],vector[1] );
+
 	return vector;
 }
 
@@ -262,7 +273,7 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 
 int letra_pokenest(char *species)
 {
-	return tolower(species[0]);
+	return toupper(species[0]);
 }
 
 
