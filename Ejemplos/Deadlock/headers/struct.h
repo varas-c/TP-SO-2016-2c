@@ -94,6 +94,7 @@ typedef struct
 	t_pokemon* pokemon;
 	char* nombre;
 	int numero;
+	char pokenest;
 }Pokemon;
 
 
@@ -125,6 +126,7 @@ Jugador new_Jugador(char simbolo, int socket, int numero){
 	jugador.numero = numero;
 	jugador.pokemonCapturados = list_create();
 	jugador.conocePokenest = FALSE;
+    jugador.peticion = 0;
 
 	return jugador;
 }

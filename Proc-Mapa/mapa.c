@@ -1350,14 +1350,18 @@ void* thread_deadlock()
 
 		if(list_size(global_listaJugadoresSistema) > 0)
 		{
-			entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema);
+			entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema,infoLogger);
 
-			if(entrenadores_aux != NULL)
+			/*if(entrenadores_aux != NULL)
 			{
-				listaDeadlock = entrenadores_aux;
+				listaDeadlock = list_create();
+
+				list_add_all(listaDeadlock,entrenadores_aux);
+
+				list_destroy(entrenadores_aux);
 
 			}
-
+*/
 
 		}
 
