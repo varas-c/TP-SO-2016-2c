@@ -21,9 +21,9 @@ enum codigoOperaciones {
 	CAPTURA_BLOQUEADO = 14,
 	BATALLA_PERDIDA = 15,
 	BATALLA_PELEA = 16,
-	MUERTE = 17,
 	PEDIR_POKEMON_MAS_FUERTE=18,
 	BATALLA_INFORME =19,
+	BATALLA_MUERTE=20,
 };
 
 //****************************************************************************************************************
@@ -189,7 +189,7 @@ int dsrlz_MoverOK(void* buffer)
 	return codOp;
 }
 
-char* dsrlz_BatallaInforme(Paquete* paquete, int fdServer)
+void dsrlz_BatallaInforme(Paquete* paquete, int fdServer)
 {
 	int codOp =0;
 	int tamInforme=0;
@@ -207,14 +207,12 @@ char* dsrlz_BatallaInforme(Paquete* paquete, int fdServer)
 
 	free(paquete->buffer);
 
+	paquete->tam_buffer = tamInforme;
+	paquete->buffer = malloc(tamInforme);
+
 	recv(fdServer,paquete->buffer,tamInforme,0);
 
 	informeBatalla = malloc(sizeof(char)*tamInforme+1);
-
-	memcpy(informeBatalla,paquete->buffer+sizeof(int)*2,sizeof(char)*tamInforme);
-	memcpy(&tamInforme,paquete->buffer+sizeof(int)*2+sizeof(char)*tamInforme,sizeof(int));
-
-	informeBatalla = malloc(tamInforme);
 
 	memcpy(informeBatalla,paquete->buffer,sizeof(char)*tamInforme);
 
@@ -222,7 +220,6 @@ char* dsrlz_BatallaInforme(Paquete* paquete, int fdServer)
 
 	free(informeBatalla);
 
-	return informeBatalla;
 }
 
 #endif /* HEADERS_SERIALIZEENTRENADOR_H_ */
