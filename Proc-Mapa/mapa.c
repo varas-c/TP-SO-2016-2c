@@ -1067,7 +1067,7 @@ Jugador* pelearEntrenadores()
 
 void* thread_planificador()
 {
-	nivel_gui_inicializar();
+	//nivel_gui_inicializar();
 
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
@@ -1309,13 +1309,6 @@ void* thread_planificador()
 
 		}
 
-
-
-
-
-
-
-
 		flag_DESCONECTADO = FALSE;
 	}
 	} //While global
@@ -1328,19 +1321,23 @@ void* thread_deadlock()
 
 	while(1)
 	{
-		usleep(mdataMapa.tiempoChequeoDeadlock*100000); //EXAGERO PARA PROBAR
+		usleep(mdataMapa.tiempoChequeoDeadlock); //EXAGERO PARA PROBAR
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 
-		entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema);
+		if(list_size(global_listaJugadoresSistema) > 0)
+		{
+			entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema);
 
-		list_clean(listaDeadlock);
+			if(entrenadores_aux != NULL)
+			{
+				listaDeadlock = list_create();
 
-		listaDeadlock = list_create();
+				list_add_all(listaDeadlock,entrenadores_aux);
 
-		list_add_all(listaDeadlock,entrenadores_aux);
-
-		list_destroy(entrenadores_aux);
+				list_destroy(entrenadores_aux);
+			}
+		}
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
@@ -1351,10 +1348,9 @@ int main(int argc, char** argv)
 	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-//	parametros.dirPokedex = "/home/utnso/SistOp/tp-2016-2c-Breaking-Bug/Proc-Pokedex-Cliente/montaje/pokedex";
-//	parametros.nombreMapa = "PuebloPaleta";
-	parametros.dirPokedex = argv[1];
-	parametros.nombreMapa = argv[2];
+	parametros.dirPokedex = "/mnt/pokedex";
+	parametros.nombreMapa = "PuebloPaleta";
+
 
 
 	signal(SIGUSR2, sigHandler_reloadMetadata);
@@ -1419,7 +1415,7 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-	/*
+
 	pthread_t hiloDeadlock;
 
 	valorHilo = pthread_create(&hiloDeadlock,NULL,thread_deadlock,NULL);
@@ -1429,7 +1425,7 @@ int main(int argc, char** argv)
 		perror("Error al crear hilo Deadlock");
 		exit(1);
 	}
-	*/
+
 
 	Jugador nuevoJugador;
 	Jugador *aux;

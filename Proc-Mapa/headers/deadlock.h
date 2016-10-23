@@ -492,7 +492,7 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 
 	 if((list_size(entrenadores_aux)>1)&&(list_size(pokenests_aux)))
 	 {
-		posibles_deadlock = no_pueden_ejecutar(entrenadores_aux,pokenests_aux);
+		posibles_deadlock = no_pueden_ejecutar(entrenadores_aux,pokenests_aux,matriz_peticiones,matriz_recursos_asignados,recursos_disponibles);
 
 		printf("Cantidad de entrenadores en deadlock o inanicion: %d\n\n",list_size(posibles_deadlock));
 
@@ -528,7 +528,7 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 {
 
-    if(list_size(entrenadores))
+    if(list_size(entrenadores) > 0)
     {
 
     	t_list* entrenadores_aux=list_create();
