@@ -3,7 +3,7 @@ Se necesita la ruta del archivo .bin que contendrá al file system, y el puerto 
 
 Ejemplo de ejecución:
 
-./Proc-Pokedex-Server /home/utnso/PokeServer/disco.bin
+./Proc-Pokedex-Server /home/utnso/PokeServer/disco.bin 10000
 
 ----------------------------------------------------------------------------------------------
 Proceso CLIENTE:
