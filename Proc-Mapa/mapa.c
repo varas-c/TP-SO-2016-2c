@@ -1083,6 +1083,30 @@ Jugador* pelearEntrenadores()
 	return perdedor;
 }
 
+void send_BatallaGanador(t_list* jugadoresBloqueados)
+{
+	JugadorBloqueado* jugador;
+	Paquete paquete;
+	paquete.tam_buffer = sizeof(int);
+	paquete.buffer = malloc(paquete.tam_buffer);
+	int codop = BATALLA_GANADOR;
+
+	memcpy(paquete.buffer,&codop,sizeof(int));
+
+	int i;
+	int tamLista = list_size(jugadoresBloqueados);
+
+	for(i=0;i<tamLista;i++)
+	{
+		jugador = list_get(jugadoresBloqueados,i);
+		send(jugador->jugador->socket,paquete.buffer,paquete.tam_buffer,0);
+	}
+
+	free(paquete.buffer);
+
+
+
+}
 
 void* thread_planificador()
 {
@@ -1135,7 +1159,7 @@ void* thread_planificador()
 
 			desconectarJugador(jugadorDeadlock);
 
-
+			send_BatallaGanador(lista_jugadoresBloqueados);
 			desbloquearJugadores(lista_jugadoresBloqueados);
 
 		}
@@ -1352,16 +1376,11 @@ void* thread_deadlock()
 		{
 			entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema,infoLogger);
 
-			/*if(entrenadores_aux != NULL)
+			if(entrenadores_aux != NULL)
 			{
-				listaDeadlock = list_create();
-
-				list_add_all(listaDeadlock,entrenadores_aux);
-
-				list_destroy(entrenadores_aux);
+				listaDeadlock = entrenadores_aux;
 
 			}
-*/
 
 		}
 
