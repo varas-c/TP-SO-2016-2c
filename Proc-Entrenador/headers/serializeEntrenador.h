@@ -24,6 +24,7 @@ enum codigoOperaciones {
 	PEDIR_POKEMON_MAS_FUERTE=18,
 	BATALLA_INFORME =19,
 	BATALLA_MUERTE=20,
+	BATALLA_GANADOR = 21,
 };
 
 //****************************************************************************************************************

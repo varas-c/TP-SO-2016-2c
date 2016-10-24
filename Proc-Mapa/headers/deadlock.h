@@ -579,7 +579,7 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* infoL
 
 		sacar_inanicion(entrenadores_aux);
 
-		if(list_size(entrenadores_aux)>1)
+		if(entrenadores_aux != NULL && list_size(entrenadores_aux)>1)
 		{
 			log_info(infoLogger, "    ENTRENADORES EN DEADLOCK");
 
