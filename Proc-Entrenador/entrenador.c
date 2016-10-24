@@ -308,11 +308,11 @@ int main(int argc, char** argv)
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
-	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
+	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	//parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 
-	//parametros.dirPokedex = "/mnt/pokedex";
-	//parametros.nombreEntrenador = "Ash";
+	parametros.dirPokedex = "/mnt/pokedex";
+	parametros.nombreEntrenador = "Ash";
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
@@ -415,26 +415,28 @@ int main(int argc, char** argv)
 
 					else if(codOp == CAPTURA_BLOQUEADO)
 					{
-						printf("Entrenador Bloqueado!");
-						do
+						printf("Entrenador Bloqueado! \n");
+						codOp = -1;
+
+						while(codOp != CAPTURA_OK && codOp !=BATALLA_MUERTE)
 						{
-						codOp = recv_codigoOperacion(fd_server);
 
+							codOp = recv_codigoOperacion(fd_server);
 
-						if(codOp == BATALLA_PELEA)
-						{
-							//CODIGO DE PELEA
-							int pokemonMasFuerte = get_pokemon_mas_fuerte();
-							paquete = srlz_pokemonMasFuerte(pokemonMasFuerte);
-							send_pokemonMasFuerte(&paquete,fd_server);
+							if(codOp == BATALLA_PELEA)
+							{
+								//CODIGO DE PELEA
+								int pokemonMasFuerte = get_pokemon_mas_fuerte();
+								paquete = srlz_pokemonMasFuerte(pokemonMasFuerte);
+								send_pokemonMasFuerte(&paquete,fd_server);
 
-							paquete=recv_BatallaInforme(fd_server);
-							dsrlz_BatallaInforme(&paquete, fd_server);
+								paquete=recv_BatallaInforme(fd_server);
+								dsrlz_BatallaInforme(&paquete, fd_server);
 
-							cantDeadlock++;
+								cantDeadlock++;
+							}
 						}
-						}
-						while(codOp != CAPTURA_OK || codOp !=BATALLA_PERDIDA);
+
 
 						if(codOp == CAPTURA_OK)
 						{
@@ -443,9 +445,9 @@ int main(int argc, char** argv)
 							printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
 						}
 
-						else if(codOp == MUERTE)
+						else if(codOp == BATALLA_MUERTE)
 						{
-							printf("Ha sido elegido como víctima durante una batalla pokemon");
+							printf("\nHa sido elegido como víctima durante una batalla pokemon\n");
 							borrarPokemones(parametros);
 							cantDeadlocksPerdidos++;
 							flag_SIGNALMUERTE = true;
@@ -456,7 +458,11 @@ int main(int argc, char** argv)
 					{
 						printf("Fin Nivel\n");
 						close(fd_server);
-						avanzarNivel(&nivel,&entrenador);
+
+						if(flag_SIGNALMUERTE == false)
+						{
+							avanzarNivel(&nivel,&entrenador);
+						}
 					}
 
 					else

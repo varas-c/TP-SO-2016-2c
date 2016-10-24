@@ -66,7 +66,7 @@ int cantidad_obtenidos_de_un_tipo(Jugador* entrenador,char simbolo)//CANT DE POK
 	while(i<cantidad_total)
 	{
 		pokemon_aux=(Pokemon*)list_get(entrenador->pokemonCapturados,i);
-		if(letra_pokenest(pokemon_aux->pokemon->species)==simbolo) //SI ESE POKEMON ES DE ESA POKENEST
+		if(pokemon_aux->pokenest==simbolo) //SI ESE POKEMON ES DE ESA POKENEST
 		{
 			cantidad++;
 		}
@@ -243,7 +243,7 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 
 int letra_pokenest(char *species)
 {
-	return tolower(species[0]);
+	return species[0];
 }
 
 
@@ -431,6 +431,14 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 
 		sacar_inanicion(entrenadores_aux);
 
+		free(matriz_peticiones);
+
+		free(matriz_recursos_asignados);
+
+		free(recursos_disponibles);
+
+		list_destroy(pokenests_aux);
+
 		if(entrenadores_aux!=NULL)
 		{
 			if(list_size(entrenadores_aux)>1)
@@ -449,15 +457,13 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores)
 
 void loggear_entrenadores_en_deadlock(t_list* entrenadores,t_log* infoLogger)
 {
-	int i=0,k=0,cantidad = list_size(entrenadores),cantidad_con_espacios=cantidad*4;
+	int i=0,k=0,cantidad = list_size(entrenadores),cantidad_con_espacios=cantidad*2;
 	char* aux= malloc((sizeof(char)*(cantidad_con_espacios))+1);
 	for(i=0;i<cantidad;i++)
 	{
 		aux[k] = ((Jugador*)list_get(entrenadores,i))->entrenador.simbolo;
 		aux[k+1] =' ';
-		aux[k+2] =' ';
-		aux[k+3] =' ';
-		k+=4;
+		k+=2;
 	}
 	aux[cantidad_con_espacios]='\0';
 	log_info(infoLogger, "       %s",aux);
@@ -467,7 +473,7 @@ void loggear_entrenadores_en_deadlock(t_list* entrenadores,t_log* infoLogger)
 void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* infoLogger)
 {
 	int columnas=list_size(pokenests),filas=list_size(entrenadores);
-	int i,j,k=0,filas_con_espacios=filas*2,columnas_con_espacios = columnas*4;
+	int i,j,k=0,filas_con_espacios=filas*2,columnas_con_espacios = columnas*2;
 	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
 
 	k=0;
@@ -475,9 +481,7 @@ void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* 
 	{
 		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
 		aux[k+1] =' ';
-		aux[k+2] =' ';
-		aux[k+3] =' ';
-		k+=4;
+		k+=2;
 	}
 	aux[columnas_con_espacios]='\0';
 
@@ -488,11 +492,9 @@ void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* 
 		k=0;
 		for(j=0;j<columnas;j++)
 		{
-			aux[k] = matriz[i][j]+48;
+			aux[k] = (matriz[i][j]+48);
 			aux[k+1]=' ';
-			aux[k+2]=' ';
-			aux[k+3]=' ';
-			k+=4;
+			k+=2;
 		}
 		log_info(infoLogger, "%c    %s",((Jugador*)list_get(entrenadores,i))->entrenador.simbolo,aux);
 	}
@@ -502,7 +504,7 @@ void loggear_matriz(int** matriz,t_list* pokenests, t_list* entrenadores,t_log* 
 void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
 {
 	int columnas=list_size(pokenests);
-	int i,k=0,columnas_con_espacios = columnas*4;
+	int i,k=0,columnas_con_espacios = columnas*2;
 	char* aux= malloc(sizeof(char)*(columnas_con_espacios)+1);
 
 	k=0;
@@ -510,9 +512,7 @@ void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
 	{
 		aux[k] = ((MetadataPokenest*)list_get(pokenests,i))->simbolo;
 		aux[k+1] =' ';
-		aux[k+2] =' ';
-		aux[k+3] =' ';
-		k+=4;
+		k+=2;
 	}
 	aux[columnas_con_espacios]='\0';
 
@@ -521,11 +521,9 @@ void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
 	k=0;
 	for(i=0;i<columnas;i++)
 	{
-		aux[k] = vector[i]+48;
+		aux[k] = (vector[i]+48);
 		aux[k+1]=' ';
-		aux[k+2]=' ';
-		aux[k+3]=' ';
-		k+=4;
+		k+=2;
 	}
 	log_info(infoLogger, "    %s",aux);
 	free(aux);
@@ -621,49 +619,49 @@ int main(void)
     MetadataPokenest* pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
-    pokenest->simbolo = 'z';
+    pokenest->simbolo = 'Z';
 
     list_add(pokenests,pokenest);
 
     pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
-    pokenest->simbolo = 'p';
+    pokenest->simbolo = 'P';
 
     list_add(pokenests,pokenest);
 
     pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
-    pokenest->simbolo = 's';
+    pokenest->simbolo = 'S';
 
     list_add(pokenests,pokenest);
 
     pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
-    pokenest->simbolo = 'j';
+    pokenest->simbolo = 'J';
 
     list_add(pokenests,pokenest);
 
     pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
-    pokenest->simbolo = 'k';
+    pokenest->simbolo = 'K';
 
     list_add(pokenests,pokenest);
 
     pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
-    pokenest->simbolo = 'c';
+    pokenest->simbolo = 'C';
 
     list_add(pokenests,pokenest);
 
     pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
-    pokenest->simbolo = 'l';
+    pokenest->simbolo = 'L';
 
     list_add(pokenests,pokenest);
 
@@ -673,7 +671,7 @@ int main(void)
 
     Jugador* entrenador = malloc(sizeof(Jugador));
 
-    entrenador->peticion = 's';
+    entrenador->peticion = 'S';
 
     entrenador->numero = 1;
 
@@ -690,6 +688,8 @@ int main(void)
 
     strcpy((pokeaux->pokemon->species),"Jigglypuff");
 
+    pokeaux->pokenest='J';
+
     pokeaux->pokemon->level = 1;
 
     list_add(entrenador->pokemonCapturados,pokeaux);
@@ -704,7 +704,7 @@ int main(void)
 
     entrenador = malloc(sizeof(Jugador));
 
-    entrenador->peticion = 'j';
+    entrenador->peticion = 'J';
 
     entrenador->numero = 0;
 
@@ -722,6 +722,8 @@ int main(void)
 
     pokeaux->pokemon->level = 2;
 
+    pokeaux->pokenest='P';
+
     list_add(entrenador->pokemonCapturados,pokeaux);
 
     list_add(entrenadores,entrenador);
@@ -734,7 +736,7 @@ int main(void)
 
     entrenador = malloc(sizeof(Jugador));
 
-    entrenador->peticion = 'p';
+    entrenador->peticion = 'P';
 
     entrenador->numero = 2;
 
@@ -752,6 +754,8 @@ int main(void)
 
     pokeaux->pokemon->level = 9;
 
+    pokeaux->pokenest = 'S';
+
     list_add(entrenador->pokemonCapturados,pokeaux);
 
     list_add(entrenadores,entrenador);
@@ -760,7 +764,7 @@ int main(void)
     ///////////////////
     entrenador = malloc(sizeof(Jugador));
 
-    entrenador->peticion = 'p';
+    entrenador->peticion = 'P';
 
     entrenador->numero = 3;
 
@@ -778,6 +782,8 @@ int main(void)
 
     pokeaux->pokemon->level = 9;
 
+    pokeaux->pokenest = 'Z';
+
     list_add(entrenador->pokemonCapturados,pokeaux);
 
     list_add(entrenadores,entrenador);
@@ -786,7 +792,7 @@ int main(void)
 
      entrenador = malloc(sizeof(Jugador));
 
-     entrenador->peticion = 'z';
+     entrenador->peticion = 'Z';
 
      entrenador->numero = 4;
 
@@ -802,6 +808,8 @@ int main(void)
 
      strcpy(pokeaux->pokemon->species,"Krabby");
 
+     pokeaux->pokenest='K';
+
      pokeaux->pokemon->level = 9;
 
      list_add(entrenador->pokemonCapturados,pokeaux);
@@ -812,7 +820,7 @@ int main(void)
 
      entrenador = malloc(sizeof(Jugador));
 
-      entrenador->peticion = 'c';
+      entrenador->peticion = 'C';
 
       entrenador->numero = 5;
 
@@ -828,6 +836,8 @@ int main(void)
 
       strcpy(pokeaux->pokemon->species,"Lickitung");
 
+      pokeaux->pokenest='L';
+
       pokeaux->pokemon->level = 9;
 
       list_add(entrenador->pokemonCapturados,pokeaux);
@@ -838,7 +848,7 @@ int main(void)
 
       entrenador = malloc(sizeof(Jugador));
 
-       entrenador->peticion = 'l';
+       entrenador->peticion = 'L';
 
        entrenador->numero = 6;
 
@@ -853,6 +863,8 @@ int main(void)
        pokeaux->pokemon->species = string_new();
 
        strcpy(pokeaux->pokemon->species,"Charizard");
+
+       pokeaux->pokenest='C';
 
        pokeaux->pokemon->level = 9;
 
