@@ -857,11 +857,8 @@ void borrarJugadorSistema(Jugador* jugador)
 		return removido->socket == socketBuscado;
 	}
 
-	pthread_mutex_lock(&mutex_hiloDeadlock);
-
 	list_remove_by_condition(global_listaJugadoresSistema,(void*)_find_socket_);
 
-	pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 }
 
