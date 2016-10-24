@@ -824,7 +824,7 @@ void desbloquearJugadores(t_list* lista)
 				jugadorBloqueado = list_remove(lista,i); //Hay que informarle que capturó
 				send_capturaOK(jugadorBloqueado->jugador,jugadorBloqueado->pokemon);
 
-				pthread_mutex_lock(&mutex_Listos);
+
 				jugadorBloqueado->jugador->estado = 0;
 				jugadorBloqueado->jugador->peticion = 0;
 				list_add(jugadorBloqueado->jugador->pokemonCapturados,jugadorBloqueado->pokemon);
@@ -832,7 +832,6 @@ void desbloquearJugadores(t_list* lista)
 				log_info(infoLogger, "Jugador %c entra a Listos.",jugadorBloqueado->jugador->entrenador.simbolo);
 				//loggearColas();
 				free(jugadorBloqueado);
-				pthread_mutex_unlock(&mutex_Listos);
 			}
 		}
 	}
@@ -1108,6 +1107,41 @@ void send_BatallaGanador(t_list* jugadoresBloqueados)
 
 }
 
+
+void borrarJugadorDeColaBloqueados(Jugador* jugadorBuscado)
+{
+	int i;
+	int tam;
+	int j;
+	t_queue* colaAux = queue_create();
+	Jugador* jugador;
+
+	for(i=0;i<colasBloqueados.cant;i++) //Recorremos todas las colas
+	{
+		tam = queue_size(colasBloqueados.cola[i]); //me fijo cuantos entrenadores tiene esa cola
+
+		for(j=0;j<tam;j++)
+		{
+			jugador = queue_pop(colasBloqueados.cola[i]); //saco al jugador
+
+			if(jugadorBuscado != jugador)
+			{
+				queue_push(colaAux,jugador);//guardamos al jugador en una cola auxiliar
+			}
+		}
+
+		while(queue_size(colaAux) > 0) //Devolvemos a todos los jugadores de la colaAux a la cola en la que estaban
+		{
+			queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
+		}
+
+	}
+
+
+
+
+}
+
 void* thread_planificador()
 {
 	nivel_gui_inicializar();
@@ -1151,27 +1185,24 @@ void* thread_planificador()
 		if(listaDeadlock != NULL)
 		{
 			jugadorDeadlock = pelearEntrenadores();
+			borrarJugadorDeColaBloqueados(jugadorDeadlock);
 			lista_jugadoresBloqueados = expropiarPokemones(jugadorDeadlock->pokemonCapturados);
 
-
 			borrarJugadorSistema(jugadorDeadlock);
-
 
 			desconectarJugador(jugadorDeadlock);
 
 			send_BatallaGanador(lista_jugadoresBloqueados);
 			desbloquearJugadores(lista_jugadoresBloqueados);
+			listaDeadlock = NULL;
 
 		}
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
-
 
 		if(!list_is_empty(listaListos))
 		{
 			if(strcmp(mdataMapa.algoritmo,"SRDF") == 0)
 			{
-				pthread_mutex_lock(&mutex_Listos);
-
 				if(any_prioritySRDF())
 				{
 					jugador = get_prioritySRDF();
@@ -1185,18 +1216,17 @@ void* thread_planificador()
 				flag_SRDF = TRUE;
 				quantum = 1;
 				}
-
-			pthread_mutex_unlock(&mutex_Listos);
 			}
 			else
 			{
-				pthread_mutex_lock(&mutex_Listos);
 				jugador = list_remove(listaListos,0);
 //				log_info(infoLogger, "el jugador :%c ha salido de la lista de listos del mapa:%s",jugador->entrenador.simbolo, parametros.nombreMapa);
 				quantum = mdataMapa.quantum;
 				flag_SRDF = FALSE;
-				pthread_mutex_unlock(&mutex_Listos);
+
 			}
+
+
 
 			buffer_recv = malloc(tam_buffer_recv);
 
@@ -1238,10 +1268,10 @@ void* thread_planificador()
 
 				case CAPTURAR: //TODO: FALTA COMPLETAR!!
 					pokenestPedida = dsrlz_Pokenest(buffer_recv);//Identificamos la pokenest pedida
-					//opc = tomarDecisionCapturaPokemon(jugador,pokenestPedida);
 					pokenest = buscar_Pokenest(pokenestPedida);
 
 					//HASTA ACA ESTA BIEN!!!
+					//pthread_mutex_lock(&mutex_hiloDeadlock);
 					if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
 					{
 						pokemon = queue_pop(pokenest->colaDePokemon);
@@ -1281,6 +1311,8 @@ void* thread_planificador()
 						}
 						quantum=0;
 					}
+
+					//pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 				break;
 
@@ -1328,9 +1360,9 @@ void* thread_planificador()
 		{
 		if(jugador->estado==0)
 		{
-			pthread_mutex_lock(&mutex_Listos);
+			pthread_mutex_lock(&mutex_hiloDeadlock);
 			list_add(listaListos,(void*)jugador);
-			pthread_mutex_unlock(&mutex_Listos);
+			pthread_mutex_unlock(&mutex_hiloDeadlock);
 			quantum = 0;
 		}
 
@@ -1338,22 +1370,17 @@ void* thread_planificador()
 
 		if(flag_DESCONECTADO == TRUE)
 		{
+		pthread_mutex_lock(&mutex_hiloDeadlock);
 		lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
 
-		pthread_mutex_lock(&mutex_hiloDeadlock);
 		borrarJugadorSistema(jugador);
-		pthread_mutex_unlock(&mutex_hiloDeadlock);
-
 		desconectarJugador(jugador);
 		quantum = 0;
 		flag_DESCONECTADO = TRUE;
-		}
-
-		//Desbloqueamos jugadores
-		pthread_mutex_lock(&mutex_hiloDeadlock);
+		send_BatallaGanador(lista_jugadoresBloqueados);
 		desbloquearJugadores(lista_jugadoresBloqueados);
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
-
+		}
 
 		flag_DESCONECTADO = FALSE;
 	}
@@ -1379,9 +1406,7 @@ void* thread_deadlock()
 			if(entrenadores_aux != NULL)
 			{
 				listaDeadlock = entrenadores_aux;
-
 			}
-
 		}
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
@@ -1516,13 +1541,10 @@ int main(int argc, char** argv)
 					CrearPersonaje(gui_items,nuevoJugador.entrenador.simbolo,nuevoJugador.entrenador.posx, nuevoJugador.entrenador.posy);
 
 					//Mutua exclusion con el planificador !
-					pthread_mutex_lock(&mutex_Listos);
-					list_add(listaListos, aux);
-					pthread_mutex_unlock(&mutex_Listos);
-
 
 					pthread_mutex_lock(&mutex_hiloDeadlock);
 					list_add(global_listaJugadoresSistema,aux);
+					list_add(listaListos, aux);
 					pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 

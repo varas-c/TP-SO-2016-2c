@@ -438,7 +438,7 @@ int main(int argc, char** argv)
 						}
 
 
-						if(codOp == CAPTURA_OK)
+						if(codOp == BATALLA_GANADOR)
 						{
 							paquete = recv_capturarPokemon(fd_server);
 							pokemonDat = dsrlz_capturarPokemon(&paquete,&entrenador);
