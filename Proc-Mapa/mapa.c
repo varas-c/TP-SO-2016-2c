@@ -280,7 +280,9 @@ void free_paquete(Paquete *paquete)
 
 void generarColasBloqueados()
 {
+	pthread_mutex_lock(&mutex_hiloDeadlock);
 	colasBloqueados.cant = list_size(listaPokenest);
+	pthread_mutex_unlock(&mutex_hiloDeadlock);
 	colasBloqueados.cola = malloc(sizeof(t_queue*)*colasBloqueados.cant);
 	colasBloqueados.referencias = malloc(sizeof(char)*colasBloqueados.cant);
 
@@ -291,7 +293,9 @@ void generarColasBloqueados()
 
 	for(i=0;i<colasBloqueados.cant;i++)
 	{
+		pthread_mutex_lock(&mutex_hiloDeadlock);
 		pokenest = list_get(listaPokenest,i);
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
 		colasBloqueados.referencias[i] = pokenest->simbolo;
 	}
 	//Creo todas las colas necesarias
@@ -525,7 +529,9 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 				queue_push(pokenest->colaDePokemon,pokemon);
 			}
 
+			pthread_mutex_lock(&mutex_hiloDeadlock);
 			list_add(listaPokenest,pokenest);
+			pthread_mutex_unlock(&mutex_hiloDeadlock);
 		}
 	}
 
@@ -537,14 +543,19 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 
 void gui_crearPokenests()
 {
+	pthread_mutex_lock(&mutex_hiloDeadlock);
 	int cantPokenest = list_size(listaPokenest);
+	pthread_mutex_unlock(&mutex_hiloDeadlock);
+
 	int i=0;
 
 	MetadataPokenest* pokenest;
 	for(i=0;i<cantPokenest;i++)
 	{
-	pokenest = list_get(listaPokenest,i);
-	CrearCaja(gui_items, pokenest->simbolo, pokenest->posicionX, pokenest->posicionY,pokenest->cantPokemon);
+		pthread_mutex_lock(&mutex_hiloDeadlock);
+		pokenest = list_get(listaPokenest,i);
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
+		CrearCaja(gui_items, pokenest->simbolo, pokenest->posicionX, pokenest->posicionY,pokenest->cantPokemon);
 	}
 }
 
@@ -847,7 +858,11 @@ void borrarJugadorSistema(Jugador* jugador)
 		return removido->socket == socketBuscado;
 	}
 
+	pthread_mutex_lock(&mutex_hiloDeadlock);
+
 	list_remove_by_condition(global_listaJugadoresSistema,(void*)_find_socket_);
+
+	pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 }
 
@@ -1145,6 +1160,7 @@ void* thread_planificador()
 
 	int retval = 0;
 
+	pthread_mutex_lock(&mutex_hiloDeadlock);
 	while(!list_is_empty(global_listaJugadoresSistema))
 	{
 		pthread_mutex_lock(&mutex_hiloDeadlock);
@@ -1358,6 +1374,8 @@ void* thread_planificador()
 		flag_DESCONECTADO = FALSE;
 	}
 	} //While global
+
+	pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
 }
 
