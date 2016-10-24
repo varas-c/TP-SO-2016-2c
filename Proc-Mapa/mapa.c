@@ -1160,7 +1160,6 @@ void* thread_planificador()
 
 	int retval = 0;
 
-	pthread_mutex_lock(&mutex_hiloDeadlock);
 	while(!list_is_empty(global_listaJugadoresSistema))
 	{
 		pthread_mutex_lock(&mutex_hiloDeadlock);
@@ -1375,7 +1374,6 @@ void* thread_planificador()
 	}
 	} //While global
 
-	pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
 }
 
