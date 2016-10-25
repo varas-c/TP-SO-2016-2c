@@ -94,7 +94,7 @@ void copiarPokemon(char *archivoPokemon, ParametrosConsola parametros, char* nom
 	strcpy(destino, parametros.dirPokedex);
 	strcat(destino, "/Entrenadores/");
 	strcat(destino, parametros.nombreEntrenador);
-	strcat(destino, "/Dir\\ De\\ Bill/");
+	strcat(destino, "/Dir\\ de\\ Bill/");
 	strcat(destino, barraCero);
 
 	comandoCopiar = malloc(strlen(origen)+strlen(destino)+5);
@@ -118,13 +118,12 @@ void borrarPokemones(ParametrosConsola parametros){
 	char *directorio, *comandoBorrar;
 	directorio = malloc(sizeof(char)*256);
 
-	comandoBorrar = malloc(strlen(directorio)+9);
-
 	strcpy(directorio, parametros.dirPokedex);
 	strcat(directorio, "/Entrenadores/");
 	strcat(directorio, parametros.nombreEntrenador);
-	strcat(directorio, "/Dir de Bill/");
+	strcat(directorio, "/Dir\\ de\\ Bill/");
 
+	comandoBorrar = malloc(strlen(directorio)+9);
 	sprintf(comandoBorrar, "rm -rf %s*", directorio);
 
 	system(comandoBorrar);
@@ -141,7 +140,6 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 		archivoMedalla = malloc(strlen(nombreMapa)+13);
 		origen = malloc(sizeof(char)*256);
 		destino = malloc(sizeof(char)*256);
-		comandoCopiar = malloc(strlen(origen)+strlen(destino)+5);
 
 		strcpy(archivoMedalla, "/medalla-");
 		strcat(archivoMedalla, nombreMapa);
@@ -150,6 +148,7 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 		strcpy(origen, parametros.dirPokedex);
 		strcat(origen, "/Mapas/");
 		strcat(origen, nombreMapa);
+		strcat(origen, "/");
 		strcat(origen, archivoMedalla);
 
 		strcpy(destino, parametros.dirPokedex);
@@ -157,6 +156,7 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 		strcat(destino, parametros.nombreEntrenador);
 		strcat(destino, "/medallas");
 
+		comandoCopiar = malloc(strlen(origen)+strlen(destino)+5);
 		sprintf(comandoCopiar, "cp %s %s", origen, destino);
 
 		system(comandoCopiar);
@@ -315,11 +315,11 @@ int main(int argc, char** argv)
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
-	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	//parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
+	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 
-	parametros.dirPokedex = "/mnt/pokedex";
-	parametros.nombreEntrenador = "Ash";
+	//parametros.dirPokedex = "/mnt/pokedex";
+	//parametros.nombreEntrenador = "Ash";
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
@@ -465,6 +465,8 @@ int main(int argc, char** argv)
 					if(nivel.cantObjetivos <= nivel.numPokenest)
 					{
 						printf("Fin Nivel\n");
+						borrarPokemones(parametros);
+						copiarMedalla(parametros, mapa.nombre);
 						close(fd_server);
 
 						if(flag_SIGNALMUERTE == false)
