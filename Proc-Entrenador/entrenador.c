@@ -82,7 +82,6 @@ void copiarPokemon(char *archivoPokemon, ParametrosConsola parametros, char* nom
 	memcpy(nombre+tamanio-7,barraCero,sizeof(char));
 	origen = malloc(sizeof(char)*256);
 	destino = malloc(sizeof(char)*256);
-	comandoCopiar = malloc(strlen(origen)+strlen(destino)+5);
 
 	strcpy(origen, parametros.dirPokedex);
 	strcat(origen, "/Mapas/");
@@ -95,12 +94,20 @@ void copiarPokemon(char *archivoPokemon, ParametrosConsola parametros, char* nom
 	strcpy(destino, parametros.dirPokedex);
 	strcat(destino, "/Entrenadores/");
 	strcat(destino, parametros.nombreEntrenador);
-	strcat(destino, "/Dir de Bill");
+	strcat(destino, "/DirdeBill");
+	strcat(destino, barraCero);
 
+	comandoCopiar = malloc(sizeof(origen)+sizeof(destino)+5);
 	sprintf(comandoCopiar, "cp %s %s", origen, destino);
 
 	system(comandoCopiar);
 
+	/*Agregue esto y empezo a copiar pero solo a partir de la segunda pokenest que llegaba, de la primera no copia
+	origen = NULL;
+	destino = NULL;
+	nombre = NULL;
+	comandoCopiar = NULL;
+*/
 	free(nombre);
 	free(origen);
 	free(destino);
@@ -308,11 +315,11 @@ int main(int argc, char** argv)
 	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
-	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
+	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	//parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 
-	//parametros.dirPokedex = "/mnt/pokedex";
-	//parametros.nombreEntrenador = "Ash";
+	parametros.dirPokedex = "/mnt/pokedex";
+	parametros.nombreEntrenador = "Chris";
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
@@ -410,6 +417,7 @@ int main(int argc, char** argv)
 					{
 						paquete = recv_capturarPokemon(fd_server);
 						pokemonDat = dsrlz_capturarPokemon(&paquete,&entrenador);
+						copiarPokemon(pokemonDat, parametros, mapa.nombre);
 						printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
 					}
 
