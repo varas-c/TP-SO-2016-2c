@@ -94,10 +94,10 @@ void copiarPokemon(char *archivoPokemon, ParametrosConsola parametros, char* nom
 	strcpy(destino, parametros.dirPokedex);
 	strcat(destino, "/Entrenadores/");
 	strcat(destino, parametros.nombreEntrenador);
-	strcat(destino, "/DirdeBill");
+	strcat(destino, "/Dir\\ De\\ Bill/");
 	strcat(destino, barraCero);
 
-	comandoCopiar = malloc(sizeof(origen)+sizeof(destino)+5);
+	comandoCopiar = malloc(strlen(origen)+strlen(destino)+5);
 	sprintf(comandoCopiar, "cp %s %s", origen, destino);
 
 	system(comandoCopiar);
@@ -319,7 +319,7 @@ int main(int argc, char** argv)
 	//parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 
 	parametros.dirPokedex = "/mnt/pokedex";
-	parametros.nombreEntrenador = "Chris";
+	parametros.nombreEntrenador = "Ash";
 
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
