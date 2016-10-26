@@ -822,19 +822,34 @@ void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 
 void desbloquearJugadores(t_list* lista)
 {
+	t_list* listaAux = list_create();
+
 	if(lista != NULL)
 	{
 		JugadorBloqueado* jugadorBloqueado;
-		int tamLista = list_size(lista);
+		int retval;
 		int i;
 
-		if(tamLista > 0)
+		if(list_size(lista) > 0)
 		{
-			for(i=0;i<tamLista;i++)
+			for(i=0;i<list_size(lista);i++)
 			{
 				jugadorBloqueado = list_remove(lista,i); //Hay que informarle que capturó
-				send_capturaOK(jugadorBloqueado->jugador,jugadorBloqueado->pokemon);
 
+				retval = send_capturaOK(jugadorBloqueado->jugador,jugadorBloqueado->pokemon); //Si acá tira error, deberia sacarle lospokemon, agregar jugadoresBloqueados, desconectarlo
+
+				if(retval<=0)
+				{
+					listaAux = expropiarPokemones(jugadorBloqueado->jugador->pokemonCapturados);
+					borrarJugadorSistema(jugadorBloqueado->jugador);
+					desconectarJugador(jugadorBloqueado->jugador);
+					send_BatallaGanador(listaAux);
+					list_add_all(lista,listaAux);
+
+				}
+
+				else
+				{
 
 				jugadorBloqueado->jugador->estado = 0;
 				jugadorBloqueado->jugador->peticion = 0;
@@ -842,10 +857,16 @@ void desbloquearJugadores(t_list* lista)
 				list_add(listaListos,jugadorBloqueado->jugador);
 				log_info(infoLogger, "Jugador %c entra a Listos.",jugadorBloqueado->jugador->entrenador.simbolo);
 				//loggearColas();
+				}
+
 				free(jugadorBloqueado);
+
 			}
 		}
 	}
+
+
+	list_destroy(listaAux);
 }
 
 void borrarJugadorSistema(Jugador* jugador)
@@ -1056,8 +1077,6 @@ Jugador* pelearEntrenadores()
 
 		pokemonPerdedor = pkmn_battle(pokemon1->pokemon,pokemon2->pokemon);
 
-
-
 		if(pokemon1->pokemon == pokemonPerdedor) //Si el 1 perdió
 		{
 			informeBatalla = generarInformeBatalla(jugador1,jugador2,pokemon1->pokemon,pokemon2->pokemon);
@@ -1114,9 +1133,6 @@ void send_BatallaGanador(t_list* jugadoresBloqueados)
 	}
 
 	free(paquete.buffer);
-
-
-
 }
 
 
@@ -1148,9 +1164,6 @@ void borrarJugadorDeColaBloqueados(Jugador* jugadorBuscado)
 		}
 
 	}
-
-
-
 
 }
 
@@ -1402,7 +1415,6 @@ void* thread_planificador()
 
 void* thread_deadlock()
 {
-	Jugador* jugador;
 	t_list * entrenadores_aux;
 
 	while(1)

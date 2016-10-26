@@ -641,7 +641,7 @@ void loggear_vector(int* vector,t_list* pokenests,t_log* infoLogger)
 	k=0;
 	for(i=0;i<columnas;i++)
 	{
-		aux[k] = vector[i]+48;
+		aux[k] = vector[i]+48; //TODO ARREGLAR EL LOG!!
 		aux[k+1]=' ';
 		k+=2;
 	}
