@@ -205,6 +205,8 @@ int* generar_vector_recursos_disponibles(t_list* pokenests)
 
 t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_peticiones,int**matriz_recursos_asignados,int*recursos_disponibles)
 {
+	t_list* no_puede_ejecutar = list_create();
+
 	if(((list_size(entrenadores))>1)&&(matriz_peticiones!=NULL)&&(matriz_recursos_asignados!=NULL))
 	{
 		int cant_entrenadores, cant_pokenests;
@@ -213,8 +215,6 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 		cant_pokenests = list_size(pokenests);
 		int posible_deadlock[cant_entrenadores];
 		int i,j,k;
-
-		t_list* no_puede_ejecutar = list_create();
 
 		for(i=0;i<cant_entrenadores;i++)
 		{
@@ -272,10 +272,10 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 		}
 
 
-		return no_puede_ejecutar; //DEVUELVO LOS QUE NO PUEDEN EJECUTAR, FALTA EVALUAR LA ESPERA CIRCULAR
+
 		}
-	else
-		return NULL;
+
+		return no_puede_ejecutar;
 }
 
 
@@ -487,10 +487,10 @@ void ordenar_por_llegada(t_list* entrenadores)
 t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* infoLogger)
 {
 
-    if(list_size(entrenadores) > 0)
-    {
+	t_list* entrenadores_aux=list_create();
 
-    	t_list* entrenadores_aux=list_create();
+    if(list_size(entrenadores) >1)
+    {
 
     	t_list* pokenests_aux=list_create();
 
@@ -530,35 +530,33 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* infoL
 
 			free(recursos_disponibles);
 
-        	if(entrenadores_aux != NULL)
-        	{
-        		if(list_size(entrenadores_aux)>1)
-				{
-        			log_info(infoLogger, "    ENTRENADORES EN DEADLOCK");
+    		if(list_size(entrenadores_aux)>1)
+			{
+    			log_info(infoLogger, "    ENTRENADORES EN DEADLOCK");
 
-        			loggear_entrenadores_en_deadlock(entrenadores_aux,infoLogger);
-        			return entrenadores_aux;
-				}
-        	}
+    			loggear_entrenadores_en_deadlock(entrenadores_aux,infoLogger);
+    			return entrenadores_aux;
+			}
 
         	else
         	{
         		log_info(infoLogger, "    NO HAY DEADLOCK");
-        		return NULL;
+        		list_clean(entrenadores_aux);
+        		return entrenadores_aux;
         	}
 
     	}
 
     	else
     	{
-
+        	free(recursos_disponibles);
     		log_info(infoLogger, "    NO HAY ENTRENADORES");
 
     		log_info(infoLogger, "    DISPONIBLES");
 
     		loggear_vector(recursos_disponibles,pokenests_aux,infoLogger);
 
-    		return NULL;
+    		return entrenadores_aux;
     	}
 
     }
@@ -566,7 +564,7 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* infoL
     {
 		log_info(infoLogger, "    NO HAY ENTRENADORES");
 
-    	return NULL;
+    	return entrenadores_aux;
 
     }
 

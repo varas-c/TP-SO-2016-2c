@@ -1194,7 +1194,7 @@ void* thread_planificador()
 	while(!list_is_empty(global_listaJugadoresSistema))
 	{
 		pthread_mutex_lock(&mutex_hiloDeadlock);
-		if(listaDeadlock != NULL)
+		if(!list_is_empty(listaDeadlock))
 		{
 			jugadorDeadlock = pelearEntrenadores();
 			borrarJugadorDeColaBloqueados(jugadorDeadlock);
@@ -1206,7 +1206,6 @@ void* thread_planificador()
 
 			send_BatallaGanador(lista_jugadoresBloqueados);
 			desbloquearJugadores(lista_jugadoresBloqueados);
-			listaDeadlock = NULL;
 
 		}
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
@@ -1416,9 +1415,9 @@ void* thread_deadlock()
 		{
 			entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema,infoLogger);
 
-			if(entrenadores_aux != NULL)
+			if(!list_is_empty(entrenadores_aux))
 			{
-				listaDeadlock = entrenadores_aux;
+				list_add_all(listaDeadlock,entrenadores_aux);
 			}
 		}
 
@@ -1434,7 +1433,7 @@ int main(int argc, char** argv)
 	//parametros.dirPokedex = "/mnt/pokedex";
 	//parametros.nombreMapa = "PuebloPaleta";
 
-
+	listaDeadlock = list_create();
 
 	signal(SIGUSR2, sigHandler_reloadMetadata);
 
