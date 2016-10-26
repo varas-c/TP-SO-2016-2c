@@ -228,7 +228,7 @@ static size_t osada_read(const char *path, char *buf, size_t size, off_t offset,
 		free(buffer);
 	}
 	else
-		memset(buf, 0, 1);
+		memset(buf, 0, size);
 	return retorno;
 }
 
