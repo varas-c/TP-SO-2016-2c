@@ -668,19 +668,16 @@ void gestionarSocket(void* socket)
 				if (offsetLectura>tablaArchivos[archivo].file_size)
 					cantLeida=0;
 				send(cliente, &cantLeida, sizeof(cantLeida), 0);
-				buffer = malloc(cantLeida);
 				if (cantidad>0 && offsetLectura<tablaArchivos[archivo].file_size)
 				{
+					buffer = malloc(cantLeida);
 					contenidoArchivo=concatenarBloques(bloques, cantidad);
 					memcpy(buffer, contenidoArchivo+offsetLectura, cantLeida);
 					free(contenidoArchivo);
 					free(bloques);
+					send(cliente, buffer, cantLeida, 0);
+					free(buffer);
 				}
-				else
-					memset(buffer, 0, cantLeida);
-
-				send(cliente, buffer, cantLeida, 0);
-				free(buffer);
 				break;
 
 		case COD_TRUNCATE:
@@ -854,15 +851,16 @@ void gestionarSocket(void* socket)
 
 int main(int argc, char** argv)
 {
-	int fd_fileSystem = open(argv[1], 2); //2 significa O_RDWR, leer y escribir
-//	int fd_fileSystem = open("juego.bin", 2); //Para debuggear
+//	int fd_fileSystem = open(argv[1], 2); //2 significa O_RDWR, leer y escribir
+	int fd_fileSystem = open("juego.bin", 2); //Para debuggear
 	if (fd_fileSystem==-1)
 	{
 		printf("Archivo de file system no encontrado.\n");
 		exit(0);
 	}
 
-	int puerto = strtol(argv[2], NULL, 10);
+//	int puerto = strtol(argv[2], NULL, 10);
+	int puerto =19000;
 	if(puerto<0)
 	{
 		printf("Puerto no válido.\n");

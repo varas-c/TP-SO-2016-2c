@@ -214,17 +214,21 @@ static size_t osada_read(const char *path, char *buf, size_t size, off_t offset,
 		printf("El servidor se encuentra desconectado.\n");
 		retorno = 0;
 	}
-	buffer = malloc(retorno);
-	if ((res = recv(fd_server, buffer, size, 0))<=0)
+	if (retorno>0)
 	{
-		printf("El servidor se encuentra desconectado.\n");
-		retorno = 0;
+		buffer = malloc(retorno);
+		if ((res = recv(fd_server, buffer, size, 0))<=0)
+		{
+			printf("El servidor se encuentra desconectado.\n");
+			retorno = 0;
+		}
+		memcpy(buf, buffer, size);
+		if (!strlen((char*)buffer))
+			retorno = 0;
+		free(buffer);
 	}
-	memcpy(buf, buffer, size);
-	if (!strlen((char*)buffer))
-		retorno = 0;
-	free(buffer);
-
+	else
+		memset(buf, 0, 1);
 	return retorno;
 }
 
