@@ -42,6 +42,28 @@ char* numero_IP = "127.0.0.1";
 char* numero_Puerto = "10000";
 int fd_server;
 
+uint8_t recibir(int socket, void* buffer, uint64_t total)
+{
+	uint64_t parcial=0;
+	do
+	{
+		if((parcial+= recv(socket, buffer+parcial, total,0))<=0)
+			return 0;
+	}while(parcial<total);
+	return 1;
+}
+
+uint8_t enviar(int socket, void* buffer, uint64_t total)
+{
+	uint64_t parcial=0;
+	do
+	{
+		if((parcial+= send(socket, buffer+parcial, total, 0))<=0)
+			return 0;
+	}while(parcial<total);
+	return 1;
+}
+
 void finalizarProceso(int signal)
 {
 	//if(signal==SIGTERM || signal==SIGINT || signal == SIGHUP)
@@ -109,15 +131,16 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 		if ((res = recv(fd_server, buffer, 1, 0)) <= 0)
 		{
 			printf("El servidor se encuentra desconectado.\n");
-			retorno = -ENOENT;
+			free(buffer);
+			return -ENOENT;
 		}
 		if (!*(uint8_t*)buffer)
 			retorno = -ENOENT;
 		else
 		{
 			free(buffer);
-			buffer = malloc(32);
-			if ((res = recv(fd_server, (osada_file*)buffer, 32, 0)) <= 0)
+			buffer = malloc(sizeof(osada_file));
+			if (!recibir(fd_server, (osada_file*)buffer, sizeof(osada_file)))
 			{
 				printf("El servidor se encuentra desconectado.\n");
 				retorno = -ENOENT;
@@ -135,7 +158,7 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 				{
 					stbuf->st_mode = S_IFREG | 0777;
 					stbuf->st_nlink = 1;
-					stbuf->st_size = (__off_t)(archivo->file_size);
+					stbuf->st_size = archivo->file_size;
 					stbuf->st_mtim.tv_sec = (__time_t)(archivo->lastmod);
 				}
 				else
@@ -144,7 +167,6 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 		}
 		free(buffer);
 	}
-
 	return retorno;
 }
 
@@ -159,9 +181,9 @@ static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
 	{
-		fflush(stdout);
 		printf("El servidor se encuentra desconectado.\n");
-		retorno = -ENOENT;
+		free(buffer);
+		return -ENOENT;
 	}
 
 	filler(buf, ".", NULL, 0);
@@ -174,15 +196,14 @@ static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 			free(buffer);
 			buffer = malloc(OSADA_FILENAME_LENGTH+1);
 			memset(buffer, 0, OSADA_FILENAME_LENGTH+1);
-			if ((res = recv(fd_server, buffer, OSADA_FILENAME_LENGTH+1, 0))<=0)
+			if (!recibir(fd_server, buffer, OSADA_FILENAME_LENGTH+1))
 			{
-				fflush(stdout);
 				printf("El servidor se encuentra desconectado.\n");
 				retorno = -ENOENT;
 			}
 			if (strlen(buffer)>0)
 				filler(buf, buffer, NULL, 0);
-		}while(strlen(buffer)>0);
+		}while((strlen(buffer)>0) && (retorno!=-ENOENT));
 	}
 	else if ((signed char) *(signed char*)buffer==-1)
 		retorno = -ENOENT;
@@ -209,26 +230,26 @@ static size_t osada_read(const char *path, char *buf, size_t size, off_t offset,
 	send(fd_server, buffer, sizeof(size)+sizeof(offset), 0);
 	free(buffer);
 
-	if ((res = recv(fd_server, &retorno, sizeof(size), 0))<=0)
+	if ((res = recv(fd_server, &retorno, sizeof(retorno), 0))<=0)
 	{
 		printf("El servidor se encuentra desconectado.\n");
 		retorno = 0;
 	}
+
 	if (retorno>0)
 	{
 		buffer = malloc(retorno);
-		if ((res = recv(fd_server, buffer, size, 0))<=0)
+		if (!recibir(fd_server, buffer, retorno))
 		{
 			printf("El servidor se encuentra desconectado.\n");
 			retorno = 0;
 		}
-		memcpy(buf, buffer, size);
-		if (!strlen((char*)buffer))
-			retorno = 0;
+		memcpy(buf, buffer, retorno);
 		free(buffer);
 	}
 	else
-		memset(buf, 0, size);
+		memset(buf, 0, retorno);
+
 	return retorno;
 }
 
@@ -263,7 +284,7 @@ static int osada_write(const char *path, const char *buf, size_t size, off_t off
 	free(buffer);
 	buffer= malloc(size);
 	memcpy(buffer, buf, size);
-	send(fd_server, buffer, size, 0);
+	enviar(fd_server, buffer, size);
 	free(buffer);
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)

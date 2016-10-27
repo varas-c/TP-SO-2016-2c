@@ -60,6 +60,28 @@ int tamanioAdmin;
 
 pthread_mutex_t sem_estructuras = PTHREAD_MUTEX_INITIALIZER;
 
+uint8_t recibir(int socket, void* buffer, uint64_t total)
+{
+	uint64_t parcial=0;
+	do
+	{
+		if((parcial+= recv(socket, buffer+parcial, total,0))<=0)
+			return 0;
+	}while(parcial<total);
+	return 1;
+}
+
+uint8_t enviar(int socket, void* buffer, uint64_t total)
+{
+	uint64_t parcial=0;
+	do
+	{
+		if((parcial+= send(socket, buffer+parcial, total, 0))<=0)
+			return 0;
+	}while(parcial<total);
+	return 1;
+}
+
 //**** PROTOTIPOS ****
 int encontrarBloqueLibre();
 void marcarBloque(osada_block_pointer, uint8_t);
@@ -588,7 +610,7 @@ void gestionarSocket(void* socket)
 					free(buffer);
 					buffer=malloc(sizeof(osada_file));
 					memcpy(buffer,tablaArchivos+archivo, sizeof(osada_file));
-					send(cliente, buffer, sizeof(osada_file), 0);
+					enviar(cliente, buffer, sizeof(osada_file));
 				}
 				free(buffer);
 				break;
@@ -617,7 +639,7 @@ void gestionarSocket(void* socket)
 							}
 							buffer = malloc(OSADA_FILENAME_LENGTH+1);
 							copiarNombreArchivo((char*)buffer, i);
-							send(cliente, buffer, OSADA_FILENAME_LENGTH+1, 0);
+							enviar(cliente, buffer, OSADA_FILENAME_LENGTH+1);
 							free(buffer);
 						}
 					}
@@ -631,7 +653,7 @@ void gestionarSocket(void* socket)
 					{
 						buffer = malloc(OSADA_FILENAME_LENGTH+1);
 						memset(buffer, 0, OSADA_FILENAME_LENGTH+1);
-						send(cliente, buffer, OSADA_FILENAME_LENGTH+1, 0);
+						enviar(cliente, buffer, OSADA_FILENAME_LENGTH+1);
 					}
 
 				}
@@ -659,7 +681,6 @@ void gestionarSocket(void* socket)
 				uint64_t offsetLectura;
 				memcpy(&offsetLectura, buffer+sizeof(cantLeida), sizeof(offsetLectura));
 				free(buffer);
-				//printf("Archivo: %d -- Size: %d -- Offset: %d\n\n", archivo, cantLeida, offsetLectura);
 				int cantidad = 0;
 				int *bloques = obtenerBloques(archivo, &cantidad);
 				unsigned char* contenidoArchivo;
@@ -668,14 +689,14 @@ void gestionarSocket(void* socket)
 				if (offsetLectura>tablaArchivos[archivo].file_size)
 					cantLeida=0;
 				send(cliente, &cantLeida, sizeof(cantLeida), 0);
-				if (cantidad>0 && offsetLectura<tablaArchivos[archivo].file_size)
+				if (cantLeida>0)
 				{
 					buffer = malloc(cantLeida);
 					contenidoArchivo=concatenarBloques(bloques, cantidad);
 					memcpy(buffer, contenidoArchivo+offsetLectura, cantLeida);
 					free(contenidoArchivo);
 					free(bloques);
-					send(cliente, buffer, cantLeida, 0);
+					enviar(cliente, buffer, cantLeida);
 					free(buffer);
 				}
 				break;
@@ -711,7 +732,7 @@ void gestionarSocket(void* socket)
 				memcpy(&offsetEscritura, buffer+sizeof(tamEscritura), sizeof(offsetEscritura));
 				free(buffer);
 				buffer = malloc(tamEscritura);
-				if ((resultado = recv(cliente, buffer, tamEscritura, 0))<=0)
+				if (!recibir(cliente, buffer, tamEscritura))
 				{
 					printf("Cliente %d desconectado.\n\n", cliente);
 					return;
@@ -851,16 +872,16 @@ void gestionarSocket(void* socket)
 
 int main(int argc, char** argv)
 {
-//	int fd_fileSystem = open(argv[1], 2); //2 significa O_RDWR, leer y escribir
-	int fd_fileSystem = open("juego.bin", 2); //Para debuggear
+	int fd_fileSystem = open(argv[1], 2); //2 significa O_RDWR, leer y escribir
+//	int fd_fileSystem = open("challenge.bin", 2); //Para debuggear
 	if (fd_fileSystem==-1)
 	{
 		printf("Archivo de file system no encontrado.\n");
 		exit(0);
 	}
 
-//	int puerto = strtol(argv[2], NULL, 10);
-	int puerto =19000;
+	int puerto = strtol(argv[2], NULL, 10);
+//	int puerto =10000;
 	if(puerto<0)
 	{
 		printf("Puerto no válido.\n");
