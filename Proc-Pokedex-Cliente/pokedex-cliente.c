@@ -42,12 +42,14 @@ char* numero_IP = "127.0.0.1";
 char* numero_Puerto = "10000";
 int fd_server;
 
+//Wrappers de las funciones de sockets para contemplar envíos parciales
+
 uint8_t recibir(int socket, void* buffer, uint64_t total)
 {
 	uint64_t parcial=0;
 	do
 	{
-		if((parcial+= recv(socket, buffer+parcial, total,0))<=0)
+		if((parcial+= recv(socket, buffer+parcial, total-parcial, 0))<=0)
 			return 0;
 	}while(parcial<total);
 	return 1;
@@ -58,7 +60,7 @@ uint8_t enviar(int socket, void* buffer, uint64_t total)
 	uint64_t parcial=0;
 	do
 	{
-		if((parcial+= send(socket, buffer+parcial, total, 0))<=0)
+		if((parcial+= send(socket, buffer+parcial, total-parcial, 0))<=0)
 			return 0;
 	}while(parcial<total);
 	return 1;
