@@ -263,7 +263,7 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 			}
 		}
 
-		mostrar_recursos_disponibles(recursos_disponibles,cant_pokenests);
+		//mostrar_recursos_disponibles(recursos_disponibles,cant_pokenests);
 
 		for(i=0;i<cant_entrenadores;i++)
 		{
