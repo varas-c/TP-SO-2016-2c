@@ -26,22 +26,18 @@
 #include <pkmn/battle.h>
 #include <semaphore.h>
 #include <signal.h>
-
 /****************************************************************************************************************
 			INCLUDES PROPIOS :)
 ****************************************************************************************************************/
-
 #include "headers/struct.h"
 #include "headers/socket.h"
 #include "headers/configMapa.h"
 #include "headers/serializeMapa.h"
 #include "headers/pokenest.h"
 #include "headers/entrenador.h"
-
 /****************************************************************************************************************
 			VARIABLES GLOBALES
 ****************************************************************************************************************/
-
 t_list* listaListos;
 t_list* colaBloqueados;
 t_list* listaDeadlock;
@@ -49,6 +45,7 @@ t_list* gui_items;
 t_list* listaPokemon;
 t_log* traceLogger;
 t_log* infoLogger;
+t_log* deadlockLogger;
 
 MetadataMapa mdataMapa;
 MetadataPokemon mdataPokemon;
@@ -61,7 +58,6 @@ pthread_mutex_t mutex_Bloqueados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_Desconectados = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_hiloDeadlock = PTHREAD_MUTEX_INITIALIZER;
-
 pthread_mutex_t mutex_BatallaPokemon = PTHREAD_MUTEX_INITIALIZER;
 
 sem_t semaforo_SincroSelect;
@@ -94,12 +90,10 @@ void loggearListaListos()
 		char* simbolos = malloc(sizeof(char)*tamLista*2+1);
 		strcpy(simbolos," ");
 		Jugador* jugador;
-
 		int i;
 
 		if(tamLista > 0)
 		{
-
 			char* aux = malloc(sizeof(char)*2+1); //Pedimos memoria para un string auxiliar que nos sirve para copiar el simbolo
 			aux[1] = '\0';
 
@@ -109,16 +103,13 @@ void loggearListaListos()
 				aux[0] = jugador->entrenador.simbolo;
 				strcat(simbolos,aux);
 			}
-
-			log_info(infoLogger, "Jugadores en cola Listos: %s", simbolos);
+			log_info(infoLogger, "Jugadores en cola Listos en el mapa %s: %s",parametros.nombreMapa, simbolos);
 			free(aux);
 		}
-
 		else
 		{
-			log_info(infoLogger, "Cola Listos vacia.");
+			log_info(infoLogger, "Cola Listos vacia en el mapa %s.", parametros.nombreMapa);
 		}
-
 		pthread_mutex_unlock(&mutex_Listos);
 }
 
@@ -162,20 +153,14 @@ void loggearColaBloqueados()
 		{
 			queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
 		}
-
 	}
-
-	log_info(infoLogger, "Jugadores en cola Bloqueados: %s", simbolos);
+	log_info(infoLogger, "Jugadores en cola Bloqueados en el mapa %s: %s ",parametros.nombreMapa,simbolos);
 	}
-
 	else
 	{
-		log_info(infoLogger, "No hay jugadores en colas de bloqueados");
+		log_info(infoLogger, "No hay jugadores en colas de bloqueados del mapa %s", parametros.nombreMapa);
 	}
-
 	pthread_mutex_unlock(&mutex_Bloqueados);
-
-
 }
 
 void loggearColas(void)
@@ -190,8 +175,6 @@ void loggearColas(void)
 
 
 }
-
-
 
 /*
 void loggearColas(void){
@@ -270,8 +253,6 @@ void loggearColas(void){
 	pthread_mutex_unlock(&mutex_Bloqueados);
 }*/
 
-//****************************************************************************************************************
-
 void free_paquete(Paquete *paquete)
 {
 	free(paquete->buffer);
@@ -329,10 +310,9 @@ void bloquearJugador(Jugador* jugador,char simboloPokenest)
 		printf("Error - Func %s - Linea %d - No existe la pokenest, posicion -1\n\n",__func__,__LINE__);
 		exit(1);
 	}
-	log_info(infoLogger, "Jugador %c entra a Bloqueados.",jugador->entrenador.simbolo);
+	log_info(infoLogger, "Jugador %c entra a Bloqueados en el mapa %s.",jugador->entrenador.simbolo, parametros.nombreMapa);
 	queue_push(colasBloqueados.cola[posicion],jugador);
-	log_info(infoLogger, "Jugador %c entra a Bloqueados.",jugador->entrenador.simbolo);
-	//loggearColas();
+	loggearColas();
 }
 
 Jugador* desbloquearJugador(char simboloPokenest)
@@ -352,13 +332,12 @@ Jugador* desbloquearJugador(char simboloPokenest)
 		jugadorDesbloqueado = queue_pop(colasBloqueados.cola[posicion]);
 
 		log_info(infoLogger, "Jugador %c sale de Bloqueados.",jugadorDesbloqueado->entrenador.simbolo);
-		//loggearColas();
+		loggearColas();
 	}
-
 	return jugadorDesbloqueado;
 }
-//****************************************************************************************************************
-/*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!
+
+//FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!
 int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
@@ -383,11 +362,10 @@ int cantPokemonEnDir(char* ruta)
 	closedir(rutaLeer);
 
 	return cantPokes;
-}*/
-
+}
 
 // FUNCION PARA USAR CON FUSE!!!!!!!!
-int cantPokemonEnDir(char* ruta)
+/*int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
 	int cantPokes = 0;
@@ -396,7 +374,6 @@ int cantPokemonEnDir(char* ruta)
 
 	rutaLeer = opendir(ruta);
 	struct stat st;
-
 
 	if(rutaLeer == NULL)
 	{
@@ -419,8 +396,7 @@ int cantPokemonEnDir(char* ruta)
 	closedir(rutaLeer);
 
 	return cantPokes;
-}
-
+}*/
 
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {
@@ -454,7 +430,7 @@ char* getRutaPokenest(ParametrosMapa parametros)
 	//A la carpeta Pokenest
 	strcat(rutaPokenest,Pokenest); // mnt/pokedex/Mapas/--nombreMapa--/Pokenest/
 
-	//----------------Terminams! :D---------------
+	//----------------Terminamos! :D---------------
 
 	return rutaPokenest;
 }
@@ -482,7 +458,6 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 	   printf("Error -- Funcion: %s - Linea: %d \n\n",__func__,__LINE__);
 	   exit(1);
 	}
-
 	//Leemos una a una las carpetas de /mnt/pokedex/Mapas/Mapa1/Pokenest
 	//Carpetas: Charmander, PIkachu, etc
 	while(NULL != (dptrPokenest = readdir(dpPokenest)) )
@@ -491,12 +466,10 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 		{
 			continue;
 		}
-
 		else
 		{	//******************************
 			////Encontramos una carpeta dentro de /mnt/pokedex/Mapas/Mapa1/Pokenest
 			//Puede ser Pikachu,Charmande,r etc, son todas carpetas
-
 			//Encontramos una carpeta Pokemon, hay que abrirla y leer todos sus archivos
 			rutaAux = malloc(sizeof(char)*256);
 			strcpy(rutaAux,rutaPokenest); //Copiamos la ruta Pokenest
@@ -504,14 +477,10 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 			strcat(rutaAux,"/");
 
 			//inicializamos las variables para una nueva Pokenest!
-
-
 			//Dentro de la carpeta hay un metadata que hay que leer!
-
 			//Leemos la metadata
 			pokenest = leerMetadataPokenest(rutaAux,"metadata");
 			pokenest->colaDePokemon = queue_create();
-
 			//Ya leimos la Pokenest, ahora hay que leer los archivos pokemon que tienen el nombre DE LA CARPETA solo que son archivos y tienen numero y .dat!
 
 			pokenest->cantPokemon = cantPokemonEnDir(rutaAux); //Aca tenemos la cantidad maxima de PokemonXXX.dat que hay que leer
@@ -604,13 +573,10 @@ void printfLista()
 			pokemon = queue_pop(pokenest->colaDePokemon);
 			printf("Pokemon: %s Numero %i \n",pokemon->pokemon->species,pokemon->numero);
 		}
-
 		printf("\n \n");
 	}
-
 }
 */
-
 
 typedef struct
 {
@@ -668,8 +634,6 @@ void desconectarJugador(Jugador* jugador)
 	FD_CLR(socket,&fds_entrenadores);
 }
 
-//*************************************************************************
-
 Paquete srlz_capturaOK(Pokemon* pokemon)
 {
 	Paquete paquete;
@@ -677,7 +641,6 @@ Paquete srlz_capturaOK(Pokemon* pokemon)
 	int tamPokemonDat = strlen(pokemonDat)+1;
 
 	int tamSpecies = strlen(pokemon->pokemon->species)+1;
-
 
 	paquete.tam_buffer = size_CAPTURA_OK+sizeof(char)*tamPokemonDat+sizeof(int)+sizeof(char)*tamSpecies;
 	paquete.buffer = malloc(paquete.tam_buffer);
@@ -721,14 +684,12 @@ Paquete srlz_MoverOK()
 	memcpy(paquete.buffer,&codOp,sizeof(int));
 
 	return paquete;
-
 }
 
 int send_MoverOK(int socket)
 {
 	Paquete paquete;
 	paquete = srlz_MoverOK();
-
 	int retval;
 	retval = send(socket,paquete.buffer,paquete.tam_buffer,0);
 
@@ -765,20 +726,18 @@ Jugador* get_prioritySRDF()
 	{
 		return jugador->conocePokenest == FALSE;
 	}
-
 	jugadorBuscado= list_remove_by_condition(listaListos,(void*)_find_priority_SRDF);
 
 	return jugadorBuscado;
 }
 
 bool any_prioritySRDF()
-{	bool flag;
-
+{
+	bool flag;
 	bool _any_satisfy_priority(Jugador* jugador)
 	{
 		return jugador->conocePokenest == FALSE;
 	}
-
 	flag = list_any_satisfy(listaListos,(void*)_any_satisfy_priority);
 
 	return flag;
@@ -787,34 +746,27 @@ bool any_prioritySRDF()
 void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 {
 	//Pregunto por X
-
 	if(x > entrenador->posx)
 	{
 		entrenador ->destinox = fabs(x - entrenador->posx);
 	}
-
 	if(entrenador->posx == x)
 	{
 		entrenador ->destinox = 0;
 	}
-
 	if(x < entrenador->posx)
 	{
 		entrenador->destinox = fabs(x - entrenador->posx);
 	}
-
 	//Pregunto por y
-
 	if(y > entrenador->posy)
 	{
 		entrenador ->destinoy = fabs(y - entrenador->posy);
 	}
-
 	if(entrenador->posy == y)
 	{
 		entrenador ->destinoy = 0;
 	}
-
 	if(y < entrenador->posy)
 	{
 		entrenador->destinoy = fabs(y - entrenador->posy);
@@ -849,25 +801,19 @@ void desbloquearJugadores(t_list* lista)
 					list_add_all(lista,listaAux);
 					tamLista = list_size(lista);
 				}
-
 				else
 				{
-
 				jugadorBloqueado->jugador->estado = 0;
 				jugadorBloqueado->jugador->peticion = 0;
 				list_add(jugadorBloqueado->jugador->pokemonCapturados,jugadorBloqueado->pokemon);
 				list_add(listaListos,jugadorBloqueado->jugador);
-				log_info(infoLogger, "Jugador %c entra a Listos.",jugadorBloqueado->jugador->entrenador.simbolo);
-				//loggearColas();
+				log_info(infoLogger, "Jugador %c entra a Listos en el mapa %s.",jugadorBloqueado->jugador->entrenador.simbolo, parametros.nombreMapa);
+				loggearColas();
 				}
-
 				free(jugadorBloqueado);
-
 			}
 		}
 	}
-
-
 	list_destroy(listaAux);
 }
 
@@ -881,8 +827,6 @@ void borrarJugadorSistema(Jugador* jugador)
 	}
 
 	list_remove_by_condition(global_listaJugadoresSistema,(void*)_find_socket_);
-
-
 }
 
 int send_codigoOperacion(int socket,int operacion)
@@ -895,10 +839,9 @@ int send_codigoOperacion(int socket,int operacion)
 	int retval = send(socket,paquete.buffer,sizeof(int),0);
 
 	free(paquete.buffer);
+
 	return retval;
 }
-
-
 
 Paquete srlz_pedirPokemon()
 {
@@ -911,9 +854,8 @@ Paquete srlz_pedirPokemon()
 	memcpy(paquete.buffer,&cod,sizeof(int));
 
 	return paquete;
-
-
 }
+
 int send_pedirPokemonMasFuerte(Jugador* jugador)
 {
 	int retval;
@@ -921,13 +863,10 @@ int send_pedirPokemonMasFuerte(Jugador* jugador)
 	paquete = srlz_pedirPokemon();
 
 	retval = send(jugador->socket,paquete.buffer,paquete.tam_buffer,0);
-
 	free(paquete.buffer);
 
 	return retval;
-
 }
-
 
 Paquete recv_pedirPokemonMasFuerte(Jugador* jugador, int* retval)
 {
@@ -938,14 +877,12 @@ Paquete recv_pedirPokemonMasFuerte(Jugador* jugador, int* retval)
 	*retval = recv(jugador->socket,paquete.buffer,paquete.tam_buffer,0);
 
 	return paquete;
-
 }
 
 int dsrlz_pedirPokemonMasFuerte(Paquete* paquete)
 {
 	int indicePoke;
 	int codop;
-
 
 	memcpy(&codop,paquete->buffer,sizeof(int));
 
@@ -954,11 +891,9 @@ int dsrlz_pedirPokemonMasFuerte(Paquete* paquete)
 		printf("Error: %s - Linea %d --- codigo invalido de PEDIR_POKEMON_MAS_FUERTE", __func__,__LINE__);
 		exit(1);
 	}
-
 	memcpy(&indicePoke,paquete->buffer + sizeof(int),sizeof(int));
 
 	return indicePoke;
-
 }
 
 char* generarInformeBatalla(Jugador* jugador1, Jugador* jugador2,t_pokemon* pokemon1, t_pokemon* pokemon2)
@@ -996,7 +931,6 @@ void send_informeBatalla(int socket_j1,int socket_j2,char* informeBatalla)
 	send(socket_j1,paquete.buffer,paquete.tam_buffer,0);
 	send(socket_j2,paquete.buffer,paquete.tam_buffer,0);
 
-
 	free(paquete.buffer);
 }
 
@@ -1009,10 +943,9 @@ void send_BatallaMuerte(int socket)
 	int codop = BATALLA_MUERTE;
 
 	memcpy(paquete.buffer,&codop,sizeof(int));
-
 	send(socket,paquete.buffer,paquete.tam_buffer,0);
-
 }
+
 Jugador* pelearEntrenadores()
 {
 	int retval;
@@ -1049,9 +982,7 @@ Jugador* pelearEntrenadores()
 			return jugador2;
 		}
 
-
 		//Si ninguno se fue, seguimos jugando
-
 		paquete = recv_pedirPokemonMasFuerte(jugador1, &retval);
 
 		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
@@ -1063,7 +994,6 @@ Jugador* pelearEntrenadores()
 		free(paquete.buffer);
 		pokemon1 = list_get(jugador1->pokemonCapturados,indicePoke);
 
-		//----
 		paquete = recv_pedirPokemonMasFuerte(jugador2, &retval);
 
 		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
@@ -1074,7 +1004,6 @@ Jugador* pelearEntrenadores()
 		indicePoke = dsrlz_pedirPokemonMasFuerte(&paquete);
 		free(paquete.buffer);
 		pokemon2 = list_get(jugador2->pokemonCapturados,indicePoke);
-
 		//HAY PELEA!
 
 		pokemonPerdedor = pkmn_battle(pokemon1->pokemon,pokemon2->pokemon);
@@ -1088,7 +1017,6 @@ Jugador* pelearEntrenadores()
 			free(informeBatalla);
 			perdedor = jugador1;
 		}
-
 		else if(pokemon2->pokemon == pokemonPerdedor) //Si el 2 perdió
 		{
 			informeBatalla = generarInformeBatalla(jugador1,jugador2,pokemon1->pokemon,pokemon2->pokemon);
@@ -1098,19 +1026,14 @@ Jugador* pelearEntrenadores()
 			free(informeBatalla);
 			perdedor = jugador2;
 		}
-
 		else
 		{
 			printf("Linea: %s - Linea: %d - Error De Deadlock, no se puede definir quien gano/perdio",__func__,__LINE__);
 			exit(1);
 		}
-
 	}
-
 	free(cadenaAux);
-
 	send_BatallaMuerte(perdedor->socket);
-
 
 	return perdedor;
 }
@@ -1133,10 +1056,8 @@ void send_BatallaGanador(t_list* jugadoresBloqueados)
 		jugador = list_get(jugadoresBloqueados,i);
 		send(jugador->jugador->socket,paquete.buffer,paquete.tam_buffer,0);
 	}
-
 	free(paquete.buffer);
 }
-
 
 void borrarJugadorDeColaBloqueados(Jugador* jugadorBuscado)
 {
@@ -1159,20 +1080,16 @@ void borrarJugadorDeColaBloqueados(Jugador* jugadorBuscado)
 				queue_push(colaAux,jugador);//guardamos al jugador en una cola auxiliar
 			}
 		}
-
 		while(queue_size(colaAux) > 0) //Devolvemos a todos los jugadores de la colaAux a la cola en la que estaban
 		{
 			queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
 		}
-
 	}
-
 }
 
 void* thread_planificador()
 {
 	nivel_gui_inicializar();
-
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
 	int estado_socket;
@@ -1221,7 +1138,7 @@ void* thread_planificador()
 
 			send_BatallaGanador(lista_jugadoresBloqueados);
 			desbloquearJugadores(lista_jugadoresBloqueados);
-
+			loggearColas();
 		}
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 
@@ -1235,9 +1152,7 @@ void* thread_planificador()
 					quantum = 1;
 					flag_SRDF = FALSE;
 				}
-
 				else{
-
 				jugador = get_SRDF();
 				flag_SRDF = TRUE;
 				quantum = 1;
@@ -1246,20 +1161,17 @@ void* thread_planificador()
 			else
 			{
 				jugador = list_remove(listaListos,0);
-//				log_info(infoLogger, "el jugador :%c ha salido de la lista de listos del mapa:%s",jugador->entrenador.simbolo, parametros.nombreMapa);
+				log_info(infoLogger, "el jugador :%c ha salido de la lista de listos del mapa:%s",jugador->entrenador.simbolo, parametros.nombreMapa);
+				loggearColas();
 				quantum = mdataMapa.quantum;
 				flag_SRDF = FALSE;
-
 			}
-
-
 
 			buffer_recv = malloc(tam_buffer_recv);
 
 		while(quantum > 0)
 		{
 			usleep(mdataMapa.retardo*1000);
-
 			estado_socket = recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
 			if(estado_socket <= 0)
@@ -1267,7 +1179,6 @@ void* thread_planificador()
 				quantum = 0;
 				flag_DESCONECTADO = TRUE;
 			}
-
 			else
 			{
 				//Tomamos el primer int del buffer para ver el código de operacion
@@ -1295,7 +1206,6 @@ void* thread_planificador()
 				case CAPTURAR: //TODO: FALTA COMPLETAR!!
 					pokenestPedida = dsrlz_Pokenest(buffer_recv);//Identificamos la pokenest pedida
 					pokenest = buscar_Pokenest(pokenestPedida);
-
 					//HASTA ACA ESTA BIEN!!!
 					//pthread_mutex_lock(&mutex_hiloDeadlock);
 					if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
@@ -1304,8 +1214,8 @@ void* thread_planificador()
 						send_codigoOperacion(jugador->socket,CAPTURA_OK);
 						retval = send_capturaOK(jugador,pokemon);
 						flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
-						//log_info(infoLogger,"el jugador:%c ha ingresado en la lista de listos del mapa:",jugador->entrenador.simbolo,parametros.nombreMapa);
-
+						log_info(infoLogger,"el jugador:%c ha ingresado en la lista de listos del mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
+						loggearColas();
 						if(flag_DESCONECTADO == FALSE)
 						{
 							pokenest->cantPokemon--;
@@ -1313,15 +1223,12 @@ void* thread_planificador()
 							restarRecurso(gui_items,pokenest->simbolo);
 							jugador->conocePokenest = false;
 						}
-
 						else
 						{
 							queue_push(pokenest->colaDePokemon,pokemon);
 						}
-
 						quantum=0;
 					}
-
 					else
 					{	// NO HAY MAS POKEMONS! hay que bloquear al entrenador
 						retval = send_codigoOperacion(jugador->socket,CAPTURA_BLOQUEADO);
@@ -1333,11 +1240,11 @@ void* thread_planificador()
 							jugador->peticion = pokenestPedida;
 							jugador->conocePokenest = false;
 							bloquearJugador(jugador,pokenestPedida);
-							//log_info(infoLogger,"El Jugador %c ha entrado a la cola de Bloqueados del mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
+							log_info(infoLogger,"El Jugador %c ha entrado a la cola de Bloqueados del mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
+							loggearColas();
 						}
 						quantum=0;
 					}
-
 					//pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 				break;
@@ -1346,13 +1253,12 @@ void* thread_planificador()
 					//sumarRecurso(jugador->pokemonCapturados,pokenest->simbolo);
 					lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
 					desconectarJugador(jugador);
-//					log_info(infoLogger, "El jugador %c ha salido del mapa%s",jugador->entrenador.simbolo,parametros.nombreMapa);
+					log_info(infoLogger, "El jugador %c ha salido del mapa%s\n\n",jugador->entrenador.simbolo,parametros.nombreMapa);
+					loggearColas();
 					quantum = 0;
 					flag_DESCONECTADO = TRUE;
 					break;
-
 				} //FIN SWITCH
-
 			}//FIN ELSE
 
 			calcular_coordenadas(&(jugador->entrenador),pokenestEnviar->posicionX,pokenestEnviar->posicionY);
@@ -1364,24 +1270,17 @@ void* thread_planificador()
 			//free(buffer_recv);
 			//log_trace(traceLogger, "Termina turno de jugador %c", jugador->entrenador.simbolo);
 			//log_info(infoLogger, "Jugador %c entra en Cola Listos", jugador->entrenador.simbolo);
-
 			//loggearColas();
-
 			//pthread_mutex_unlock(&mutex_socket);
-
 			//log_info(infoLogger, "%s ha ingresado a la cola de listos con ip %d y el socket %d.",(&jugador)-> entrenador, (&jugador)-> estado, (&jugador)->socket);
 			//loggearColas();
 			//pthread_mutex_lock(&mutex_socket);
-
 			if(flag_SRDF == FALSE)
 			{
 			quantum--;
 			}
-
 			nivel_gui_dibujar(gui_items, mostrar);
-
 		}//FIN WHILE
-
 		if(flag_DESCONECTADO == FALSE)
 		{
 		if(jugador->estado==0)
@@ -1391,9 +1290,7 @@ void* thread_planificador()
 			pthread_mutex_unlock(&mutex_hiloDeadlock);
 			quantum = 0;
 		}
-
 		}
-
 		if(flag_DESCONECTADO == TRUE)
 		{
 		pthread_mutex_lock(&mutex_hiloDeadlock);
@@ -1407,18 +1304,15 @@ void* thread_planificador()
 		desbloquearJugadores(lista_jugadoresBloqueados);
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 		}
-
 		flag_DESCONECTADO = FALSE;
 	}
 	} //While global
-
 	}
 }
 
 void* thread_deadlock()
 {
 	t_list * entrenadores_aux;
-
 
 	while(1)
 	{
@@ -1428,7 +1322,6 @@ void* thread_deadlock()
 
 		if(list_size(global_listaJugadoresSistema) > 0)
 		{
-
 			entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema,infoLogger);
 
 			if(!list_is_empty(entrenadores_aux))
@@ -1439,11 +1332,10 @@ void* thread_deadlock()
 			list_clean(entrenadores_aux);
 		}
 		else
-			log_info(infoLogger, "    NO HAY ENTRENADORES");
+			log_info(deadlockLogger, "    NO HAY ENTRENADORES EN EL MAPA % s",parametros.nombreMapa);
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
-
 }
 
 int main(int argc, char** argv)
@@ -1459,7 +1351,9 @@ int main(int argc, char** argv)
 	signal(SIGUSR2, sigHandler_reloadMetadata);
 
 	traceLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_TRACE);
-	infoLogger = log_create("Logs.log", "Mapa", false, LOG_LEVEL_INFO);
+	infoLogger = log_create("LogMapa.log", "Mapa", false, LOG_LEVEL_INFO);
+	deadlockLogger = log_create("LogDeadlock.log", "Mapa", false, LOG_LEVEL_INFO);
+
 	log_info(infoLogger, "Se inicia Mapa: %s.", parametros.nombreMapa);
 
 	gui_items = list_create();
@@ -1473,12 +1367,9 @@ int main(int argc, char** argv)
 	mdataMapa = leerMetadataMapa(parametros);
 
 	generarColasBloqueados();
-
 	//**********************************
-
 	//Para crear una entrada en un archivo LOG:
 	//log_tipoDeLog (logger, "mensaje"). tipoDeLog = trace, info, error, etc
-
 	//*********************************
 	//FUNCION SERVE
 
@@ -1506,7 +1397,6 @@ int main(int argc, char** argv)
 	colaBloqueados = list_create();
 
 	//FALTAN CARGAR LAS POKENEST Y DIBUJARLAS
-
 	pthread_t hiloPlanificador;
 	int valorHilo = -1;
 
@@ -1518,9 +1408,7 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-
 	pthread_t hiloDeadlock;
-
 
 	valorHilo = pthread_create(&hiloDeadlock,NULL,thread_deadlock,NULL);
 
@@ -1529,8 +1417,6 @@ int main(int argc, char** argv)
 		perror("Error al crear hilo Deadlock");
 		exit(1);
 	}
-
-
 
 	Jugador nuevoJugador;
 	Jugador *aux;
@@ -1580,11 +1466,10 @@ int main(int argc, char** argv)
 					list_add(listaListos, aux);
 					pthread_mutex_unlock(&mutex_hiloDeadlock);
 
-
 					//Loggeamos info
-//					log_info(infoLogger, "Nuevo jugador: %c, socket %d", nuevoJugador.entrenador.simbolo, nuevoJugador.socket);
-//					log_info(infoLogger, "Jugador %c entra en Lista Listos en el Mapa:%s", nuevoJugador.entrenador.simbolo,parametros.nombreMapa);
-					//loggearColas();
+					log_info(infoLogger, "Nuevo jugador: %c, socket %d en el mapa %s.", nuevoJugador.entrenador.simbolo, nuevoJugador.socket,parametros.nombreMapa);
+					log_info(infoLogger, "Jugador %c entra en Lista Listos en el Mapa:%s", nuevoJugador.entrenador.simbolo,parametros.nombreMapa);
+					loggearColas();
 				}
 			}
 		}
@@ -1601,6 +1486,7 @@ int main(int argc, char** argv)
 	log_info(infoLogger, "Se cierra Mapa: %s.",  parametros.nombreMapa);
 	log_destroy(traceLogger);
 	log_destroy(infoLogger);
+	log_destroy(deadlockLogger);
 
 	return 0;
 }

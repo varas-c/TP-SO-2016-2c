@@ -317,10 +317,8 @@ int main(int argc, char** argv)
 
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
-
 	//parametros.dirPokedex = "/mnt/pokedex";
 	//parametros.nombreEntrenador = "Ash";
-
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
 	metadata mdata;
@@ -428,9 +426,7 @@ int main(int argc, char** argv)
 
 						while(codOp != BATALLA_GANADOR && codOp !=BATALLA_MUERTE)
 						{
-
 							codOp = recv_codigoOperacion(fd_server);
-
 							if(codOp == BATALLA_PELEA)
 							{
 								//CODIGO DE PELEA
@@ -444,15 +440,12 @@ int main(int argc, char** argv)
 								cantDeadlock++;
 							}
 						}
-
-
 						if(codOp == BATALLA_GANADOR)
 						{
 							paquete = recv_capturarPokemon(fd_server);
 							pokemonDat = dsrlz_capturarPokemon(&paquete,&entrenador);
 							printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
 						}
-
 						else if(codOp == BATALLA_MUERTE)
 						{
 							printf("\nHa sido elegido como víctima durante una batalla pokemon\n");
@@ -461,7 +454,6 @@ int main(int argc, char** argv)
 							flag_SIGNALMUERTE = true;
 						}
 					}
-
 					if(nivel.cantObjetivos <= nivel.numPokenest)
 					{
 						printf("Fin Nivel\n");
@@ -474,16 +466,13 @@ int main(int argc, char** argv)
 							avanzarNivel(&nivel,&entrenador);
 						}
 					}
-
 					else
 					{
 						nivel.numPokenest++;
 						pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
 					}
-
 					break;
 				}
-
 
 			if(flag_SIGNALMUERTE == true)
 			{
@@ -498,7 +487,6 @@ int main(int argc, char** argv)
 				flag_seguirJugando = informar_signalMuerteEntrenador();
 			}
 	}
-
 		flag_SIGNALMUERTE = false;
 	}
 
@@ -508,9 +496,9 @@ int main(int argc, char** argv)
 	fin.segundos = local2->tm_sec;
 
 	tardado = tiempoTardado(inicio, fin);
-	printf("Ganaste el Juego. Tu tiempo: %d minutos y %d segundos\n", tardado.minutos, tardado.segundos);
-	printf("Pasó %d segundos bloqueado en Pokenests");//TODO
-	printf("Estuvo involucrado en: %d deadlocks, y fue victima en: %d",cantDeadlock,cantDeadlocksPerdidos);
+	printf("\nGanaste el Juego. Tu tiempo: %d minutos y %d segundos\n\n", tardado.minutos, tardado.segundos);
+	printf("Pasó %d segundos bloqueado en Pokenests\n\n");//TODO
+	printf("Estuvo involucrado en: %d deadlocks, y fue victima en: %d\n\n",cantDeadlock,cantDeadlocksPerdidos);
 	//free(paquete.buffer);
 	return 0;
 }
