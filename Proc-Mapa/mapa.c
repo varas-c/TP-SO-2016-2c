@@ -359,7 +359,7 @@ Jugador* desbloquearJugador(char simboloPokenest)
 }
 //****************************************************************************************************************
 /*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!*/
-int cantPokemonEnDir(char* ruta)
+/*int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
 	int cantPokes = 0;
@@ -385,8 +385,8 @@ int cantPokemonEnDir(char* ruta)
 	return cantPokes;
 }
 
-
-/* FUNCION PARA USAR CON FUSE!!!!!!!!
+*/
+/* FUNCION PARA USAR CON FUSE!!!!!!!!*/
 int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
@@ -420,7 +420,7 @@ int cantPokemonEnDir(char* ruta)
 
 	return cantPokes;
 }
-*/
+
 
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {
@@ -1420,7 +1420,7 @@ void* thread_deadlock()
 
 	while(1)
 	{
-		usleep(mdataMapa.tiempoChequeoDeadlock); //EXAGERO PARA PROBAR
+		usleep(mdataMapa.tiempoChequeoDeadlock*1000); //EXAGERO PARA PROBAR
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 
