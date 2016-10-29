@@ -143,7 +143,7 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 		origen = malloc(sizeof(char)*256);
 		destino = malloc(sizeof(char)*256);
 
-		strcpy(archivoMedalla, "/medalla-");
+		strcpy(archivoMedalla, "medalla-");
 		strcat(archivoMedalla, nombreMapa);
 		strcat(archivoMedalla, ".jpg");
 

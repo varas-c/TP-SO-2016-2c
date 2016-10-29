@@ -516,7 +516,8 @@ int truncarArchivo(int archivo, uint64_t size)
 
 		tablaArchivos[archivo].file_size = size;
 		tablaArchivos[archivo].lastmod = time(NULL);
-		free(bloques);
+		if (bloques!=NULL)
+			free(bloques);
 	}
 	return size;
 }
