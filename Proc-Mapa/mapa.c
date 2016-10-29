@@ -358,7 +358,7 @@ Jugador* desbloquearJugador(char simboloPokenest)
 	return jugadorDesbloqueado;
 }
 //****************************************************************************************************************
-/*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!*/
+/*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!
 int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
@@ -383,10 +383,10 @@ int cantPokemonEnDir(char* ruta)
 	closedir(rutaLeer);
 
 	return cantPokes;
-}
+}*/
 
 
-/* FUNCION PARA USAR CON FUSE!!!!!!!!
+// FUNCION PARA USAR CON FUSE!!!!!!!!
 int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
@@ -420,7 +420,7 @@ int cantPokemonEnDir(char* ruta)
 
 	return cantPokes;
 }
-*/
+
 
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {
@@ -526,6 +526,7 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 				mdataPokemon = leerMetadataPokemon(rutaAux,pokemon->nombre);
 				//pokemon->pokemon = malloc(sizeof(t_pokemon*));
 				pokemon->pokemon = create_pokemon(fabrica, dptrPokenest->d_name, mdataPokemon.nivel);
+				pokemon->pokemon->species = strdup(dptrPokenest->d_name);
 				queue_push(pokenest->colaDePokemon,pokemon);
 			}
 
@@ -829,12 +830,13 @@ void desbloquearJugadores(t_list* lista)
 		JugadorBloqueado* jugadorBloqueado;
 		int retval;
 		int i;
+		int tamLista = list_size(lista);
 
 		if(list_size(lista) > 0)
 		{
-			for(i=0;i<list_size(lista);i++)
+			for(i=0;i<tamLista;i++)
 			{
-				jugadorBloqueado = list_remove(lista,i); //Hay que informarle que capturó
+				jugadorBloqueado = list_remove(lista,0); //Hay que informarle que capturó
 
 				retval = send_capturaOK(jugadorBloqueado->jugador,jugadorBloqueado->pokemon); //Si acá tira error, deberia sacarle lospokemon, agregar jugadoresBloqueados, desconectarlo
 
@@ -845,7 +847,7 @@ void desbloquearJugadores(t_list* lista)
 					desconectarJugador(jugadorBloqueado->jugador);
 					send_BatallaGanador(listaAux);
 					list_add_all(lista,listaAux);
-
+					tamLista = list_size(lista);
 				}
 
 				else
@@ -1298,7 +1300,7 @@ void* thread_planificador()
 					//pthread_mutex_lock(&mutex_hiloDeadlock);
 					if(queue_size(pokenest->colaDePokemon)>0) //HAY POKEMONES PARA ENTREGAR!
 					{
-						pokemon = queue_pop(pokenest->colaDePokemon);
+						pokemon = (Pokemon*)queue_pop(pokenest->colaDePokemon);
 						send_codigoOperacion(jugador->socket,CAPTURA_OK);
 						retval = send_capturaOK(jugador,pokemon);
 						flag_DESCONECTADO = verificarConexion(jugador,retval,&quantum);
@@ -1420,7 +1422,7 @@ void* thread_deadlock()
 
 	while(1)
 	{
-		usleep(mdataMapa.tiempoChequeoDeadlock); //EXAGERO PARA PROBAR
+		usleep(mdataMapa.tiempoChequeoDeadlock*1000); //EXAGERO PARA PROBAR
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 
@@ -1446,11 +1448,11 @@ void* thread_deadlock()
 
 int main(int argc, char** argv)
 {
-	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	//parametros.dirPokedex = "/mnt/pokedex";
-	//parametros.nombreMapa = "PuebloPaleta";
+	parametros.dirPokedex = "/home/utnso/tp-2016-2c-Breaking-Bug/mnt/pokedex/";
+	parametros.nombreMapa = "PuebloPaleta";
 
 	listaDeadlock = list_create();
 
