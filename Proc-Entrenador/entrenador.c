@@ -84,7 +84,8 @@ void copiarPokemon(char *archivoPokemon, ParametrosConsola parametros, char* nom
 	destino = malloc(sizeof(char)*256);
 
 	strcpy(origen, parametros.dirPokedex);
-	strcat(origen, "/Mapas/");
+	//strcat(origen, "/Mapas/");	//Para otros
+	strcat(origen, "Mapas/");	//Para montaje de fs
 	strcat(origen, nombreMapa);
 	strcat(origen, "/Pokenest/");
 	strcat(origen, nombre);
@@ -119,7 +120,8 @@ void borrarPokemones(ParametrosConsola parametros){
 	directorio = malloc(sizeof(char)*256);
 
 	strcpy(directorio, parametros.dirPokedex);
-	strcat(directorio, "/Entrenadores/");
+	//strcat(directorio, "/Entrenadores/");
+	strcat(directorio, "Entrenadores/");	//para montaje de fs
 	strcat(directorio, parametros.nombreEntrenador);
 	strcat(directorio, "/Dir\\ de\\ Bill/");
 
@@ -146,7 +148,8 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 		strcat(archivoMedalla, ".jpg");
 
 		strcpy(origen, parametros.dirPokedex);
-		strcat(origen, "/Mapas/");
+		//strcat(origen, "/Mapas/");
+		strcat(origen, "Mapas/");	///Para montaje de fs
 		strcat(origen, nombreMapa);
 		strcat(origen, "/");
 		strcat(origen, archivoMedalla);
@@ -265,7 +268,7 @@ bool informar_signalMuerteEntrenador()
 
 	printf("†††††††† -- You are dead -- †††††††† \n");
 
-	printf("No tienes mas vidas - cantidad de reintentos: %i\n", entrenador.reintentos);
+	printf("No tienes mas vidas - cantidad de reintentos: %d\n", entrenador.reintentos);
 	printf("1) Reiniciar \n");
 	printf("2) Salir \n");
 
@@ -317,7 +320,10 @@ int main(int argc, char** argv)
 
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
+
 	//parametros.dirPokedex = "/mnt/pokedex";
+	//parametros.dirPokedex = "/home/utnso/tp-2016-2c-Breaking-Bug/Archivos de prueba/pokedex";
+
 	//parametros.nombreEntrenador = "Ash";
 	//Ahora se deberia leer la Hoja de Viaje, la direccion de la Pokedex esta en parametros.dirPokedex
 
@@ -474,7 +480,7 @@ int main(int argc, char** argv)
 					break;
 				}
 
-			if(flag_SIGNALMUERTE == true)
+			if(flag_SIGNALMUERTE)
 			{
 				close(fd_server);
 				auxcantNiveles = nivel.cantNiveles;

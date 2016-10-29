@@ -337,8 +337,9 @@ Jugador* desbloquearJugador(char simboloPokenest)
 	return jugadorDesbloqueado;
 }
 
-//FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!
+/*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!*/
 int cantPokemonEnDir(char* ruta)
+
 {
 	struct dirent *archivo = NULL;
 	int cantPokes = 0;
@@ -362,6 +363,7 @@ int cantPokemonEnDir(char* ruta)
 	closedir(rutaLeer);
 
 	return cantPokes;
+
 }
 
 // FUNCION PARA USAR CON FUSE!!!!!!!!
@@ -612,6 +614,7 @@ t_list* expropiarPokemones(t_list* listaPokemones)
 
 		else //Ningun jugador estaba esperando este pokemon, asi que metemos al pokemon a la pokenest
 		{
+			pokenest->cantPokemon++;
 			pokenest = buscar_Pokenest(pokemonDesbloqueado->pokenest);
 			queue_push(pokenest->colaDePokemon,pokemonDesbloqueado);
 			sumarRecurso(gui_items,pokenest->simbolo);

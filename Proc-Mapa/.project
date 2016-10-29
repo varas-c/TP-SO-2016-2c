@@ -3,6 +3,7 @@
 	<name>Proc-Mapa</name>
 	<comment></comment>
 	<projects>
+		<project>nivel</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
