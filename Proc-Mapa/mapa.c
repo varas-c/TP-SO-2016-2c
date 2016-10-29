@@ -646,6 +646,7 @@ t_list* expropiarPokemones(t_list* listaPokemones)
 
 		else //Ningun jugador estaba esperando este pokemon, asi que metemos al pokemon a la pokenest
 		{
+			pokenest->cantPokemon++;
 			pokenest = buscar_Pokenest(pokemonDesbloqueado->pokenest);
 			queue_push(pokenest->colaDePokemon,pokemonDesbloqueado);
 			sumarRecurso(gui_items,pokenest->simbolo);
