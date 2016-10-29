@@ -1417,6 +1417,7 @@ void* thread_deadlock()
 {
 	t_list * entrenadores_aux;
 
+
 	while(1)
 	{
 		usleep(mdataMapa.tiempoChequeoDeadlock); //EXAGERO PARA PROBAR
@@ -1425,16 +1426,22 @@ void* thread_deadlock()
 
 		if(list_size(global_listaJugadoresSistema) > 0)
 		{
+
 			entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema,infoLogger);
 
 			if(!list_is_empty(entrenadores_aux))
 			{
 				list_add_all(listaDeadlock,entrenadores_aux);
 			}
+
+			list_clean(entrenadores_aux);
 		}
+		else
+			log_info(infoLogger, "    NO HAY ENTRENADORES");
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
+
 }
 
 int main(int argc, char** argv)

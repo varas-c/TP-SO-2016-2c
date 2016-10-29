@@ -404,6 +404,26 @@ Jugador* entrenador_tiene_pokemon(t_list* entrenadores,t_pokemon* poke)
 	return 0;
 }
 
+/*
+void liberar_recursos_entrenador(Jugador* entrenador_perdedor,t_list* pokenests)
+{
+	int i,j;
+	Pokemon* pokemon_aux;
+	MetadataPokenest* pokenest_aux;
+
+	for(i=0;i<list_size(entrenador_perdedor->pokemonCapturados);i++)
+	{
+		pokemon_aux=list_get(entrenador_perdedor->pokemonCapturados,i);
+		for(j=0;j<list_size(pokenests);j++)
+		{
+			pokenest_aux = list_get(pokenests,j);
+			if(letra_pokenest(pokemon_aux->pokemon->species)==pokenest_aux->simbolo)
+				pokenest_aux->cantPokemon+=1;
+		}
+	}
+}
+*/
+
 //*************************************************************
 
 Jugador* batalla_deadlock(t_list* posible_deadlock,t_list* pokenests)    //BATALLAS
@@ -507,16 +527,13 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* infoL
     			log_info(infoLogger, "    ENTRENADORES EN DEADLOCK");
 
     			loggear_entrenadores_en_deadlock(entrenadores_aux,infoLogger);
-
     			return entrenadores_aux;
 			}
 
         	else
         	{
         		log_info(infoLogger, "    NO HAY DEADLOCK");
-
         		list_clean(entrenadores_aux);
-
         		return entrenadores_aux;
         	}
 
@@ -529,10 +546,6 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* infoL
     		log_info(infoLogger, "    DISPONIBLES");
 
     		loggear_vector(recursos_disponibles,pokenests_aux,infoLogger);
-
-    		free(recursos_disponibles);
-
-    		list_clean(entrenadores_aux);
 
     		return entrenadores_aux;
     	}
