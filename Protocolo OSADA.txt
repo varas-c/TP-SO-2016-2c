@@ -24,7 +24,7 @@ El cliente envía el tamaño del buffer, la cantidad de bytes a leer y el despla
 El servidor responde enviando la cantidad leída (puede ser menor a la pedida, si el archivo es más pequeño) y luego el buffer lleno.
 -------------------------------------------------------------------------
 4 - truncate
-El cliente envía el nuevo tamaño del archivo. De momento el servidor no devuelve nada.
+El cliente envía el nuevo tamaño del archivo. El servidor devuelve 1 si pudo truncarlo y 0 si no pudo.
 -------------------------------------------------------------------------
 5 - write
 El cliente envía el buffer de escritura, su tamaño y el offset (mismos tamaños que en read, orden: tamaño -> offset -> buffer), y el server responde 1 si pudo escribir, o 0 si no pudo.

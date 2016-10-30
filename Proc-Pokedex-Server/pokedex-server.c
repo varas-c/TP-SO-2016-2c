@@ -11,7 +11,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-//#include <fuse.h>
 #include <pthread.h>
 #include <time.h>
 #include <commons/config.h>
@@ -93,8 +92,8 @@ int nombrarArchivo(int, char*);
 uint8_t sonNombresIguales(unsigned char*, unsigned char*);
 void copiarNombreArchivo(char*, int); //Precondición: destino tiene 18 bytes o más
 int buscarIndice(unsigned char*, int);
-int obtenerPrimerBloque(int);
 int obtenerBloqueSgte(int);
+int obtenerUltimoBloque(int);
 int reservarNuevoBloque(int);
 int liberarBloque(int, uint8_t);
 int borrarArchivo(int); //Valida además que, si es un directorio, esté vacío
@@ -179,20 +178,24 @@ int buscarIndice(unsigned char* archivo, int dirPadre) //Para ignorar dirPadre, 
 	return -1;
 }
 
-int obtenerPrimerBloque(int indice)
-{
-	if (indice<0 || indice>=2048)
-		return -1;
-	else
-		return tablaAsignaciones[tablaArchivos[indice].first_block];
-}
-
 int obtenerBloqueSgte(int bloqueActual)
 {
 	if (bloqueActual<0)
 		return -1;
 	else
 		return tablaAsignaciones[bloqueActual];
+}
+
+int obtenerUltimoBloque(int indice)
+{
+	if (indice<0 || indice>=2048)
+		return -1;
+	else
+	{
+		int bloqueActual = tablaArchivos[indice].first_block;
+		for(; obtenerBloqueSgte(bloqueActual) != BLOQUE_NULO; bloqueActual=obtenerBloqueSgte(bloqueActual));
+		return bloqueActual;
+	}
 }
 
 int liberarBloque(int bloque, uint8_t eliminarEnlace)
@@ -405,6 +408,7 @@ int reservarNuevoBloque(int bloqueAnterior)
 		tablaAsignaciones[bloqueAnterior]=nuevoBloque;
 
 	tablaAsignaciones[nuevoBloque]=BLOQUE_NULO;
+	memset(inicioDatos[nuevoBloque], 0, OSADA_BLOCK_SIZE);
 	return nuevoBloque;
 }
 
@@ -496,13 +500,14 @@ int actualizar(int archivo, void* nuevosDatos, size_t cantidadBytes, uint64_t of
 
 int truncarArchivo(int archivo, uint64_t size)
 {
-	if (archivo<0 || size<0)
+	if (archivo<0 || size<0 || tablaArchivos[archivo].state!=REGULAR)
 		return -1;
 	else
 	{
 		int cantidad = 0;
 		int* bloques = obtenerBloques(archivo, &cantidad);
 		int bloquesNecesarios = size/OSADA_BLOCK_SIZE + ((size%OSADA_BLOCK_SIZE)>0);
+		//Borrar bloques fuera del tamaño recibido
 		for(;cantidad>bloquesNecesarios; cantidad--)
 		{
 			if (cantidad>1)
@@ -513,11 +518,20 @@ int truncarArchivo(int archivo, uint64_t size)
 				liberarBloque(bloques[cantidad-1], 0);
 			}
 		}
-
+		//Reservar nuevos bloques si el tamaño recibido es mayor que el actual
+		int bloqueAnterior = obtenerUltimoBloque(archivo);
+		for(;cantidad<bloquesNecesarios;cantidad++)
+		{
+			bloqueAnterior = reservarNuevoBloque(bloqueAnterior);
+			if (bloqueAnterior<0)
+			{
+				truncarArchivo(archivo, 0);
+				return -1;
+			}
+		}
 		tablaArchivos[archivo].file_size = size;
 		tablaArchivos[archivo].lastmod = time(NULL);
-		if (bloques!=NULL)
-			free(bloques);
+		free(bloques);
 	}
 	return size;
 }
@@ -541,7 +555,17 @@ int crearArchivo(int dirPadre, const char* nombre, osada_file_state tipo)
 		return -4;
 
 	tablaArchivos[nuevoIndice].state = tipo;
-	tablaArchivos[nuevoIndice].first_block = BLOQUE_NULO;
+	if (tipo==REGULAR) //Reservar el primer bloque automáticamente si es un archivo regular
+	{
+		tablaArchivos[nuevoIndice].first_block = reservarNuevoBloque(BLOQUE_NULO);
+		if (tablaArchivos[nuevoIndice].first_block < 0) //Si no se pudo, borrar el arhivo creado y devolver que no hay espacio
+		{
+			borrarArchivo(nuevoIndice);
+			return -4;
+		}
+	}
+	else
+		tablaArchivos[nuevoIndice].first_block = BLOQUE_NULO;
 	tablaArchivos[nuevoIndice].parent_directory = dirPadre;
 	nombrarArchivo(nuevoIndice, nombre);
 	tablaArchivos[nuevoIndice].lastmod = time(NULL);
@@ -716,7 +740,11 @@ void gestionarSocket(void* socket)
 				uint64_t size;
 				memcpy(&size, buffer, sizeof(size));
 				free(buffer);
-				truncarArchivo(archivo, size);
+				uint8_t resultado = (truncarArchivo(archivo, size)>=0);
+				buffer = malloc(sizeof(resultado));
+				memcpy(buffer, &resultado, sizeof(resultado));
+				send(cliente, buffer, sizeof(resultado), 0);
+				free(buffer);
 				break;
 
 		case COD_WRITE:
@@ -876,7 +904,7 @@ void gestionarSocket(void* socket)
 int main(int argc, char** argv)
 {
 	int fd_fileSystem = open(argv[1], 2); //2 significa O_RDWR, leer y escribir
-//	int fd_fileSystem = open("challenge.bin", 2); //Para debuggear
+//	int fd_fileSystem = open("juego.bin", 2); //Para debuggear
 	if (fd_fileSystem==-1)
 	{
 		printf("Archivo de file system no encontrado.\n");

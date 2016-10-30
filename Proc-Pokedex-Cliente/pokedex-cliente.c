@@ -258,15 +258,23 @@ static size_t osada_read(const char *path, char *buf, size_t size, off_t offset,
 int osada_truncate(const char * path, off_t size) //Truncate debe estar para que write funcione
 {
 	void* buffer;
+	signed char retorno=0;
 
 	enviarCodigoYTamanio(COD_TRUNCATE, strlen(path)+1);
 	enviarPath(path);
 	buffer = malloc(sizeof(size));
-	memset(buffer, size, sizeof(size));
-	send(fd_server, buffer, sizeof(off_t), 0);
+	memcpy(buffer, &size, sizeof(size));
+	send(fd_server, buffer, sizeof(size), 0);
 	free(buffer);
+	if (recv(fd_server, &retorno, sizeof(retorno), 0)<=0)
+	{
+		printf("El servidor se encuentra desconectado.\n");
+		return 0;
+	}
 
-	return 0;
+	if (!retorno)
+		return -ENOSPC;
+	return retorno;
 }
 
 static int osada_write(const char *path, const char *buf, size_t size, off_t offset,
@@ -292,9 +300,9 @@ static int osada_write(const char *path, const char *buf, size_t size, off_t off
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
 	{
 		printf("El servidor se encuentra desconectado.\n");
-		retorno = 0;
+		retorno = -1;
 	}
-	if (!((uint8_t*)buffer)[0])
+	if (!(((uint8_t*)buffer)[0]))
 		retorno = -ENOSPC;
 
 	free(buffer);
