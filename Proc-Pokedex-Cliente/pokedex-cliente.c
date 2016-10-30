@@ -258,7 +258,7 @@ static size_t osada_read(const char *path, char *buf, size_t size, off_t offset,
 int osada_truncate(const char * path, off_t size) //Truncate debe estar para que write funcione
 {
 	void* buffer;
-	signed char retorno=0;
+	uint8_t retorno=0;
 
 	enviarCodigoYTamanio(COD_TRUNCATE, strlen(path)+1);
 	enviarPath(path);
@@ -274,7 +274,7 @@ int osada_truncate(const char * path, off_t size) //Truncate debe estar para que
 
 	if (!retorno)
 		return -ENOSPC;
-	return retorno;
+	return 0;
 }
 
 static int osada_write(const char *path, const char *buf, size_t size, off_t offset,
