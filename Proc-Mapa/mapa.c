@@ -614,8 +614,9 @@ t_list* expropiarPokemones(t_list* listaPokemones)
 
 		else //Ningun jugador estaba esperando este pokemon, asi que metemos al pokemon a la pokenest
 		{
-			pokenest->cantPokemon++;
+
 			pokenest = buscar_Pokenest(pokemonDesbloqueado->pokenest);
+			pokenest->cantPokemon++;
 			queue_push(pokenest->colaDePokemon,pokemonDesbloqueado);
 			sumarRecurso(gui_items,pokenest->simbolo);
 		}
@@ -1323,19 +1324,14 @@ void* thread_deadlock()
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 
-		if(list_size(global_listaJugadoresSistema) > 0)
+		entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema,deadlockLogger);
+
+		if(!list_is_empty(entrenadores_aux))
 		{
-			entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema,infoLogger);
-
-			if(!list_is_empty(entrenadores_aux))
-			{
-				list_add_all(listaDeadlock,entrenadores_aux);
-			}
-
-			list_clean(entrenadores_aux);
+			list_add_all(listaDeadlock,entrenadores_aux);
 		}
-		else
-			log_info(deadlockLogger, "    NO HAY ENTRENADORES EN EL MAPA % s",parametros.nombreMapa);
+
+		list_clean(entrenadores_aux);
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
