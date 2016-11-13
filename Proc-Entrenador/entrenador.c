@@ -330,9 +330,12 @@ int main(int argc, char** argv)
 	metadata mdata;
 	mdata = leerMetadataEntrenador(parametros);
 
-	struct tm *local, *local2;
-	time_t t, t2;
-	tiempo tardado,inicio,fin;
+	struct tm *local, *local2, *local3, *local4;
+	time_t t, t2, t3, t4;
+	tiempo tardado,inicio,fin, bloqueadoInicio, bloqueadoFin, totalBloqueado, bloqueado;
+
+	totalBloqueado.minutos = 0;
+	totalBloqueado.segundos = 0;
 
 	t = time(NULL);
 	local = localtime(&t);
@@ -428,6 +431,10 @@ int main(int argc, char** argv)
 					else if(codOp == CAPTURA_BLOQUEADO)
 					{
 						printf("Entrenador Bloqueado! \n");
+						t3 = time(NULL);
+						local3 = localtime(&t3);
+						bloqueadoInicio.minutos = local3->tm_min;
+						bloqueadoInicio.segundos = local3->tm_sec;
 						codOp = -1;
 
 						while(codOp != BATALLA_GANADOR && codOp !=BATALLA_MUERTE)
@@ -448,12 +455,31 @@ int main(int argc, char** argv)
 						}
 						if(codOp == BATALLA_GANADOR)
 						{
+							t4 = time(NULL);
+							local4 = localtime(&t4);
+							bloqueadoFin.minutos = local4->tm_min;
+							bloqueadoFin.segundos = local4->tm_sec;
+							bloqueado = tiempoTardado(bloqueadoInicio,bloqueadoFin);
+
+							totalBloqueado.minutos += bloqueado.minutos;
+							totalBloqueado.segundos += bloqueado.segundos;
+
 							paquete = recv_capturarPokemon(fd_server);
 							pokemonDat = dsrlz_capturarPokemon(&paquete,&entrenador);
 							printf("%s - Objetivo Numero: %i \n",pokemonDat,nivel.numPokenest);
 						}
 						else if(codOp == BATALLA_MUERTE)
 						{
+							printf("\nHa sido elegido como víctima durante una batalla pokemon\n");
+							t4 = time(NULL);
+							local4 = localtime(&t4);
+							bloqueadoFin.minutos = local4->tm_min;
+							bloqueadoFin.segundos = local4->tm_sec;
+							bloqueado = tiempoTardado(bloqueadoInicio,bloqueadoFin);
+
+							totalBloqueado.minutos += bloqueado.minutos;
+							totalBloqueado.segundos += bloqueado.segundos;
+
 							printf("\nHa sido elegido como víctima durante una batalla pokemon\n");
 							borrarPokemones(parametros);
 							cantDeadlocksPerdidos++;
@@ -503,7 +529,7 @@ int main(int argc, char** argv)
 
 	tardado = tiempoTardado(inicio, fin);
 	printf("\nGanaste el Juego. Tu tiempo: %d minutos y %d segundos\n\n", tardado.minutos, tardado.segundos);
-	printf("Pasó %d segundos bloqueado en Pokenests\n\n");//TODO
+	printf("Pasó %d minutos y %d segundos bloqueado en Pokenests\n", totalBloqueado.minutos, totalBloqueado.segundos);
 	printf("Estuvo involucrado en: %d deadlocks, y fue victima en: %d\n\n",cantDeadlock,cantDeadlocksPerdidos);
 	//free(paquete.buffer);
 	return 0;
