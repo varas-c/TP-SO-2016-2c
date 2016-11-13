@@ -366,8 +366,10 @@ int cantPokemonEnDir(char* ruta)
 
 }
 
+
 // FUNCION PARA USAR CON FUSE!!!!!!!!
-/*int cantPokemonEnDir(char* ruta)
+/*
+int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
 	int cantPokes = 0;
@@ -398,7 +400,8 @@ int cantPokemonEnDir(char* ruta)
 	closedir(rutaLeer);
 
 	return cantPokes;
-}*/
+}
+*/
 
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {

@@ -1,0 +1,6 @@
+Juego Facil 1
+- Los entrenadores no se bloquean nunca en ningun mapa, siempre hay recursos para todos los entrenadores.
+- NO hay deadlock
+
+-Revisar los LOGS de bloqueados, deberia estar todo en 0
+-Revisar los LOGS de Deadlock, nunca deberia haber
