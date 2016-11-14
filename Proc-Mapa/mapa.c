@@ -1357,8 +1357,8 @@ int main(int argc, char** argv)
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	parametros.dirPokedex = "/mnt/juegoMedio/pokedex";
-	parametros.nombreMapa = "Verde";
+	//parametros.dirPokedex = "/mnt/juegoMedio/pokedex";
+	//parametros.nombreMapa = "Verde";
 
 	listaDeadlock = list_create();
 
