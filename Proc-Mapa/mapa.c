@@ -165,14 +165,8 @@ void loggearColaBloqueados()
 
 void loggearColas(void)
 {
-	loggearListaListos();
-	loggearColaBloqueados();
-
-
-
-
-
-
+	//loggearListaListos();
+	//loggearColaBloqueados();
 
 }
 
@@ -913,7 +907,7 @@ char* generarInformeBatalla(Jugador* jugador1, Jugador* jugador2,t_pokemon* poke
 	return informeBatalla;
 }
 
-void send_informeBatalla(int socket_j1,int socket_j2,char* informeBatalla)
+void send_informeBatalla(int socket_j1,char* informeBatalla)
 {
 	int codop = BATALLA_INFORME;
 	int tamCadena = strlen(informeBatalla)+1;
@@ -926,7 +920,6 @@ void send_informeBatalla(int socket_j1,int socket_j2,char* informeBatalla)
 	memcpy(paquete.buffer+sizeof(int),&tamCadena,sizeof(int));
 
 	send(socket_j1,paquete.buffer,paquete.tam_buffer,0);
-	send(socket_j2,paquete.buffer,paquete.tam_buffer,0);
 
 	free(paquete.buffer);
 
@@ -936,7 +929,6 @@ void send_informeBatalla(int socket_j1,int socket_j2,char* informeBatalla)
 	memcpy(paquete.buffer,informeBatalla,sizeof(char)*tamCadena);
 
 	send(socket_j1,paquete.buffer,paquete.tam_buffer,0);
-	send(socket_j2,paquete.buffer,paquete.tam_buffer,0);
 
 	free(paquete.buffer);
 }
@@ -968,10 +960,12 @@ Jugador* pelearEntrenadores()
 	cadenaAux[1] = '\0';
 
 	t_pokemon* pokemonPerdedor = NULL;
+	int tamLista = list_size(listaDeadlock);
 
 	jugador1 = list_remove(listaDeadlock,0);
+	tamLista--;
 
-	while(list_size(listaDeadlock) > 0)
+	while(tamLista > 0)
 	{
 		jugador2 = list_remove(listaDeadlock,0);
 
@@ -986,6 +980,10 @@ Jugador* pelearEntrenadores()
 
 		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
 		{
+			informeBatalla = malloc(50);
+			strcpy(informeBatalla,"Batalla Suspendida, Jugador Desconectado");
+			send_informeBatalla(jugador1->socket,informeBatalla);
+			free(informeBatalla);
 			return jugador2;
 		}
 
@@ -994,6 +992,10 @@ Jugador* pelearEntrenadores()
 
 		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
 		{
+			informeBatalla = malloc(50);
+			strcpy(informeBatalla,"Batalla Suspendida, Jugador Desconectado");
+			send_informeBatalla(jugador2->socket,informeBatalla);
+			free(informeBatalla);
 			return jugador1;
 		}
 
@@ -1005,6 +1007,10 @@ Jugador* pelearEntrenadores()
 
 		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
 		{
+			informeBatalla = malloc(50);
+			strcpy(informeBatalla,"Batalla Suspendida, Jugador Desconectado");
+			send_informeBatalla(jugador1->socket,informeBatalla);
+			free(informeBatalla);
 			return jugador2;
 		}
 
@@ -1020,7 +1026,8 @@ Jugador* pelearEntrenadores()
 			informeBatalla = generarInformeBatalla(jugador1,jugador2,pokemon1->pokemon,pokemon2->pokemon);
 			cadenaAux[0] = jugador2->entrenador.simbolo;
 			strcat(informeBatalla,cadenaAux);
-			send_informeBatalla(jugador1->socket,jugador2->socket,informeBatalla);
+			send_informeBatalla(jugador1->socket,informeBatalla);
+			send_informeBatalla(jugador2->socket,informeBatalla);
 			free(informeBatalla);
 			perdedor = jugador1;
 		}
@@ -1029,7 +1036,8 @@ Jugador* pelearEntrenadores()
 			informeBatalla = generarInformeBatalla(jugador1,jugador2,pokemon1->pokemon,pokemon2->pokemon);
 			cadenaAux[0] = jugador1->entrenador.simbolo;
 			strcat(informeBatalla,cadenaAux);
-			send_informeBatalla(jugador1->socket,jugador2->socket,informeBatalla);
+			send_informeBatalla(jugador1->socket,informeBatalla);
+			send_informeBatalla(jugador2->socket,informeBatalla);
 			free(informeBatalla);
 			perdedor = jugador2;
 		}
@@ -1038,7 +1046,11 @@ Jugador* pelearEntrenadores()
 			printf("Linea: %s - Linea: %d - Error De Deadlock, no se puede definir quien gano/perdio",__func__,__LINE__);
 			exit(1);
 		}
+
+		tamLista--;
 	}
+
+
 	free(cadenaAux);
 	send_BatallaMuerte(perdedor->socket);
 
@@ -1345,8 +1357,8 @@ int main(int argc, char** argv)
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	//parametros.dirPokedex = "/home/utnso/tp-2016-2c-Breaking-Bug/mnt/pokedex/";
-	//parametros.nombreMapa = "PuebloPaleta";
+	parametros.dirPokedex = "/mnt/juegoMedio/pokedex";
+	parametros.nombreMapa = "Verde";
 
 	listaDeadlock = list_create();
 

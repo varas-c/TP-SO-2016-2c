@@ -438,23 +438,7 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
     	int* recursos_disponibles = generar_vector_recursos_disponibles(pokenests_aux);
 
-       	log_info(deadlockLogger, "");
 
-        log_info(deadlockLogger, "    PETICIONES EN EL MAPA: %s", parametros.nombreMapa);
-
-    	loggear_matriz(matriz_peticiones,pokenests_aux,entrenadores,deadlockLogger);
-
-    	log_info(deadlockLogger, "");
-
-        log_info(deadlockLogger, "    ASIGNADOS EN EL MAPA: %s", parametros.nombreMapa);
-
-    	loggear_matriz(matriz_recursos_asignados,pokenests_aux,entrenadores,deadlockLogger);
-
-    	log_info(deadlockLogger, "");
-
-        log_info(deadlockLogger, "    DISPONIBLES EN EL MAPA: %s", parametros.nombreMapa);
-
-    	loggear_vector(recursos_disponibles,pokenests_aux,deadlockLogger);
 
     	if((asignados)&&(peticiones)&&(list_size(entrenadores) >1))
     	{
@@ -462,29 +446,49 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
         	sacar_inanicion(entrenadores_aux);
 
-        	free(matriz_peticiones);
-
-			free(matriz_recursos_asignados);
-
-			free(recursos_disponibles);
-
     		if(list_size(entrenadores_aux)>1)
 			{
+               	log_info(deadlockLogger, "");
+
+                log_info(deadlockLogger, "    PETICIONES EN EL MAPA: %s", parametros.nombreMapa);
+
+            	loggear_matriz(matriz_peticiones,pokenests_aux,entrenadores,deadlockLogger);
+
+            	log_info(deadlockLogger, "");
+
+                log_info(deadlockLogger, "    ASIGNADOS EN EL MAPA: %s", parametros.nombreMapa);
+
+            	loggear_matriz(matriz_recursos_asignados,pokenests_aux,entrenadores,deadlockLogger);
+
+            	log_info(deadlockLogger, "");
+
+                log_info(deadlockLogger, "    DISPONIBLES EN EL MAPA: %s", parametros.nombreMapa);
+
+            	//loggear_vector(recursos_disponibles,pokenests_aux,deadlockLogger);
             	log_info(deadlockLogger, "");
 
     			log_info(deadlockLogger, "    ENTRENADORES EN DEADLOCK EN EL MAPA: %s", parametros.nombreMapa);
 
     			loggear_entrenadores_en_deadlock(entrenadores_aux,deadlockLogger);
 
+            	free(matriz_peticiones);
+
+    			free(matriz_recursos_asignados);
+
+    			free(recursos_disponibles);
+
+
 			}
 
         	else
         	{
+
             	log_info(deadlockLogger, "");
 
             	log_info(deadlockLogger, "    NO HAY DEADLOCK EN EL MAPA: %s", parametros.nombreMapa);
 
         		list_clean(entrenadores_aux);
+
 
         	}
 
@@ -506,9 +510,11 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
     }
     else
     {
+    	/*
     	log_info(deadlockLogger, "");
 
 		log_info(deadlockLogger, "    NO HAY ENTRENADORES EN EL MAPA: %s", parametros.nombreMapa);
+		*/
 
     }
 

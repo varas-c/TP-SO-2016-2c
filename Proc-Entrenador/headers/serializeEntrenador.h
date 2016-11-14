@@ -200,7 +200,7 @@ void dsrlz_BatallaInforme(Paquete* paquete, int fdServer)
 
 	if(codOp != BATALLA_INFORME)
 	{
-		printf("Funcion: %s - Linea:%d - Error:codigo de Operacion BATALLA_INFORME invalido\n\n",__func__,__LINE__);
+		printf("\n\nFuncion: %s - Linea:%d - Error:codigo de Operacion BATALLA_INFORME invalido - codOp %i\n\n",__func__,__LINE__,codOp);
 		exit(1);
 	}
 
