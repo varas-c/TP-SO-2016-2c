@@ -1003,6 +1003,11 @@ Jugador* pelearEntrenadores()
 		free(paquete.buffer);
 		pokemon1 = list_get(jugador1->pokemonCapturados,indicePoke);
 
+		if(pokemon1==NULL)
+		{
+			printf("Pokemon 1 NULO - indice %i",indicePoke);
+		}
+
 		paquete = recv_pedirPokemonMasFuerte(jugador2, &retval);
 
 		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
@@ -1017,6 +1022,12 @@ Jugador* pelearEntrenadores()
 		indicePoke = dsrlz_pedirPokemonMasFuerte(&paquete);
 		free(paquete.buffer);
 		pokemon2 = list_get(jugador2->pokemonCapturados,indicePoke);
+
+		if(pokemon2==NULL)
+		{
+			printf("Pokemon 2 NULO - indice %i",indicePoke);
+		}
+
 		//HAY PELEA!
 
 		pokemonPerdedor = pkmn_battle(pokemon1->pokemon,pokemon2->pokemon);
