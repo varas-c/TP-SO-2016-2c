@@ -41,6 +41,15 @@ tiempo tiempoTardado(tiempo inicio, tiempo fin){
 	return tiempoTardado;
 }
 
+tiempo organizarTiempo(tiempo unTiempo){
+	int total;
+	tiempo tiempoOrganizado;
+	total = ((unTiempo.minutos)*60 + (unTiempo.segundos));
+	tiempoOrganizado.minutos = (total / 60);
+	tiempoOrganizado.segundos = (total % 60);
+	return tiempoOrganizado;
+}
+
 #include "headers/struct.h"
 
 Entrenador entrenador;
@@ -332,7 +341,9 @@ int main(int argc, char** argv)
 
 	struct tm *local, *local2, *local3, *local4;
 	time_t t, t2, t3, t4;
-	tiempo tardado,inicio,fin, bloqueadoInicio, bloqueadoFin, totalBloqueado, bloqueado;
+	tiempo tardado,inicio,fin, bloqueadoInicio, bloqueadoFin, totalBloqueado, bloqueado, totalBloqueadoOrganizado;
+
+
 
 	totalBloqueado.minutos = 0;
 	totalBloqueado.segundos = 0;
@@ -528,8 +539,10 @@ int main(int argc, char** argv)
 	fin.segundos = local2->tm_sec;
 
 	tardado = tiempoTardado(inicio, fin);
+	totalBloqueadoOrganizado = organizarTiempo(totalBloqueado);
+
 	printf("\nGanaste el Juego. Tu tiempo: %d minutos y %d segundos\n\n", tardado.minutos, tardado.segundos);
-	printf("Pasó %d minutos y %d segundos bloqueado en Pokenests\n", totalBloqueado.minutos, totalBloqueado.segundos);
+	printf("Pasó %d minutos y %d segundos bloqueado en Pokenests\n", totalBloqueadoOrganizado.minutos, totalBloqueadoOrganizado.segundos);
 	printf("Estuvo involucrado en: %d deadlocks, y fue victima en: %d\n\n",cantDeadlock,cantDeadlocksPerdidos);
 	//free(paquete.buffer);
 	return 0;
