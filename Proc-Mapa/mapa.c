@@ -154,7 +154,7 @@ void loggearColaBloqueados()
 			queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
 		}
 	}
-	log_info(infoLogger, "Jugadores en cola Bloqueados en el mapa %s: %s ",parametros.nombreMapa,simbolos);
+	//log_info(infoLogger, "Jugadores en cola Bloqueados en el mapa %s: %s ",parametros.nombreMapa,simbolos);
 	}
 	else
 	{
@@ -808,7 +808,7 @@ void desbloquearJugadores(t_list* lista)
 				jugadorBloqueado->jugador->peticion = 0;
 				list_add(jugadorBloqueado->jugador->pokemonCapturados,jugadorBloqueado->pokemon);
 				list_add(listaListos,jugadorBloqueado->jugador);
-				log_info(infoLogger, "Jugador %c entra a Listos en el mapa %s.",jugadorBloqueado->jugador->entrenador.simbolo, parametros.nombreMapa);
+				//log_info(infoLogger, "Jugador %c entra a Listos en el mapa %s.",jugadorBloqueado->jugador->entrenador.simbolo, parametros.nombreMapa);
 				loggearColas();
 				}
 				free(jugadorBloqueado);
@@ -961,13 +961,28 @@ Jugador* pelearEntrenadores()
 
 	t_pokemon* pokemonPerdedor = NULL;
 	int tamLista = list_size(listaDeadlock);
+	log_info(deadlockLogger, "--- tam listaDeadlock en PelearEntrenadores: %i", tamLista);
 
 	jugador1 = list_remove(listaDeadlock,0);
+
+	if(jugador1 == NULL)
+	{
+		printf("Jugador 1 NULO");
+		exit(1);
+	}
+
 	tamLista--;
 
 	while(tamLista > 0)
 	{
 		jugador2 = list_remove(listaDeadlock,0);
+
+		if(jugador2 == NULL)
+		{
+			printf("Jugador 2 NULO");
+			exit(1);
+		}
+
 
 		retval = send_pedirPokemonMasFuerte(jugador1);
 
@@ -1003,6 +1018,12 @@ Jugador* pelearEntrenadores()
 		free(paquete.buffer);
 		pokemon1 = list_get(jugador1->pokemonCapturados,indicePoke);
 
+		if(pokemon1==NULL)
+		{
+			printf("POKEMON1 NULO - INDICE %i",indicePoke);
+			exit(1);
+		}
+
 		paquete = recv_pedirPokemonMasFuerte(jugador2, &retval);
 
 		if(retval <= 0) //EL entrenador se fue, lo damos por muerto!
@@ -1017,9 +1038,22 @@ Jugador* pelearEntrenadores()
 		indicePoke = dsrlz_pedirPokemonMasFuerte(&paquete);
 		free(paquete.buffer);
 		pokemon2 = list_get(jugador2->pokemonCapturados,indicePoke);
+
+		if(pokemon2==NULL)
+		{
+			printf("POKEMON2 NULO - INDICE %i",indicePoke);
+			exit(1);
+		}
+
 		//HAY PELEA!
 
 		pokemonPerdedor = pkmn_battle(pokemon1->pokemon,pokemon2->pokemon);
+
+		if(pokemonPerdedor == NULL)
+		{
+			printf("Error en PELEA");
+			exit(1);
+		}
 
 		if(pokemon1->pokemon == pokemonPerdedor) //Si el 1 perdió
 		{
@@ -1040,11 +1074,12 @@ Jugador* pelearEntrenadores()
 			send_informeBatalla(jugador2->socket,informeBatalla);
 			free(informeBatalla);
 			perdedor = jugador2;
+			jugador1 = jugador2;
 		}
 		else
 		{
-			printf("Linea: %s - Linea: %d - Error De Deadlock, no se puede definir quien gano/perdio",__func__,__LINE__);
-			exit(1);
+			//printf("Linea: %s - Linea: %d - Error De Deadlock, no se puede definir quien gano/perdio",__func__,__LINE__);
+			//exit(1);
 		}
 
 		tamLista--;
@@ -1148,6 +1183,7 @@ void* thread_planificador()
 		if(!list_is_empty(listaDeadlock))
 		{
 			jugadorDeadlock = pelearEntrenadores();
+			log_info(deadlockLogger, "--- Fin de la pelea ---");
 			borrarJugadorDeColaBloqueados(jugadorDeadlock);
 			lista_jugadoresBloqueados = expropiarPokemones(jugadorDeadlock->pokemonCapturados);
 
@@ -1180,7 +1216,7 @@ void* thread_planificador()
 			else
 			{
 				jugador = list_remove(listaListos,0);
-				log_info(infoLogger, "el jugador :%c ha salido de la lista de listos del mapa:%s",jugador->entrenador.simbolo, parametros.nombreMapa);
+				//log_info(infoLogger, "el jugador :%c ha salido de la lista de listos del mapa:%s",jugador->entrenador.simbolo, parametros.nombreMapa);
 				loggearColas();
 				quantum = mdataMapa.quantum;
 				flag_SRDF = FALSE;
@@ -1343,10 +1379,21 @@ void* thread_deadlock()
 
 		if(!list_is_empty(entrenadores_aux))
 		{
-			list_add_all(listaDeadlock,entrenadores_aux);
+			int tam = list_size(entrenadores_aux);
+			int i;
+			list_clean(listaDeadlock);
+			for(i=0;i<tam;i++)
+			{
+				list_add(listaDeadlock,list_remove(entrenadores_aux,0));
+			}
+
+			log_info(deadlockLogger, " -- Tam entrenadores_aux: %i",tam);
+			log_info(deadlockLogger, "--- tam listaDeadlock: %i", list_size(listaDeadlock));
+			loggear_entrenadores_en_deadlock(entrenadores_aux,deadlockLogger);
 		}
 
 		list_clean(entrenadores_aux);
+		list_destroy(entrenadores_aux);
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
@@ -1354,11 +1401,11 @@ void* thread_deadlock()
 
 int main(int argc, char** argv)
 {
-	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	//parametros.dirPokedex = "/mnt/juegoMedio/pokedex";
-	//parametros.nombreMapa = "Verde";
+	parametros.dirPokedex = "/mnt/juegoMedio/pokedex";
+	parametros.nombreMapa = "Palet";
 
 	listaDeadlock = list_create();
 
@@ -1481,9 +1528,11 @@ int main(int argc, char** argv)
 					pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 					//Loggeamos info
+					/*
 					log_info(infoLogger, "Nuevo jugador: %c, socket %d en el mapa %s.", nuevoJugador.entrenador.simbolo, nuevoJugador.socket,parametros.nombreMapa);
 					log_info(infoLogger, "Jugador %c entra en Lista Listos en el Mapa:%s", nuevoJugador.entrenador.simbolo,parametros.nombreMapa);
 					loggearColas();
+					*/
 				}
 			}
 		}
@@ -1501,6 +1550,8 @@ int main(int argc, char** argv)
 	log_destroy(traceLogger);
 	log_destroy(infoLogger);
 	log_destroy(deadlockLogger);
+
+	printf("SE CIERRA EL PROGRAMAA");
 
 	return 0;
 }

@@ -421,7 +421,6 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
     if(list_size(entrenadores))
     {
-
     	t_list* pokenests_aux=list_create();
 
         list_add_all(entrenadores_aux,entrenadores);
@@ -448,6 +447,7 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
     		if(list_size(entrenadores_aux)>1)
 			{
+
                	log_info(deadlockLogger, "");
 
                 log_info(deadlockLogger, "    PETICIONES EN EL MAPA: %s", parametros.nombreMapa);
@@ -464,7 +464,7 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
                 log_info(deadlockLogger, "    DISPONIBLES EN EL MAPA: %s", parametros.nombreMapa);
 
-            	//loggear_vector(recursos_disponibles,pokenests_aux,deadlockLogger);
+            	loggear_vector(recursos_disponibles,pokenests_aux,deadlockLogger);
             	log_info(deadlockLogger, "");
 
     			log_info(deadlockLogger, "    ENTRENADORES EN DEADLOCK EN EL MAPA: %s", parametros.nombreMapa);
@@ -477,17 +477,19 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
     			free(recursos_disponibles);
 
-
+    			return entrenadores_aux;
 			}
 
         	else
         	{
-
+        		/*
             	log_info(deadlockLogger, "");
 
             	log_info(deadlockLogger, "    NO HAY DEADLOCK EN EL MAPA: %s", parametros.nombreMapa);
+				*/
 
         		list_clean(entrenadores_aux);
+        		free(recursos_disponibles);
 
 
         	}
@@ -496,29 +498,24 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
     	else
     	{
-
+    		/*
         	log_info(deadlockLogger, "");
 
         	log_info(deadlockLogger, "    NO HAY DEADLOCK EN EL MAPA: %s", parametros.nombreMapa);
+			*/
+
 
     		free(recursos_disponibles);
-
     		list_clean(entrenadores_aux);
 
     	}
 
     }
-    else
-    {
-    	/*
-    	log_info(deadlockLogger, "");
 
-		log_info(deadlockLogger, "    NO HAY ENTRENADORES EN EL MAPA: %s", parametros.nombreMapa);
-		*/
+    return entrenadores_aux;
 
-    }
 
-	return entrenadores_aux;
+
 }
 //*************************************************************
 

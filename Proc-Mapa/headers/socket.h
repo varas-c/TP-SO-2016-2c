@@ -67,11 +67,11 @@ void socket_select(int fdmax, fd_set *read_fds)
 	while(1)
 	{
 
-	if (select(fdmax + 1, read_fds, NULL, NULL, NULL) == -1)
+	if (select(fdmax + 1, read_fds, NULL, NULL, NULL) <= 0)
 	{
 		if(errno == EINTR)
 		{
-			//DO NOTHING
+			 printf("Señal recibida");
 		}
 
 		else
