@@ -30,9 +30,13 @@ Jugador* detectar_y_solucionar_deadlock(t_list* pokenests,t_list* entrenadores)
 
     list_add_all(pokenests_aux,pokenests);
 
-	int** matriz_peticiones = generar_matriz_peticiones(entrenadores_aux, pokenests_aux);
+	int** matriz_peticiones = inicializar_matriz(list_size(entrenadores), list_size(pokenests));
 
-	int** matriz_recursos_asignados = generar_matriz_asignados(entrenadores_aux, pokenests_aux);
+	int** matriz_recursos_asignados  = inicializar_matriz(list_size(entrenadores), list_size(pokenests));
+
+	generar_matriz_peticiones(entrenadores_aux, pokenests_aux,matriz_peticiones);
+
+	generar_matriz_asignados(entrenadores_aux, pokenests_aux,matriz_recursos_asignados);
 
 	int* recursos_disponibles = generar_vector_recursos_disponibles(pokenests_aux);
 
@@ -103,14 +107,7 @@ int main(void)
     MetadataPokenest* pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
-    pokenest->simbolo = 'O';
-
-    list_add(pokenests,pokenest);
-
-    pokenest = malloc(sizeof(MetadataPokenest));
-
-    pokenest->cantPokemon = 0;
-    pokenest->simbolo = 'C';
+    pokenest->simbolo = 'G';
 
     list_add(pokenests,pokenest);
 
@@ -128,14 +125,21 @@ int main(void)
 
     list_add(pokenests,pokenest);
 
+    pokenest = malloc(sizeof(MetadataPokenest));
 
+    pokenest->cantPokemon = 0;
+    pokenest->simbolo = 'P';
+
+    list_add(pokenests,pokenest);
+
+/*
     pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
     pokenest->simbolo = 'K';
 
     list_add(pokenests,pokenest);
-/*
+
     pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 0;
@@ -160,7 +164,7 @@ int main(void)
 
     entrenador->numero = 1;
 
-    entrenador->entrenador.simbolo='M';
+    entrenador->entrenador.simbolo='@';
 
     entrenador->pokemonCapturados = list_create();
     Pokemon* pokeaux;
@@ -171,9 +175,9 @@ int main(void)
 
     pokeaux->nombre = string_new();
 
-    strcpy((pokeaux->nombre),"C");
+    strcpy((pokeaux->nombre),"P");
 
-    pokeaux->pokenest='C';
+    pokeaux->pokenest='P';
 
     pokeaux->pokemon->level = 1;
 
@@ -189,7 +193,7 @@ int main(void)
 
     entrenador = malloc(sizeof(Jugador));
 
-    entrenador->peticion = 'C';
+    entrenador->peticion = 'P';
 
     entrenador->numero = 0;
 
@@ -203,11 +207,11 @@ int main(void)
 
     pokeaux->nombre = string_new();
 
-    strcpy(pokeaux->nombre,"O");
+    strcpy(pokeaux->nombre,"B");
 
     pokeaux->pokemon->level = 2;
 
-    pokeaux->pokenest='O';
+    pokeaux->pokenest='B';
 
     list_add(entrenador->pokemonCapturados,pokeaux);
 
@@ -221,13 +225,13 @@ int main(void)
 
     entrenador = malloc(sizeof(Jugador));
 
-    entrenador->peticion = 'O';
+    entrenador->peticion = 'Z';
 
     entrenador->numero = 2;
 
     entrenador->pokemonCapturados = list_create();
 
-    entrenador->entrenador.simbolo='@';
+    entrenador->entrenador.simbolo='&';
 
     pokeaux = malloc(sizeof(Pokemon));
 
@@ -235,11 +239,11 @@ int main(void)
 
     pokeaux->nombre = string_new();
 
-    strcpy(pokeaux->nombre,"B");
+    strcpy(pokeaux->nombre,"G");
 
     pokeaux->pokemon->level = 9;
 
-    pokeaux->pokenest = 'B';
+    pokeaux->pokenest = 'G';
 
     list_add(entrenador->pokemonCapturados,pokeaux);
 
@@ -248,7 +252,7 @@ int main(void)
 
     ///////////////////
 
-
+/*
     entrenador = malloc(sizeof(Jugador));
 
     entrenador->peticion = 'Z';
@@ -308,7 +312,7 @@ int main(void)
 
      ///////////////////
 
-     /*
+
 
      entrenador = malloc(sizeof(Jugador));
 
@@ -368,7 +372,9 @@ int main(void)
 
        ///////////////////
 
-       detectar_y_solucionar_deadlock(pokenests,entrenadores);
+       t_log * log = log_create("LogDeadlock.log", "Mapa", false, LOG_LEVEL_INFO);
+
+       obtener_un_deadlock(pokenests,entrenadores,log);
 
        list_destroy(entrenadores);
 

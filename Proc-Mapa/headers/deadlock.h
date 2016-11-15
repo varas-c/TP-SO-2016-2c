@@ -250,22 +250,25 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 		return no_puede_ejecutar;
 }
 //*************************************************************
+//*************************************************************
 
 bool tiene_lo_que_pide(Jugador* entrenador, Jugador* otro_entrenador)
 {
 	int i;
 	Pokemon* poke1;
-	if(entrenador!=otro_entrenador)
+
+	if((otro_entrenador->entrenador.simbolo)!=(entrenador->entrenador.simbolo))
 	{
 		for(i=0;i<list_size(otro_entrenador->pokemonCapturados);i++)
 		{
 			poke1=(Pokemon*)list_get(otro_entrenador->pokemonCapturados,i);
 
-			if((poke1->nombre[0]==entrenador->peticion))
+			if((poke1->pokenest==entrenador->peticion))
 			{
 				return true;
 			}
 		}
+		return false;
 	}
 	else
 		return false;
@@ -284,6 +287,7 @@ bool esta_en_inanicion(Jugador* entrenador,t_list* entrenadores)
 
 	for(j=0;j<list_size(entrenadores);j++)
 	{
+		if((((Jugador*)(list_get(entrenadores,j)))->entrenador.simbolo)!=(entrenador->entrenador.simbolo))
 		if(tiene_lo_que_pide(list_get(entrenadores,j),entrenador))
 		{
 			inanicion=false;
@@ -311,7 +315,7 @@ bool sacar_inanicion(t_list* entrenadores)
 				{
 					list_remove(entrenadores,i);
 					se_encontro = true;
-					i=0;
+					i=-1;
 				}
 			}
 		}
