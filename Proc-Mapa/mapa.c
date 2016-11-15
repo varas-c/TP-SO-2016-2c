@@ -1020,8 +1020,12 @@ Jugador* pelearEntrenadores()
 
 		if(pokemon1==NULL)
 		{
+<<<<<<< HEAD
 			printf("POKEMON1 NULO - INDICE %i",indicePoke);
 			exit(1);
+=======
+			printf("Pokemon 1 NULO - indice %i",indicePoke);
+>>>>>>> 8134ff16ad3aeddcfd3af2f361f938b9b2da8f5e
 		}
 
 		paquete = recv_pedirPokemonMasFuerte(jugador2, &retval);
@@ -1041,8 +1045,12 @@ Jugador* pelearEntrenadores()
 
 		if(pokemon2==NULL)
 		{
+<<<<<<< HEAD
 			printf("POKEMON2 NULO - INDICE %i",indicePoke);
 			exit(1);
+=======
+			printf("Pokemon 2 NULO - indice %i",indicePoke);
+>>>>>>> 8134ff16ad3aeddcfd3af2f361f938b9b2da8f5e
 		}
 
 		//HAY PELEA!
