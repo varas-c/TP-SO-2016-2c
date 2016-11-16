@@ -68,8 +68,8 @@ uint8_t enviar(int socket, void* buffer, uint64_t total)
 
 void finalizarProceso(int signal)
 {
-	//if(signal==SIGTERM || signal==SIGINT || signal == SIGHUP)
-	close(fd_server);
+	if(signal==SIGTERM || signal==SIGINT || signal == SIGHUP)
+		close(fd_server);
 	exit(0);
 }
 
@@ -440,7 +440,7 @@ int main(int argc, char* argv[])
 	numero_Puerto = getenv("POKE_SERVER_PUERTO");
 	fd_server = get_fdServer(numero_IP,numero_Puerto); //el fd_server es el "socket" que necesitas para comunicarte con el mapa
 /*
- * Uso de señales. Por ahora no hacen falta, el server detecta la desconexion
+// Uso de señales. Por ahora no hacen falta, el server detecta la desconexion
 	signal(SIGINT, finalizarProceso);
 	signal(SIGTERM, finalizarProceso);
 	signal(SIGHUP, finalizarProceso);
