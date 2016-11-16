@@ -149,7 +149,7 @@ char* dsrlz_capturarPokemon(Paquete* paquete, Entrenador* entrenador)
 	char *pokemonDat;
 	char* species;
 	int tamSpecies;
-	t_pokemon* pokemonCapturado;
+	int* pokemonLevel;
 
 	codOp = dsrlz_codigoOperacion(paquete->buffer);
 
@@ -165,19 +165,12 @@ char* dsrlz_capturarPokemon(Paquete* paquete, Entrenador* entrenador)
 
 	memcpy(pokemonDat,paquete->buffer+sizeof(int)*2,sizeof(char)*lengthPokemonDat);
 
-	memcpy(&tamSpecies,paquete->buffer+sizeof(int)*2+sizeof(char)*lengthPokemonDat,sizeof(int));
+	pokemonLevel = malloc(sizeof(int));
 
-	species = malloc(tamSpecies);
+	memcpy(pokemonLevel,paquete->buffer+sizeof(int)*2+sizeof(char)*lengthPokemonDat,sizeof(int));
 
-	memcpy(species,paquete->buffer+sizeof(int)*2+sizeof(char)*lengthPokemonDat+sizeof(int),sizeof(char)*tamSpecies);
 
-	pokemonCapturado = malloc(sizeof(t_pokemon));
-	memcpy(pokemonCapturado,paquete->buffer+sizeof(int)*2+sizeof(char)*lengthPokemonDat+sizeof(int)+sizeof(char)*tamSpecies,sizeof(t_pokemon));
-	pokemonCapturado->species = strdup(species);
-	free(species);
-
-	printf("Pokemon %s",pokemonCapturado->species);
-	list_add(entrenador->pokemonesCapturados,pokemonCapturado);
+	list_add(entrenador->pokemonesCapturados,pokemonLevel);
 
 	return pokemonDat;
 }

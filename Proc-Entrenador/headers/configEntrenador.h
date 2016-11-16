@@ -21,7 +21,7 @@ metadata leerMetadata(char* ruta)//Lee Metadata de un entrenador
 	//Si no se pudo abrir el archivo, salimos
 	if (config==NULL)
 	{
-		printf("Error en - Funcion: %s - Linea: %d - Archivo metadata.config no encontrado.\n", __func__,__LINE__);
+		printf("Error en - Funcion: %s - Linea: %d - Archivo metadata no encontrado.\n", __func__,__LINE__);
 		exit(20);
 	}
 
@@ -170,7 +170,7 @@ char* obtenerNombreMapa(char** hojaDeViaje, int numeroMapa)
 char* getRutaMetadata(ParametrosConsola parametros)
 {
 	char* pathEntrenadores= "Entrenadores";
-	char* pathMetadata = "metadata.config";
+	char* pathMetadata = "metadata";
 	char* slash = "/";
 
 	int tamPathPokedex =sizeofString(parametros.dirPokedex);
@@ -293,7 +293,7 @@ int evaluar_opciones(Entrenador entrenador, Pokenest pokenest)
 Paquete recv_capturarPokemon(int fd_server)
 {
 	Paquete paquete;
-	paquete.tam_buffer = sizeof(int)*2+sizeof(char)*50+sizeof(int)+sizeof(char)*50+sizeof(t_pokemon);
+	paquete.tam_buffer = sizeof(int) + sizeof(int) + sizeof(int) + sizeof(char)*20;
 	paquete.buffer = malloc(paquete.tam_buffer);
 
 

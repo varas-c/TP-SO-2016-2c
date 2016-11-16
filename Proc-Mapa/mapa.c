@@ -627,7 +627,7 @@ void desconectarJugador(Jugador* jugador)
 	int socket = jugador->socket;
 	close(socket);
 	BorrarItem(gui_items,jugador->entrenador.simbolo);
-	list_clean(jugador->pokemonCapturados);
+	//list_clean(jugador->pokemonCapturados);
 	list_destroy(jugador->pokemonCapturados);
 	//free(jugador->entrenador);
 	free(jugador);
@@ -641,22 +641,22 @@ Paquete srlz_capturaOK(Pokemon* pokemon)
 	char* pokemonDat = pokemon->nombre;
 	int tamPokemonDat = strlen(pokemonDat)+1;
 
-	int tamSpecies = strlen(pokemon->pokemon->species)+1;
+	//int tamSpecies = strlen(pokemon->pokemon->species)+1;
 
-	paquete.tam_buffer = size_CAPTURA_OK+sizeof(char)*tamPokemonDat+sizeof(int)+sizeof(char)*tamSpecies;
+	paquete.tam_buffer = size_CAPTURA_OK + sizeof(char)*tamPokemonDat;
 	paquete.buffer = malloc(paquete.tam_buffer);
 
 	int codOp = CAPTURA_OK;
 
-	memcpy(paquete.buffer,&codOp,sizeof(int));
-	memcpy(paquete.buffer+sizeof(int),&tamPokemonDat,sizeof(int));
-	memcpy(paquete.buffer+sizeof(int)*2,pokemonDat,sizeof(char)*tamPokemonDat);
-	memcpy(paquete.buffer+sizeof(int)*2+sizeof(char)*tamPokemonDat,&tamSpecies,sizeof(int));
-	memcpy(paquete.buffer+sizeof(int)*2+sizeof(char)*tamPokemonDat+sizeof(int),pokemon->pokemon->species,sizeof(char)*tamSpecies);
+	memcpy(paquete.buffer,&codOp,sizeof(int)); //copiaos el codigo de operacion
+	memcpy(paquete.buffer+sizeof(int),&tamPokemonDat,sizeof(int)); //copiamos el largo de la cadena de Pokemon.dat
+	memcpy(paquete.buffer+sizeof(int)*2,pokemonDat,sizeof(char)*tamPokemonDat);//copiamos la cadena Pokemon.dat
 
-	memcpy(paquete.buffer+sizeof(int)*2+sizeof(char)*tamPokemonDat+sizeof(int)+sizeof(char)*tamSpecies,pokemon->pokemon,sizeof(t_pokemon));
+	int level = pokemon->pokemon->level;
 
-	//free(pokemonDat);
+	memcpy(paquete.buffer+sizeof(int)*2+sizeof(char)*tamPokemonDat,&level,sizeof(int)); //copiamos el nivel
+
+
 	return paquete;
 }
 
@@ -667,7 +667,7 @@ int send_capturaOK(Jugador* jugador,Pokemon* pokemon)
 	paquete = srlz_capturaOK(pokemon);
 	int retval;
 
-	retval = send(jugador->socket,paquete.buffer,paquete.tam_buffer,0);
+	retval = send(jugador->socket,paquete.buffer,paquete.tam_buffer,MSG_NOSIGNAL);
 
 	free(paquete.buffer);
 
@@ -703,7 +703,7 @@ int verificarConexion(Jugador* jugador,int retval,int* quantum)
 {
 	if(retval < 0)
 	{
-		desconectarJugador(jugador);
+		//desconectarJugador(jugador);
 		*quantum = 0;
 		return 1;
 	}
@@ -1020,12 +1020,10 @@ Jugador* pelearEntrenadores()
 
 		if(pokemon1==NULL)
 		{
-<<<<<<< HEAD
+
 			printf("POKEMON1 NULO - INDICE %i",indicePoke);
 			exit(1);
-=======
-			printf("Pokemon 1 NULO - indice %i",indicePoke);
->>>>>>> 8134ff16ad3aeddcfd3af2f361f938b9b2da8f5e
+
 		}
 
 		paquete = recv_pedirPokemonMasFuerte(jugador2, &retval);
@@ -1045,12 +1043,9 @@ Jugador* pelearEntrenadores()
 
 		if(pokemon2==NULL)
 		{
-<<<<<<< HEAD
+
 			printf("POKEMON2 NULO - INDICE %i",indicePoke);
 			exit(1);
-=======
-			printf("Pokemon 2 NULO - indice %i",indicePoke);
->>>>>>> 8134ff16ad3aeddcfd3af2f361f938b9b2da8f5e
 		}
 
 		//HAY PELEA!
@@ -1314,12 +1309,14 @@ void* thread_planificador()
 
 				case 0:
 					//sumarRecurso(jugador->pokemonCapturados,pokenest->simbolo);
+					/*
 					lista_jugadoresBloqueados = expropiarPokemones(jugador->pokemonCapturados);
 					desconectarJugador(jugador);
 					log_info(infoLogger, "El jugador %c ha salido del mapa%s\n\n",jugador->entrenador.simbolo,parametros.nombreMapa);
 					loggearColas();
 					quantum = 0;
 					flag_DESCONECTADO = TRUE;
+					*/
 					break;
 				} //FIN SWITCH
 			}//FIN ELSE
@@ -1389,7 +1386,8 @@ void* thread_deadlock()
 		{
 			int tam = list_size(entrenadores_aux);
 			int i;
-			list_clean(listaDeadlock);
+			list_destroy(listaDeadlock);
+			listaDeadlock=list_create();
 			for(i=0;i<tam;i++)
 			{
 				list_add(listaDeadlock,list_remove(entrenadores_aux,0));
@@ -1400,7 +1398,7 @@ void* thread_deadlock()
 			loggear_entrenadores_en_deadlock(entrenadores_aux,deadlockLogger);
 		}
 
-		list_clean(entrenadores_aux);
+		//list_clean(entrenadores_aux);
 		list_destroy(entrenadores_aux);
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
@@ -1409,11 +1407,11 @@ void* thread_deadlock()
 
 int main(int argc, char** argv)
 {
-	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	parametros.dirPokedex = "/mnt/juegoMedio/pokedex";
-	parametros.nombreMapa = "Palet";
+	//parametros.dirPokedex = "/mnt/pruebaBase/pokedex";
+	//parametros.nombreMapa = "Verde";
 
 	listaDeadlock = list_create();
 

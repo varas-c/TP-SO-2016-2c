@@ -43,7 +43,7 @@ enum sizeofBuffer
 	size_SIMBOLO = sizeof(int)+sizeof(char),
 	size_FINOBJETIVOS = sizeof(int),
 	size_COORDENADAS = sizeof(int)+sizeof(int)+sizeof(int),
-	size_CAPTURA_OK = sizeof(int)+sizeof(int) + sizeof(t_pokemon),
+	size_CAPTURA_OK = sizeof(int)+sizeof(int) + sizeof(int),
 	size_MOVER_OK = sizeof(int),
 	size_BATALLA_PELEA = sizeof(int),
 	size_PEDIR_POKEMON_MAS_FUERTE = sizeof(int) + sizeof(int),

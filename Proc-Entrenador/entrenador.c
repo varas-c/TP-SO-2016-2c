@@ -181,16 +181,19 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 
 int get_pokemon_mas_fuerte()
 {
-	t_pokemon* mas_fuerte = (t_pokemon*)list_get(entrenador.pokemonesCapturados,0);
+	int* mas_fuerte = (int*)list_get(entrenador.pokemonesCapturados,0);
+	int* aux;
 
 	int i;
 	int indicePok = 0;
 
 	for(i=1;i<list_size(entrenador.pokemonesCapturados);i++)
 	{
-		if((((t_pokemon*)list_get(entrenador.pokemonesCapturados,i))->level)>(mas_fuerte->level))
+		aux = (int*)list_get(entrenador.pokemonesCapturados,i);
+
+		if(*aux > *mas_fuerte)
 		{
-			mas_fuerte = (t_pokemon*)list_get(entrenador.pokemonesCapturados,i);
+			mas_fuerte = (int*)list_get(entrenador.pokemonesCapturados,i);
 			indicePok= i;
 		}
 	}
@@ -318,6 +321,21 @@ int recv_codigoOperacion(int fd_server)
 
 	return codop;
 }
+
+void liberarPokemonesCapturados(t_list* pokemones)
+{
+	int tamList = list_size(pokemones);
+	int i;
+
+	for(i=0;i<tamList;i++)
+	{
+		free(list_remove(pokemones,0));
+	}
+
+	list_clean(pokemones);
+}
+
+
 
 int main(int argc, char** argv)
 {
@@ -491,25 +509,29 @@ int main(int argc, char** argv)
 							totalBloqueado.minutos += bloqueado.minutos;
 							totalBloqueado.segundos += bloqueado.segundos;
 
-							printf("\nHa sido elegido como víctima durante una batalla pokemon\n");
 							borrarPokemones(parametros);
 							cantDeadlocksPerdidos++;
 							flag_SIGNALMUERTE = true;
 						}
 					}
-					if(nivel.cantObjetivos <= nivel.numPokenest)
+
+					//Aca termina el if de captura
+
+					if(nivel.cantObjetivos <= nivel.numPokenest && flag_SIGNALMUERTE == false) //Si gano el nivel
 					{
 						printf("Fin Nivel\n");
 						borrarPokemones(parametros);
-						copiarMedalla(parametros, mapa.nombre);
+
 						close(fd_server);
 
 						if(flag_SIGNALMUERTE == false)
 						{
+							liberarPokemonesCapturados(entrenador.pokemonesCapturados);
 							avanzarNivel(&nivel,&entrenador);
+							copiarMedalla(parametros, mapa.nombre);
 						}
 					}
-					else
+					else if (flag_SIGNALMUERTE == false)
 					{
 						nivel.numPokenest++;
 						pokenest = new_pokenest(mdata.objetivos[nivel.nivelActual],nivel.numPokenest);
@@ -527,11 +549,17 @@ int main(int argc, char** argv)
 				entrenador = entrenador_estadoInicial;
 				entrenador.reintentos = auxreintentos++;
 				nivel.finNivel = 1;
+				liberarPokemonesCapturados(entrenador.pokemonesCapturados);
 				flag_seguirJugando = informar_signalMuerteEntrenador();
 			}
 	}
 		flag_SIGNALMUERTE = false;
 	}
+
+	//ACA HAY QUE VER SI GANA
+
+	if(nivel.cantNiveles == nivel.nivelActual)
+	{
 
 	t2 = time(NULL);
 	local2 = localtime(&t2);
@@ -545,5 +573,7 @@ int main(int argc, char** argv)
 	printf("Pasó %d minutos y %d segundos bloqueado en Pokenests\n", totalBloqueadoOrganizado.minutos, totalBloqueadoOrganizado.segundos);
 	printf("Estuvo involucrado en: %d deadlocks, y fue victima en: %d\n\n",cantDeadlock,cantDeadlocksPerdidos);
 	//free(paquete.buffer);
+	}
+
 	return 0;
 }

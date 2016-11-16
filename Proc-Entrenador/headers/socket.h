@@ -93,12 +93,16 @@ void sigHandler_endProcess(int signal)
 {
 	switch(signal)
 	{
-	case SIGINT || SIGHUP:
+	case SIGINT:
 		close(fd_server);
 		printf("Atrapando %i ", signal);
 		exit(1);
 		break;
-
+	case SIGHUP:
+		close(fd_server);
+		printf("Atrapando %i ", signal);
+		exit(1);
+		break;
 	}
 }
 
