@@ -408,7 +408,7 @@ int reservarNuevoBloque(int bloqueAnterior)
 		tablaAsignaciones[bloqueAnterior]=nuevoBloque;
 
 	tablaAsignaciones[nuevoBloque]=BLOQUE_NULO;
-	memset(inicioDatos[nuevoBloque], 0, OSADA_BLOCK_SIZE);
+	memset(inicioDatos[nuevoBloque], '\0', OSADA_BLOCK_SIZE);
 	return nuevoBloque;
 }
 
