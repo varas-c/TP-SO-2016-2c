@@ -187,7 +187,14 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 		cant_entrenadores = list_size(entrenadores);
 		cant_pokenests = list_size(pokenests);
 		int posible_deadlock[cant_entrenadores];
-		int i,j,k;
+		int i=0,j,k;
+		int *recursos_disponibles_aux =malloc(sizeof(int)*(list_size(pokenests)));
+		int tamanio=list_size(pokenests);
+		while(i<tamanio)
+		{
+			recursos_disponibles_aux[i]=recursos_disponibles[i];
+			i++;
+		}
 
 		for(i=0;i<cant_entrenadores;i++)
 		{
@@ -217,7 +224,7 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 				entrenador_satisfecho = true;
 				for(j=0;j<cant_pokenests;j++)
 				{
-					if(matriz_peticiones[i][j] > recursos_disponibles[j])
+					if(matriz_peticiones[i][j] > recursos_disponibles_aux[j])
 					{
 						entrenador_satisfecho = false;
 						j=cant_pokenests;
@@ -229,7 +236,7 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 					posible_deadlock[i] = 0;
 					for(k=0;k<cant_pokenests;k++)  //NO ESTA EN DEADLOCK, "DEVUELVE" SUS RECURSOS
 					{
-						recursos_disponibles[k] += matriz_recursos_asignados[i][k];
+						recursos_disponibles_aux[k] += matriz_recursos_asignados[i][k];
 					}
 					i=-1;
 				}
@@ -245,6 +252,8 @@ t_list* no_pueden_ejecutar(t_list* entrenadores, t_list*pokenests,int**matriz_pe
 				list_add(no_puede_ejecutar,list_get(entrenadores,i)); // DEVUELVO LISTA CON LOS QUE PUEDEN ESTAR EN DL
 			}
 		}
+
+		free(recursos_disponibles_aux);
 	}
 
 		return no_puede_ejecutar;
@@ -415,12 +424,23 @@ void ordenar_por_llegada(t_list* entrenadores)
 {
 	list_sort(entrenadores, llego_primero);
 }
+
 //*************************************************************
 
-t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadlockLogger)
+void liberar_matriz(int** matriz,int c)
 {
+	int i=0;
+	for(i=0;i<c;i++)
+	{
+		free(matriz[i]);
+	}
+}
 
-	t_list* entrenadores_aux=list_create();
+//*************************************************************
+
+t_list* obtener_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadlockLogger)
+{
+	t_list* entrenadores_aux = list_create();
 
     if(list_size(entrenadores))
     {
@@ -450,7 +470,6 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
     		if(list_size(entrenadores_aux)>1)
 			{
-
                	log_info(deadlockLogger, "");
 
                 log_info(deadlockLogger, "    PETICIONES");
@@ -474,9 +493,11 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
     			loggear_entrenadores_en_deadlock(entrenadores_aux,deadlockLogger);
 
-            	free(matriz_peticiones);
+    			liberar_matriz(matriz_peticiones,list_size(entrenadores));
 
-    			free(matriz_recursos_asignados);
+    			liberar_matriz(matriz_recursos_asignados,list_size(entrenadores));
+
+    			list_destroy(pokenests_aux);
 
     			free(recursos_disponibles);
 
@@ -485,12 +506,12 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
         	else
         	{
+/*
+        	log_info(deadlockLogger, "");
+        	log_info(deadlockLogger, "    NO HAY DEADLOCK EN EL MAPA: %s", parametros.nombreMapa);
+*/
 
-            	log_info(deadlockLogger, "");
-
-            	log_info(deadlockLogger, "    NO HAY DEADLOCK ");
-
-
+    			list_destroy(pokenests_aux);
         		list_clean(entrenadores_aux);
         		free(recursos_disponibles);
 
@@ -501,13 +522,13 @@ t_list* obtener_un_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadl
 
     	else
     	{
+
     		/*
         	log_info(deadlockLogger, "");
-
         	log_info(deadlockLogger, "    NO HAY DEADLOCK EN EL MAPA: %s", parametros.nombreMapa);
-			*/
+*/
 
-
+			list_destroy(pokenests_aux);
     		free(recursos_disponibles);
     		list_clean(entrenadores_aux);
 
