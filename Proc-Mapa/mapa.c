@@ -1453,7 +1453,7 @@ void* thread_deadlock()
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 
-		entrenadores_aux = obtener_un_deadlock(listaPokenest,global_listaJugadoresSistema,deadlockLogger);
+		entrenadores_aux = obtener_deadlock(listaPokenest,global_listaJugadoresSistema,deadlockLogger);
 
 		if(!list_is_empty(entrenadores_aux))
 		{
@@ -1483,7 +1483,7 @@ int main(int argc, char** argv)
 	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	parametros.dirPokedex = "/mnt/pruebaBase/pokedex";
+	parametros.dirPokedex = "../../mnt/pruebaBase/pokedex";
 	parametros.nombreMapa = "Verde";
 
 	listaDeadlock = list_create();
