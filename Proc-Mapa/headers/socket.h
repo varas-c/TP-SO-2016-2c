@@ -62,12 +62,18 @@ void socket_listen(int listener)
 }
 //****************************************************************************************************************
 
+
+
 void socket_select(int fdmax, fd_set *read_fds)
 {
+
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
+
 	while(1)
 	{
 
-	if (select(fdmax + 1, read_fds, NULL, NULL, NULL) <= 0)
+	if (select(fdmax + 1, read_fds, NULL, NULL, &tv) < 0)
 	{
 		if(errno == EINTR)
 		{
@@ -105,11 +111,12 @@ int socket_addNewConection(int listener, fd_set *master, int *fdmax)
 	else {
 		/*
 		FD_SET(newfd, master); // añadir al conjunto maestro
+		*/
 
 		if (newfd > *fdmax) {    // actualizar el máximo
 			*fdmax = newfd;
 		}
-		*/
+
 	//printf("selectserver: new connection from %s on ""socket %d\n", inet_ntoa(remoteaddr.sin_addr),newfd);
 	}
 	return newfd;

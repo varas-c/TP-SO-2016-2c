@@ -4,6 +4,9 @@
  *  Created on: 30/8/2016
  *      Author: utnso
  */
+
+
+
 #include <pkmn/factory.h>
 #include <pthread.h>
 #include <sys/select.h>
@@ -26,6 +29,10 @@
 #include <pkmn/battle.h>
 #include <semaphore.h>
 #include <signal.h>
+
+
+struct timeval tv;
+
 /****************************************************************************************************************
 			INCLUDES PROPIOS :)
 ****************************************************************************************************************/
@@ -75,6 +82,7 @@ ParametrosMapa parametros;
 structColasBloqueados colasBloqueados;
 
 t_list* global_listaJugadoresSistema;
+t_list* listaDesconectados;
 
 #include "headers/planificacion.h" //Este lo puse acpa abajo porque usa variables globales, fuck it. No se como arreglarlo.
 #include "headers/deadlock.h"
@@ -651,6 +659,8 @@ t_list* expropiarPokemones2(t_list* listaPokemones)
 
 			if(retval<=0)
 			{
+				list_destroy(listaDeadlock);
+				listaDeadlock=list_create();
 				expropiarPokemones2(jugadorDesbloqueado->pokemonCapturados);
 				borrarJugadorSistema(jugadorDesbloqueado);
 				desconectarJugador(jugadorDesbloqueado);
@@ -658,6 +668,7 @@ t_list* expropiarPokemones2(t_list* listaPokemones)
 			}
 			else
 			{
+				FD_CLR(jugadorDesbloqueado->socket,&fds_entrenadores);
 				jugadorDesbloqueado->estado = 0;
 				jugadorDesbloqueado->peticion = 0;
 				list_add(jugadorDesbloqueado->pokemonCapturados,pokemonDesbloqueado);
@@ -1215,6 +1226,34 @@ void borrarJugadorDeColaBloqueados(Jugador* jugadorBuscado)
 	}
 }
 
+void borrarJugadorListaDeadlock(Jugador* jugador)
+{
+	int numeroBuscado = jugador->numero;
+
+	bool _find_number_(Jugador* removido)
+	{
+		return removido->numero == numeroBuscado;
+	}
+
+	list_remove_by_condition(listaDeadlock,(void*)_find_number_);
+
+}
+
+
+Jugador* removeJugadorSistema(int socketBuscado)
+{
+	Jugador* jugador = NULL;
+
+	bool _find_socket_(Jugador* removido)
+	{
+		return removido->socket == socketBuscado;
+	}
+
+	jugador = list_remove_by_condition(global_listaJugadoresSistema,(void*)_find_socket_);
+
+	return jugador;
+}
+
 void* thread_planificador()
 {
 	nivel_gui_inicializar();
@@ -1239,6 +1278,8 @@ void* thread_planificador()
 	pid_t pid= getpid();
 
 	Jugador* jugadorDeadlock = NULL;
+	Jugador* jugadorDesconectado;
+	int* socketDesconectado;
 
 	while(1)
 	{
@@ -1374,6 +1415,7 @@ void* thread_planificador()
 							jugador->peticion = pokenestPedida;
 							jugador->conocePokenest = false;
 							bloquearJugador(jugador,pokenestPedida);
+							FD_SET(jugador->socket,&fds_entrenadores);
 							log_info(infoLogger,"El Jugador %c ha entrado a la cola de Bloqueados del mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
 							loggearColas();
 						}
@@ -1399,7 +1441,7 @@ void* thread_planificador()
 
 			calcular_coordenadas(&(jugador->entrenador),pokenestEnviar->posicionX,pokenestEnviar->posicionY);
 
-			int tam = list_size(listaListos);
+			int tam = list_size(global_listaJugadoresSistema);
 
 			sprintf(mostrar,"Mapa: %s -pid.%i - Quantum: %i - Jugador: %i - TamLista: %i ",parametros.nombreMapa,pid,quantum,jugador->numero,tam);
 
@@ -1417,6 +1459,8 @@ void* thread_planificador()
 			}
 			nivel_gui_dibujar(gui_items, mostrar);
 		}//FIN WHILE
+
+
 		if(flag_DESCONECTADO == FALSE)
 		{
 		if(jugador->estado==0)
@@ -1431,12 +1475,37 @@ void* thread_planificador()
 		{
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 		expropiarPokemones2(jugador->pokemonCapturados);
+
+		list_destroy(listaDeadlock);
+		listaDeadlock=list_create();
 		borrarJugadorSistema(jugador);
 		desconectarJugador(jugador);
 		quantum = 0;
 		flag_DESCONECTADO = TRUE;
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 		}
+
+		pthread_mutex_lock(&mutex_hiloDeadlock);
+
+		while(!list_is_empty(listaDesconectados))
+		{
+			socketDesconectado = list_remove(listaDesconectados,0);
+			jugadorDesconectado = removeJugadorSistema(*socketDesconectado);
+
+			if(jugadorDesconectado != NULL)
+			{
+			borrarJugadorDeColaBloqueados(jugadorDesconectado);
+			list_destroy(listaDeadlock);
+			listaDeadlock=list_create();
+			expropiarPokemones2(jugadorDesconectado->pokemonCapturados);
+			borrarJugadorSistema(jugadorDesconectado);
+		    desconectarJugador(jugadorDesconectado);
+		    free(socketDesconectado);
+			}
+		}
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
+
+
 		flag_DESCONECTADO = FALSE;
 	}
 	} //While global
@@ -1480,11 +1549,13 @@ void* thread_deadlock()
 
 int main(int argc, char** argv)
 {
+	listaDesconectados = list_create();
+
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	//parametros.dirPokedex = "/mnt/pruebaBase/pokedex";
-	//parametros.nombreMapa = "Verde";
+	//parametros.dirPokedex = "/mnt/juegoFacil2/pokedex";
+	//parametros.nombreMapa = "Palet";
 
 	listaDeadlock = list_create();
 
@@ -1563,9 +1634,12 @@ int main(int argc, char** argv)
 	int *aux2;
 	int tambuffer;
 	tambuffer = sizeof(int);
-	void* buffer;
+	void* buffer = malloc(sizeof(int));
 	int newfd;
 	char simboloEntrenador;
+
+
+	int* socketDesconectado;
 
 	for (;;) {
 		read_fds = fds_entrenadores; // cópialo
@@ -1613,7 +1687,22 @@ int main(int argc, char** argv)
 					loggearColas();
 					*/
 				}
+
+				else
+				{
+					if( recv(i,buffer,sizeof(int),MSG_PEEK) <= 0 )
+					{
+
+						//UN CLIENTE BLOQUEADO SE DESCONECTÓ, AVISAR A MAPA
+						socketDesconectado = malloc(sizeof(int));
+						*socketDesconectado = i;
+						pthread_mutex_lock(&mutex_hiloDeadlock);
+						list_add(listaDesconectados,socketDesconectado);
+						pthread_mutex_unlock(&mutex_hiloDeadlock);
+					}
+				}
 			}
+
 		}
 	}
 
