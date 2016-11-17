@@ -1256,7 +1256,7 @@ void* thread_planificador()
 		//nivel_gui_dibujar(gui_items, mostrar);
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
-		if(!list_is_empty(listaDeadlock))
+		if(mdataMapa.modoBatalla == true && !list_is_empty(listaDeadlock) )
 		{
 			jugadorDeadlock = pelearEntrenadores();
 			log_info(deadlockLogger, "--- Fin de la pelea ---");
@@ -1480,11 +1480,11 @@ void* thread_deadlock()
 
 int main(int argc, char** argv)
 {
-	//verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
-	//parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
+	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
+	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	parametros.dirPokedex = "/mnt/pruebaBase/pokedex";
-	parametros.nombreMapa = "Verde";
+	//parametros.dirPokedex = "/mnt/pruebaBase/pokedex";
+	//parametros.nombreMapa = "Verde";
 
 	listaDeadlock = list_create();
 
