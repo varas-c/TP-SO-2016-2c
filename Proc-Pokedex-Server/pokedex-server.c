@@ -13,10 +13,9 @@
 #include <sys/mman.h>
 #include <pthread.h>
 #include <time.h>
-#include <commons/config.h>
-#include <commons/log.h>
 #include <commons/bitarray.h>
 #include <commons/string.h>
+#include <commons/collections/list.h>
 #include "headers/struct.h"
 #include "headers/osada.h"
 #include "headers/socket.h"
@@ -82,6 +81,15 @@ uint8_t enviar(int socket, void* buffer, uint64_t total)
 	}while(parcial<total);
 	return 1;
 }
+/*
+void finalizarProceso(int signal)
+{
+	if(signal==SIGTERM || signal==SIGINT || signal == SIGHUP)
+	{
+		close(listener);
+	}
+	exit(0);
+}*/
 
 //**** PROTOTIPOS ****
 int encontrarBloqueLibre();
@@ -288,7 +296,7 @@ int* obtenerBloques(int indice, int* size) //Devuelve en orden los índices de l
 int obtenerArchivo(char* path)
 {
 	int i = 0;
-	int retorno;
+	int retorno = 0;
 	while(path[i]!=0 && path[i]=='/')
 		i++;
 	if (i==strlen(path))
@@ -408,7 +416,7 @@ int reservarNuevoBloque(int bloqueAnterior)
 		tablaAsignaciones[bloqueAnterior]=nuevoBloque;
 
 	tablaAsignaciones[nuevoBloque]=BLOQUE_NULO;
-	memset(inicioDatos[nuevoBloque], 0, OSADA_BLOCK_SIZE);
+	memset(inicioDatos[nuevoBloque], '\0', OSADA_BLOCK_SIZE);
 	return nuevoBloque;
 }
 
@@ -605,6 +613,7 @@ void gestionarSocket(void* socket)
 		{
 			fflush(stdout);
 			printf("Cliente %d desconectado al recibir codigo de operacion\n\n", cliente);
+			free(buffer);
 			return;
 		}
 		memcpy(&operacion, buffer, 1);
@@ -615,6 +624,7 @@ void gestionarSocket(void* socket)
 		{
 			fflush(stdout);
 			printf("Cliente %d desconectado al entrar en getattr.\n\n", cliente);
+			free(buffer);
 			return;
 		}
 		printf("Operacion %d sobre %s\n", operacion, (char*)buffer);
@@ -687,7 +697,6 @@ void gestionarSocket(void* socket)
 				else
 				{
 					signed char menosUno = -1;
-					buffer=malloc(1);
 					memcpy(buffer, &menosUno, 1);
 					send(cliente, buffer, 1, 0);
 				}
@@ -701,6 +710,7 @@ void gestionarSocket(void* socket)
 				if ((resultado = recv(cliente, buffer, sizeof(size_t)+sizeof(uint64_t), 0))<=0)
 				{
 					printf("Cliente %d desconectado.\n\n", cliente);
+					free(buffer);
 					return;
 				}
 				size_t cantLeida;
@@ -735,6 +745,7 @@ void gestionarSocket(void* socket)
 				if ((resultado = recv(cliente, buffer, sizeof(uint64_t), 0))<=0)
 				{
 					printf("Cliente %d desconectado.\n\n", cliente);
+					free(buffer);
 					return;
 				}
 				uint64_t size;
@@ -754,6 +765,7 @@ void gestionarSocket(void* socket)
 				if ((resultado = recv(cliente, buffer, sizeof(size_t)+sizeof(uint64_t), 0))<=0)
 				{
 					printf("Cliente %d desconectado.\n\n", cliente);
+					free(buffer);
 					return;
 				}
 
@@ -766,6 +778,7 @@ void gestionarSocket(void* socket)
 				if (!recibir(cliente, buffer, tamEscritura))
 				{
 					printf("Cliente %d desconectado.\n\n", cliente);
+					free(buffer);
 					return;
 				}
 				resultado = actualizar(archivo, buffer, tamEscritura, offsetEscritura);
@@ -859,6 +872,7 @@ void gestionarSocket(void* socket)
 				if ((recv(cliente,buffer,1,0))<=0)
 				{
 					printf("Cliente %d desconectado.\n\n", cliente);
+					free(buffer);
 					return;
 				}
 				uint8_t tamPath=0;
@@ -918,6 +932,13 @@ int main(int argc, char** argv)
 		printf("Puerto no válido.\n");
 		exit(0);
 	}
+
+/*
+// 	Uso de señales
+		signal(SIGINT, finalizarProceso);
+		signal(SIGTERM, finalizarProceso);
+		signal(SIGHUP, finalizarProceso);
+*/
 	struct stat fsStat;
 	fstat(fd_fileSystem, &fsStat);
 
@@ -951,6 +972,10 @@ int main(int argc, char** argv)
 	int listener;     // descriptor de socket a la escucha
 	int i;
 	pthread_t hilo;
+	pthread_attr_t atributo;
+	pthread_attr_init(&atributo);
+	pthread_attr_setdetachstate(&atributo, PTHREAD_CREATE_DETACHED);
+
 	FD_ZERO(&master);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);
 
@@ -979,9 +1004,8 @@ int main(int argc, char** argv)
 					if (i == listener)
 					{
 						//ACEPTAMOS UN NUEVO CLIENTE
-						//socket_addNewConnection lo que ace
 						int cliente = socket_addNewConection(listener,&master,&fdmax);
-						int retval = pthread_create(&hilo, NULL, (void*)gestionarSocket, (void*) cliente);
+						int retval = pthread_create(&hilo, &atributo, (void*)gestionarSocket, (void*) cliente);
 						if(!retval)
 							printf("Nueva conexion detectada.Socket: %d\n", cliente);
 						else

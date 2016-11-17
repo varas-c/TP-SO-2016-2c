@@ -68,28 +68,20 @@ uint8_t enviar(int socket, void* buffer, uint64_t total)
 
 void finalizarProceso(int signal)
 {
-	//if(signal==SIGTERM || signal==SIGINT || signal == SIGHUP)
-	close(fd_server);
+	if(signal==SIGTERM || signal==SIGINT || signal == SIGHUP)
+		close(fd_server);
 	exit(0);
 }
 
-void enviarCodigoYTamanio(int codigo, uint8_t tamanio)
+void enviarCodigoYPath(uint8_t codigo, const char* path)
 {
 	void* buffer;
-	buffer = malloc(2);
+	buffer = malloc(2+strlen(path)+1);
 	memset(buffer, codigo, 1);
-	memset(buffer+1, tamanio, 1);
-	send(fd_server, buffer, 2, 0);
-	free(buffer);
-	return;
-}
+	memset(buffer+1, strlen(path)+1, 1);
 
-void enviarPath(const char* path)
-{
-	void* buffer;
-	buffer = malloc(strlen(path)+1);
-	memcpy(buffer, path, strlen(path)+1);
-	send(fd_server, buffer, strlen(path)+1, 0);
+	memcpy(buffer+2, path, strlen(path)+1);
+	enviar(fd_server, buffer, 2+strlen(path)+1);
 	free(buffer);
 	return;
 }
@@ -127,8 +119,7 @@ static int osada_getattr(const char *path, struct stat *stbuf)
 	}
 	else
 	{
-		enviarCodigoYTamanio(COD_GETATTR, strlen(path)+1);
-		enviarPath(path);
+		enviarCodigoYPath(COD_GETATTR, path);
 		buffer = malloc(1);
 		if ((res = recv(fd_server, buffer, 1, 0)) <= 0)
 		{
@@ -178,8 +169,7 @@ static int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, of
 	int retorno = 0;
 	int res=0;
 
-	enviarCodigoYTamanio(COD_READDIR, strlen(path)+1);
-	enviarPath(path);
+	enviarCodigoYPath(COD_READDIR, path);
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
 	{
@@ -224,8 +214,7 @@ static size_t osada_read(const char *path, char *buf, size_t size, off_t offset,
 
 	//ATENCIÓN: off_t ocupa 8 bytes acá, y 4 en el servidor. Tener en cuenta al hacer sizeof(off_t)
 
-	enviarCodigoYTamanio(COD_READ, strlen(path)+1);
-	enviarPath(path);
+	enviarCodigoYPath(COD_READ, path);
 	buffer = malloc(sizeof(size)+sizeof(offset));
 	memcpy(buffer, &size, sizeof(size));
 	memcpy(buffer+sizeof(size), &offset, sizeof(offset));
@@ -260,8 +249,7 @@ int osada_truncate(const char * path, off_t size) //Truncate debe estar para que
 	void* buffer;
 	uint8_t retorno=0;
 
-	enviarCodigoYTamanio(COD_TRUNCATE, strlen(path)+1);
-	enviarPath(path);
+	enviarCodigoYPath(COD_TRUNCATE, path);
 	buffer = malloc(sizeof(size));
 	memcpy(buffer, &size, sizeof(size));
 	send(fd_server, buffer, sizeof(size), 0);
@@ -284,17 +272,13 @@ static int osada_write(const char *path, const char *buf, size_t size, off_t off
 	int retorno = size;
 	int res=0;
 
-	enviarCodigoYTamanio(COD_WRITE, strlen(path)+1);
-	enviarPath(path);
+	enviarCodigoYPath(COD_WRITE, path);
 
-	buffer=malloc(sizeof(size_t)+sizeof(off_t));
+	buffer=malloc(sizeof(size_t)+sizeof(off_t)+size);
 	memcpy(buffer, &size, sizeof(size));
 	memcpy(buffer+sizeof(size_t), &offset, sizeof(off_t));
-	send(fd_server, buffer, sizeof(size_t)+sizeof(off_t), 0);
-	free(buffer);
-	buffer= malloc(size);
-	memcpy(buffer, buf, size);
-	enviar(fd_server, buffer, size);
+	memcpy(buffer+sizeof(size_t)+sizeof(off_t), buf, size);
+	enviar(fd_server, buffer, sizeof(size_t)+sizeof(off_t)+size);
 	free(buffer);
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
@@ -315,8 +299,7 @@ int osada_create (const char *path, mode_t tipo, struct fuse_file_info *fi)
 	int retorno = 0;
 	int res=0;
 
-	enviarCodigoYTamanio(COD_CREATE, strlen(path)+1);
-	enviarPath(path);
+	enviarCodigoYPath(COD_CREATE, path);
 
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
@@ -343,8 +326,7 @@ int osada_mkdir(const char* path, mode_t mode)
 	int retorno = 0;
 	int res=0;
 
-	enviarCodigoYTamanio(COD_MKDIR, strlen(path)+1);
-	enviarPath(path);
+	enviarCodigoYPath(COD_MKDIR, path);
 
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
@@ -371,8 +353,7 @@ int osada_rmdir(const char* path)
 	int retorno = 0;
 	int res=0;
 
-	enviarCodigoYTamanio(COD_RMDIR, strlen(path)+1);
-	enviarPath(path);
+	enviarCodigoYPath(COD_RMDIR, path);
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
 	{
@@ -396,8 +377,7 @@ int osada_unlink(const char* path)
 	int retorno = 0;
 	int res=0;
 
-	enviarCodigoYTamanio(COD_UNLINK, strlen(path)+1);
-	enviarPath(path);
+	enviarCodigoYPath(COD_UNLINK, path);
 	buffer = malloc(1);
 	if ((res = recv(fd_server, buffer, 1, 0))<=0)
 	{
@@ -419,8 +399,7 @@ int osada_rename (const char *path,char* nuevoPath)
 	int retorno = 0;
 	int res=0;
 
-	enviarCodigoYTamanio(COD_RENAME, strlen(path)+1);
-	enviarPath(path);
+	enviarCodigoYPath(COD_RENAME, path);
 	enviarMensaje(nuevoPath);
 
 	buffer = malloc(1);
@@ -461,7 +440,7 @@ int main(int argc, char* argv[])
 	numero_Puerto = getenv("POKE_SERVER_PUERTO");
 	fd_server = get_fdServer(numero_IP,numero_Puerto); //el fd_server es el "socket" que necesitas para comunicarte con el mapa
 /*
- * Uso de señales. Por ahora no hacen falta, el server detecta la desconexion
+// Uso de señales. Por ahora no hacen falta, el server detecta la desconexion
 	signal(SIGINT, finalizarProceso);
 	signal(SIGTERM, finalizarProceso);
 	signal(SIGHUP, finalizarProceso);

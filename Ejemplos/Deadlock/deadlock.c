@@ -106,8 +106,8 @@ int main(void)
 
     MetadataPokenest* pokenest = malloc(sizeof(MetadataPokenest));
 
-    pokenest->cantPokemon = 0;
-    pokenest->simbolo = 'G';
+    pokenest->cantPokemon = 1;
+    pokenest->simbolo = 'Z';
 
     list_add(pokenests,pokenest);
 
@@ -121,7 +121,7 @@ int main(void)
     pokenest = malloc(sizeof(MetadataPokenest));
 
     pokenest->cantPokemon = 1;
-    pokenest->simbolo = 'Z';
+    pokenest->simbolo = 'G';
 
     list_add(pokenests,pokenest);
 
@@ -153,104 +153,74 @@ int main(void)
     pokenest->simbolo = 'L';
 
     list_add(pokenests,pokenest);
-*/
-
+*/  Pokemon* pokeaux;
+    Jugador* entrenador;
     ///////////////////   UN ENTRENADOR
 
-
-    Jugador* entrenador = malloc(sizeof(Jugador));
-
-    entrenador->peticion = 'B';
-
-    entrenador->numero = 1;
-
-    entrenador->entrenador.simbolo='@';
-
-    entrenador->pokemonCapturados = list_create();
-    Pokemon* pokeaux;
-
-    pokeaux = malloc(sizeof(Pokemon));
-
-    pokeaux->pokemon = malloc(sizeof(t_pokemon));
-
-    pokeaux->nombre = string_new();
-
-    strcpy((pokeaux->nombre),"P");
-
-    pokeaux->pokenest='P';
-
-    pokeaux->pokemon->level = 1;
-
-    list_add(entrenador->pokemonCapturados,pokeaux);
-
-    list_add(entrenadores,entrenador);
-
-    ///////////////////
-
-    ///////////////////   OTRO ENTRENADOR
-
-
-
     entrenador = malloc(sizeof(Jugador));
-
     entrenador->peticion = 'P';
-
     entrenador->numero = 0;
-
     entrenador->pokemonCapturados = list_create();
-
     entrenador->entrenador.simbolo='#';
-
     pokeaux = malloc(sizeof(Pokemon));
-
     pokeaux->pokemon = malloc(sizeof(t_pokemon));
-
     pokeaux->nombre = string_new();
-
     strcpy(pokeaux->nombre,"B");
-
     pokeaux->pokemon->level = 2;
-
     pokeaux->pokenest='B';
-
     list_add(entrenador->pokemonCapturados,pokeaux);
-
     list_add(entrenadores,entrenador);
-
-
-    ///////////////////
 
     ///////////////////   OTRO ENTRENADOR
 
-
     entrenador = malloc(sizeof(Jugador));
-
-    entrenador->peticion = 'Z';
-
-    entrenador->numero = 2;
-
+    entrenador->peticion = 'B';
+    entrenador->numero = 1;
+    entrenador->entrenador.simbolo='@';
     entrenador->pokemonCapturados = list_create();
-
-    entrenador->entrenador.simbolo='&';
-
+    pokeaux;
     pokeaux = malloc(sizeof(Pokemon));
-
     pokeaux->pokemon = malloc(sizeof(t_pokemon));
-
     pokeaux->nombre = string_new();
-
-    strcpy(pokeaux->nombre,"G");
-
-    pokeaux->pokemon->level = 9;
-
-    pokeaux->pokenest = 'G';
-
+    strcpy((pokeaux->nombre),"P");
+    pokeaux->pokenest='P';
+    pokeaux->pokemon->level = 1;
     list_add(entrenador->pokemonCapturados,pokeaux);
-
     list_add(entrenadores,entrenador);
 
+    ///////////////////   OTRO ENTRENADOR
 
-    ///////////////////
+    entrenador = malloc(sizeof(Jugador));
+    entrenador->peticion = 'Z';
+    entrenador->numero = 2;
+    entrenador->pokemonCapturados = list_create();
+    entrenador->entrenador.simbolo='&';
+    pokeaux = malloc(sizeof(Pokemon));
+    pokeaux->pokemon = malloc(sizeof(t_pokemon));
+    pokeaux->nombre = string_new();
+    strcpy(pokeaux->nombre,"G");
+    pokeaux->pokemon->level = 9;
+    pokeaux->pokenest = 'G';
+    list_add(entrenador->pokemonCapturados,pokeaux);
+    list_add(entrenadores,entrenador);
+
+    ///////////////////   OTRO ENTRENADOR
+
+    entrenador = malloc(sizeof(Jugador));
+    entrenador->peticion = 'G';
+    entrenador->numero = 2;
+    entrenador->pokemonCapturados = list_create();
+    entrenador->entrenador.simbolo=')';
+    /*
+    pokeaux = malloc(sizeof(Pokemon));
+    pokeaux->pokemon = malloc(sizeof(t_pokemon));
+    pokeaux->nombre = string_new();
+    strcpy(pokeaux->nombre,"G");
+    pokeaux->pokemon->level = 9;
+    pokeaux->pokenest = 'G';
+    list_add(entrenador->pokemonCapturados,pokeaux);
+    */
+    list_add(entrenadores,entrenador);
 
 /*
     entrenador = malloc(sizeof(Jugador));
@@ -374,7 +344,13 @@ int main(void)
 
        t_log * log = log_create("LogDeadlock.log", "Mapa", false, LOG_LEVEL_INFO);
 
-       obtener_un_deadlock(pokenests,entrenadores,log);
+       t_list* entrenadores_aux = list_create();
+
+       obtener_deadlock(pokenests,entrenadores,log,entrenadores_aux);
+
+       list_destroy(entrenadores_aux);
+
+       log_destroy(log);
 
        list_destroy(entrenadores);
 
