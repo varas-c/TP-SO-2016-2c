@@ -340,7 +340,6 @@ void liberarPokemonesCapturados(t_list* pokemones)
 }
 
 
-
 int main(int argc, char** argv)
 {
 	pid_t pid = getpid();
