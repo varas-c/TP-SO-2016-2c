@@ -434,6 +434,7 @@ void liberar_matriz(int** matriz,int c)
 	{
 		free(matriz[i]);
 	}
+	free(matriz);
 }
 
 //*************************************************************
