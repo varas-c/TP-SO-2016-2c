@@ -313,8 +313,8 @@ int recv_codigoOperacion(int fd_server)
 	int retval = 0;
 	int codop = -1;
 
-	sleep(1);
-	retval = recv(fd_server,paquete.buffer,sizeof(int),MSG_DONTWAIT);
+
+	retval = recv(fd_server,paquete.buffer,sizeof(int),0);
 
 	if(retval > 0)
 	{
@@ -385,8 +385,6 @@ int main(int argc, char** argv)
 
 	int opcion = -1;
 	entrenador = new_Entrenador(mdata);
-
-	vidas_restantes = entrenador.vidas;
 
 	Paquete paquete;
 
@@ -508,6 +506,7 @@ int main(int argc, char** argv)
 						else if(codOp == BATALLA_MUERTE)
 						{
 							printf("\nHa sido elegido como víctima durante una batalla pokemon\n");
+							entrenador.vidas--;
 							t4 = time(NULL);
 							local4 = localtime(&t4);
 							bloqueadoFin.minutos = local4->tm_min;
@@ -551,14 +550,27 @@ int main(int argc, char** argv)
 			{
 				close(fd_server);
 				auxcantNiveles = nivel.cantNiveles;
+				int nivelActual = nivel.nivelActual;
 				nivel = new_nivel();
 				nivel.cantNiveles = auxcantNiveles;
-				entrenador.reintentos = auxreintentos;
-				entrenador = entrenador_estadoInicial;
 				entrenador.reintentos = auxreintentos++;
 				nivel.finNivel = 1;
 				liberarPokemonesCapturados(entrenador.pokemonesCapturados);
-				flag_seguirJugando = informar_signalMuerteEntrenador();
+
+				if(entrenador.vidas > 0)
+				{
+					printf("\nMuerte - Reiniciando Mapa ... - Vidas restantes: %d\n", entrenador.vidas);
+					nivel.nivelActual = nivelActual;
+					reiniciarEntrenador(&entrenador);
+				}
+
+				else
+				{
+					entrenador = entrenador_estadoInicial;
+					reiniciarEntrenador(&entrenador);
+					flag_seguirJugando = informar_signalMuerteEntrenador();
+				}
+				flag_SIGNALMUERTE = false;
 			}
 	}
 		flag_SIGNALMUERTE = false;

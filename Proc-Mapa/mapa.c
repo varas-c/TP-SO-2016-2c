@@ -67,7 +67,8 @@ pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_hiloDeadlock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_BatallaPokemon = PTHREAD_MUTEX_INITIALIZER;
 
-sem_t semaforo_SincroSelect;
+
+sem_t semaforo_HayJugadores;
 
 typedef struct
 {
@@ -340,6 +341,7 @@ Jugador* desbloquearJugador(char simboloPokenest)
 }
 
 /*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!*/
+/*
 int cantPokemonEnDir(char* ruta)
 
 {
@@ -367,10 +369,10 @@ int cantPokemonEnDir(char* ruta)
 	return cantPokes;
 
 }
-
+*/
 
 // FUNCION PARA USAR CON FUSE!!!!!!!!
-/*
+
 int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
@@ -403,7 +405,7 @@ int cantPokemonEnDir(char* ruta)
 
 	return cantPokes;
 }
-*/
+
 
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {
@@ -641,9 +643,6 @@ void removerListaDesconectados(int socketBuscado)
 
 	list_remove_by_condition(listaDesconectados,(void*)_find_socket_);
 
-
-
-
 }
 
 
@@ -786,7 +785,7 @@ void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 		entrenador->destinoy = fabs(y - entrenador->posy);
 	}
 }
-
+/*
 void desbloquearJugadores(t_list* lista)
 {
 	t_list* listaAux = list_create();
@@ -832,7 +831,7 @@ void desbloquearJugadores(t_list* lista)
 	}
 	list_destroy(listaAux);
 }
-
+*/
 void borrarJugadorSistema(Jugador* jugador)
 {
 	int socketBuscado = jugador->socket;
@@ -1230,8 +1229,6 @@ void expropiarPokemones2(t_list* listaPokemones)
 				removerListaDesconectados(jugadorDesbloqueado->socket);
 				borrarJugadorSistema(jugadorDesbloqueado);
 				desconectarJugador(jugadorDesbloqueado);
-
-
 			}
 			else
 			{
@@ -1302,23 +1299,31 @@ void* thread_planificador()
 	Jugador* jugadorDeadlock = NULL;
 	Jugador* jugadorDesconectado;
 	int* socketDesconectado;
+	int retval = 0;
 
-
+	int a = 0;
 	bool flag_AUX = 0;
 
 	while(1)
 	{
-	nivel_gui_dibujar(gui_items,"                                                           ");
-	sprintf(mostrar,"Mapa: %s -- No hay jugadores -pid.%i                          ",parametros.nombreMapa,pid);
-	nivel_gui_dibujar(gui_items, mostrar);
-	usleep(mdataMapa.retardo*1000);
+		sem_getvalue(&semaforo_HayJugadores, &a);
+		if (a<=0 && list_is_empty(listaListos))
+		{
+			sprintf(mostrar,"Mapa: %s -- No hay jugadores -pid.%i                          ",parametros.nombreMapa,pid);
+			nivel_gui_dibujar(gui_items,"                                                           ");
+			nivel_gui_dibujar(gui_items, mostrar);
+		}
+		sem_wait(&semaforo_HayJugadores);
+		nivel_gui_dibujar(gui_items,"                                                           ");
+		nivel_gui_dibujar(gui_items, mostrar);
+		usleep(mdataMapa.retardo*1000);
 
 	//Si nadie mas se quiere ir, es hora de Jugar!
 
-	int retval = 0;
 
-	while(!list_is_empty(global_listaJugadoresSistema))
-	{
+
+//	while(!list_is_empty(global_listaJugadoresSistema))
+
 		//nivel_gui_dibujar(gui_items, mostrar);
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
@@ -1440,6 +1445,7 @@ void* thread_planificador()
 							jugador->peticion = pokenestPedida;
 							jugador->conocePokenest = false;
 							bloquearJugador(jugador,pokenestPedida);
+							sem_post(&semaforo_HayJugadores);
 							FD_SET(jugador->socket,&fds_entrenadores);
 							log_info(infoLogger,"El Jugador %c ha entrado a la cola de Bloqueados del mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
 							loggearColas();
@@ -1493,6 +1499,7 @@ void* thread_planificador()
 		{
 			pthread_mutex_lock(&mutex_hiloDeadlock);
 			list_add(listaListos,(void*)jugador);
+			sem_post(&semaforo_HayJugadores);
 			pthread_mutex_unlock(&mutex_hiloDeadlock);
 			quantum = 0;
 		}
@@ -1533,20 +1540,22 @@ void* thread_planificador()
 		}
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 
-
-
-
-	} //While global
+	 //While global
 	}
 }
 
 void* thread_deadlock()
 {
 	t_list * entrenadores_aux;
+	int flag_signal=0;
 
 	while(1)
 	{
 		usleep(mdataMapa.tiempoChequeoDeadlock*1000); //EXAGERO PARA PROBAR
+
+		sem_getvalue(&semaforo_HayJugadores, &flag_signal);
+		if (flag_signal<=0)
+			sem_post(&semaforo_HayJugadores);
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 
@@ -1584,6 +1593,8 @@ int main(int argc, char** argv)
 
 	//parametros.dirPokedex = "/mnt/juegoFacil2/pokedex";
 	//parametros.nombreMapa = "Palet";
+
+	sem_init(&semaforo_HayJugadores, 0, 0);
 
 	listaDeadlock = list_create();
 
@@ -1706,6 +1717,7 @@ int main(int argc, char** argv)
 					pthread_mutex_lock(&mutex_hiloDeadlock);
 					list_add(global_listaJugadoresSistema,aux);
 					list_add(listaListos, aux);
+					sem_post(&semaforo_HayJugadores);
 					pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 					//Loggeamos info

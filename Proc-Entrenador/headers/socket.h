@@ -19,7 +19,6 @@
 #include <arpa/inet.h>
 
 int fd_server;
-int vidas_restantes;
 
 int get_fdServer(char* numero_IP, char* numero_Puerto)
 {
@@ -74,12 +73,13 @@ void manejar_signals(int operacion){
 		switch(operacion){
 
 		case SIGUSR1: //Le sumamos una vida al entrenador
-			entrenador.vidas += 1;
+			entrenador.vidas ++;
 			break;
-		case SIGTERM://Le restamos uan vida al entrenador
-			entrenador.vidas -= 1;
+		case SIGTERM://Le restamos una vida al entrenador
+			entrenador.vidas --;
 
-			if(entrenador.vidas == 0)
+			printf("Quedan %d vidas\n\n", entrenador.vidas);
+			if(entrenador.vidas <= 0)
 			{
 				flag_SIGNALMUERTE = true;
 			}
