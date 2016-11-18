@@ -162,7 +162,7 @@ void loggearColaBloqueados()
 			queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
 		}
 	}
-	//log_info(infoLogger, "Jugadores en cola Bloqueados en el mapa %s: %s ",parametros.nombreMapa,simbolos);
+	log_info(infoLogger, "Jugadores en cola Bloqueados en el mapa %s: %s ",parametros.nombreMapa,simbolos);
 	}
 	else
 	{
@@ -173,8 +173,8 @@ void loggearColaBloqueados()
 
 void loggearColas(void)
 {
-	//loggearListaListos();
-	//loggearColaBloqueados();
+	loggearListaListos();
+	loggearColaBloqueados();
 
 }
 
@@ -340,8 +340,8 @@ Jugador* desbloquearJugador(char simboloPokenest)
 }
 
 /*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!*/
+/*
 int cantPokemonEnDir(char* ruta)
-
 {
 	struct dirent *archivo = NULL;
 	int cantPokes = 0;
@@ -363,14 +363,12 @@ int cantPokemonEnDir(char* ruta)
 		}
 	}
 	closedir(rutaLeer);
-
 	return cantPokes;
-
 }
-
+*/
 
 // FUNCION PARA USAR CON FUSE!!!!!!!!
-/*
+
 int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
@@ -403,7 +401,6 @@ int cantPokemonEnDir(char* ruta)
 
 	return cantPokes;
 }
-*/
 
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {
@@ -641,12 +638,7 @@ void removerListaDesconectados(int socketBuscado)
 
 	list_remove_by_condition(listaDesconectados,(void*)_find_socket_);
 
-
-
-
 }
-
-
 
 Paquete srlz_capturaOK(Pokemon* pokemon)
 {
@@ -1308,7 +1300,7 @@ void* thread_planificador()
 
 	while(1)
 	{
-	nivel_gui_dibujar(gui_items,"                                                           ");
+	//nivel_gui_dibujar(gui_items,"                                                           ");
 	sprintf(mostrar,"Mapa: %s -- No hay jugadores -pid.%i                          ",parametros.nombreMapa,pid);
 	nivel_gui_dibujar(gui_items, mostrar);
 	usleep(mdataMapa.retardo*1000);
@@ -1333,7 +1325,6 @@ void* thread_planificador()
 			borrarJugadorSistema(jugadorDeadlock);
 
 			desconectarJugador(jugadorDeadlock);
-
 
 			loggearColas();
 		}
@@ -1380,9 +1371,6 @@ void* thread_planificador()
 			{
 				//Tomamos el primer int del buffer para ver el código de operacion
 				codOp = dsrlz_codigoOperacion(buffer_recv);
-
-
-
 
 				//Evaluo el codigo de Operacion para ver que verga quiere
 				switch(codOp)
@@ -1532,10 +1520,6 @@ void* thread_planificador()
 			}
 		}
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
-
-
-
-
 	} //While global
 	}
 }
@@ -1582,8 +1566,8 @@ int main(int argc, char** argv)
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	//parametros.dirPokedex = "/mnt/juegoFacil2/pokedex";
-	//parametros.nombreMapa = "Palet";
+	//parametros.dirPokedex = "/home/utnso/workspace/tp-2016-2c-Breaking-Bug/Proc-Pokedex-Cliente/ejemplo/pokedex/";
+	//parametros.nombreMapa = "Verde";
 
 	listaDeadlock = list_create();
 

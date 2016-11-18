@@ -313,14 +313,12 @@ int recv_codigoOperacion(int fd_server)
 	int retval = 0;
 	int codop = -1;
 
-	sleep(1);
-	retval = recv(fd_server,paquete.buffer,sizeof(int),MSG_DONTWAIT);
+
+	retval = recv(fd_server,paquete.buffer,sizeof(int),0);
 
 	if(retval > 0)
 	{
-
 		memcpy(&codop,paquete.buffer,sizeof(int));
-
 		free(paquete.buffer);
 	}
 
@@ -366,8 +364,6 @@ int main(int argc, char** argv)
 	struct tm *local, *local2, *local3, *local4;
 	time_t t, t2, t3, t4;
 	tiempo tardado,inicio,fin, bloqueadoInicio, bloqueadoFin, totalBloqueado, bloqueado, totalBloqueadoOrganizado;
-
-
 
 	totalBloqueado.minutos = 0;
 	totalBloqueado.segundos = 0;
@@ -549,7 +545,6 @@ int main(int argc, char** argv)
 
 			if(flag_SIGNALMUERTE)
 			{
-				close(fd_server);
 				auxcantNiveles = nivel.cantNiveles;
 				nivel = new_nivel();
 				nivel.cantNiveles = auxcantNiveles;

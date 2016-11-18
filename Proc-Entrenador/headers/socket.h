@@ -82,6 +82,7 @@ void manejar_signals(int operacion){
 			if(entrenador.vidas == 0)
 			{
 				flag_SIGNALMUERTE = true;
+				close(fd_server);
 			}
 			break;
 		}
