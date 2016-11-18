@@ -54,6 +54,7 @@ tiempo organizarTiempo(tiempo unTiempo){
 
 Entrenador entrenador;
 bool flag_SIGNALMUERTE = false;
+bool flag_BLOQUEADO=false;
 
 #include "headers/socket.h"
 #include "headers/configEntrenador.h"
@@ -278,7 +279,7 @@ bool informar_signalMuerteEntrenador()
 {
 	char opc;
 
-	printf("†††††††† -- You are dead -- †††††††† \n");
+	printf("\n\n†††††††† -- You are dead -- †††††††† \n");
 
 	printf("No tienes mas vidas - cantidad de reintentos: %d\n", entrenador.reintentos);
 	printf("1) Reiniciar \n");
@@ -404,6 +405,8 @@ int main(int argc, char** argv)
 
 	Paquete paquete;
 
+
+
 	//Agregamos las funciones que manejaran las señales enmascaras como SIGTERM Y SIGUSR1.
 
 	signal(SIGUSR1, manejar_signals);
@@ -479,6 +482,7 @@ int main(int argc, char** argv)
 
 					else if(codOp == CAPTURA_BLOQUEADO)
 					{
+						flag_BLOQUEADO = true;
 						printf("Entrenador Bloqueado! \n");
 						t3 = time(NULL);
 						local3 = localtime(&t3);
@@ -491,6 +495,7 @@ int main(int argc, char** argv)
 							codOp = recv_codigoOperacion(fd_server);
 							if(codOp == BATALLA_PELEA)
 							{
+
 								//CODIGO DE PELEA
 								int pokemonMasFuerte = get_pokemon_mas_fuerte();
 								paquete = srlz_pokemonMasFuerte(pokemonMasFuerte);
@@ -506,6 +511,7 @@ int main(int argc, char** argv)
 
 						if(codOp == BATALLA_GANADOR)
 						{
+							flag_BLOQUEADO = false;
 							t4 = time(NULL);
 							local4 = localtime(&t4);
 							bloqueadoFin.minutos = local4->tm_min;
@@ -564,6 +570,9 @@ int main(int argc, char** argv)
 			if(flag_SIGNALMUERTE)
 			{
 				close(fd_server);
+
+				flag_BLOQUEADO = false;
+
 				auxcantNiveles = nivel.cantNiveles;
 				nivel = new_nivel();
 				nivel.cantNiveles = auxcantNiveles;

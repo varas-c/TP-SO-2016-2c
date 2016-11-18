@@ -70,7 +70,8 @@ void manejar_signals(int operacion){
 
 	if(flag_SIGNALMUERTE == false)
 	{
-
+		fflush(stdout);
+		printf("\n\nSEÑAL SEÑAL\n\n");
 		switch(operacion){
 
 		case SIGUSR1: //Le sumamos una vida al entrenador
@@ -82,7 +83,8 @@ void manejar_signals(int operacion){
 			if(entrenador.vidas == 0)
 			{
 				flag_SIGNALMUERTE = true;
-				close(fd_server);
+
+				if(flag_BLOQUEADO) close(fd_server);
 			}
 			break;
 		}
