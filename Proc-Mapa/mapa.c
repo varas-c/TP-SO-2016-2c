@@ -1708,10 +1708,10 @@ int main(int argc, char** argv)
 						//UN CLIENTE BLOQUEADO SE DESCONECTÓ, AVISAR A MAPA
 						socketDesconectado = malloc(sizeof(int));
 						*socketDesconectado = i;
-						pthread_mutex_lock(&mutex_hiloDeadlock);
+						//pthread_mutex_lock(&mutex_hiloDeadlock);
 						list_add(listaDesconectados,socketDesconectado);
 						FD_CLR(i,&fds_entrenadores);
-						pthread_mutex_unlock(&mutex_hiloDeadlock);
+						//pthread_mutex_unlock(&mutex_hiloDeadlock);
 					}
 				}
 			}

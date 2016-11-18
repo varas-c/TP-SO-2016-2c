@@ -545,6 +545,7 @@ int main(int argc, char** argv)
 
 			if(flag_SIGNALMUERTE)
 			{
+				close(fd_server);
 				auxcantNiveles = nivel.cantNiveles;
 				nivel = new_nivel();
 				nivel.cantNiveles = auxcantNiveles;
