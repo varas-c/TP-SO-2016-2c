@@ -102,7 +102,7 @@ void copiarPokemon(char *archivoPokemon, ParametrosConsola parametros, char* nom
 	strcat(origen, archivoPokemon);
 
 	strcpy(destino, parametros.dirPokedex);
-	strcat(destino, "/Entrenadores/");
+	strcat(destino, "Entrenadores/");
 	strcat(destino, parametros.nombreEntrenador);
 	strcat(destino, "/Dir\\ de\\ Bill/");
 	strcat(destino, barraCero);
@@ -164,7 +164,7 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 		strcat(origen, archivoMedalla);
 
 		strcpy(destino, parametros.dirPokedex);
-		strcat(destino, "/Entrenadores/");
+		strcat(destino, "Entrenadores/");
 		strcat(destino, parametros.nombreEntrenador);
 		strcat(destino, "/medallas");
 
@@ -339,13 +339,32 @@ void liberarPokemonesCapturados(t_list* pokemones)
 	list_clean(pokemones);
 }
 
+ParametrosConsola parametros;
+
+void sigHandler_endProcess(int signal)
+{
+	switch(signal)
+	{
+	case SIGINT:
+		close(fd_server);
+		borrarPokemones(parametros);
+		printf("Atrapando %i ", signal);
+		exit(1);
+		break;
+	case SIGHUP:
+		close(fd_server);
+		borrarPokemones(parametros);
+		printf("Atrapando %i ", signal);
+		exit(1);
+		break;
+	}
+}
 
 int main(int argc, char** argv)
 {
 	pid_t pid = getpid();
 	printf("PID ENTRENADOR:%i \n\n",pid);
 
-	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta

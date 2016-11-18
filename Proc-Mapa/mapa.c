@@ -340,7 +340,7 @@ Jugador* desbloquearJugador(char simboloPokenest)
 }
 
 /*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!*/
-/*
+
 int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
@@ -365,8 +365,8 @@ int cantPokemonEnDir(char* ruta)
 	closedir(rutaLeer);
 	return cantPokes;
 }
-*/
 
+/*
 // FUNCION PARA USAR CON FUSE!!!!!!!!
 
 int cantPokemonEnDir(char* ruta)
@@ -401,7 +401,7 @@ int cantPokemonEnDir(char* ruta)
 
 	return cantPokes;
 }
-
+*/
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {
 	char *pokeDat;

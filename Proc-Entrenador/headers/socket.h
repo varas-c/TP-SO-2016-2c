@@ -90,21 +90,6 @@ void manejar_signals(int operacion){
 }
 //******************************************
 
-void sigHandler_endProcess(int signal)
-{
-	switch(signal)
-	{
-	case SIGINT:
-		close(fd_server);
-		printf("Atrapando %i ", signal);
-		exit(1);
-		break;
-	case SIGHUP:
-		close(fd_server);
-		printf("Atrapando %i ", signal);
-		exit(1);
-		break;
-	}
-}
+
 
 #endif /* HEADERS_SOCKET_H_ */
