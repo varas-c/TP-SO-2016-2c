@@ -54,6 +54,7 @@ tiempo organizarTiempo(tiempo unTiempo){
 
 Entrenador entrenador;
 bool flag_SIGNALMUERTE = false;
+bool flag_BLOQUEADO=false;
 
 #include "headers/socket.h"
 #include "headers/configEntrenador.h"
@@ -102,7 +103,7 @@ void copiarPokemon(char *archivoPokemon, ParametrosConsola parametros, char* nom
 	strcat(origen, archivoPokemon);
 
 	strcpy(destino, parametros.dirPokedex);
-	strcat(destino, "/Entrenadores/");
+	strcat(destino, "Entrenadores/");
 	strcat(destino, parametros.nombreEntrenador);
 	strcat(destino, "/Dir\\ de\\ Bill/");
 	strcat(destino, barraCero);
@@ -164,7 +165,7 @@ void copiarMedalla(ParametrosConsola parametros, char* nombreMapa){
 		strcat(origen, archivoMedalla);
 
 		strcpy(destino, parametros.dirPokedex);
-		strcat(destino, "/Entrenadores/");
+		strcat(destino, "Entrenadores/");
 		strcat(destino, parametros.nombreEntrenador);
 		strcat(destino, "/medallas");
 
@@ -278,7 +279,7 @@ bool informar_signalMuerteEntrenador()
 {
 	char opc;
 
-	printf("†††††††† -- You are dead -- †††††††† \n");
+	printf("\n\n†††††††† -- You are dead -- †††††††† \n");
 
 	printf("No tienes mas vidas - cantidad de reintentos: %d\n", entrenador.reintentos);
 	printf("1) Reiniciar \n");
@@ -318,9 +319,7 @@ int recv_codigoOperacion(int fd_server)
 
 	if(retval > 0)
 	{
-
 		memcpy(&codop,paquete.buffer,sizeof(int));
-
 		free(paquete.buffer);
 	}
 
@@ -341,14 +340,32 @@ void liberarPokemonesCapturados(t_list* pokemones)
 	list_clean(pokemones);
 }
 
+ParametrosConsola parametros;
 
+void sigHandler_endProcess(int signal)
+{
+	switch(signal)
+	{
+	case SIGINT:
+		close(fd_server);
+		borrarPokemones(parametros);
+		printf("Atrapando %i ", signal);
+		exit(1);
+		break;
+	case SIGHUP:
+		close(fd_server);
+		borrarPokemones(parametros);
+		printf("Atrapando %i ", signal);
+		exit(1);
+		break;
+	}
+}
 
 int main(int argc, char** argv)
 {
 	pid_t pid = getpid();
 	printf("PID ENTRENADOR:%i \n\n",pid);
 
-	ParametrosConsola parametros;
 	/*Recibimos el nombre del entrenador y la direccion de la pokedex por Consola*/
 
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
@@ -366,8 +383,6 @@ int main(int argc, char** argv)
 	struct tm *local, *local2, *local3, *local4;
 	time_t t, t2, t3, t4;
 	tiempo tardado,inicio,fin, bloqueadoInicio, bloqueadoFin, totalBloqueado, bloqueado, totalBloqueadoOrganizado;
-
-
 
 	totalBloqueado.minutos = 0;
 	totalBloqueado.segundos = 0;
@@ -387,6 +402,8 @@ int main(int argc, char** argv)
 	entrenador = new_Entrenador(mdata);
 
 	Paquete paquete;
+
+
 
 	//Agregamos las funciones que manejaran las señales enmascaras como SIGTERM Y SIGUSR1.
 
@@ -463,6 +480,7 @@ int main(int argc, char** argv)
 
 					else if(codOp == CAPTURA_BLOQUEADO)
 					{
+						flag_BLOQUEADO = true;
 						printf("Entrenador Bloqueado! \n");
 						t3 = time(NULL);
 						local3 = localtime(&t3);
@@ -475,6 +493,7 @@ int main(int argc, char** argv)
 							codOp = recv_codigoOperacion(fd_server);
 							if(codOp == BATALLA_PELEA)
 							{
+
 								//CODIGO DE PELEA
 								int pokemonMasFuerte = get_pokemon_mas_fuerte();
 								paquete = srlz_pokemonMasFuerte(pokemonMasFuerte);
@@ -490,6 +509,7 @@ int main(int argc, char** argv)
 
 						if(codOp == BATALLA_GANADOR)
 						{
+							flag_BLOQUEADO = false;
 							t4 = time(NULL);
 							local4 = localtime(&t4);
 							bloqueadoFin.minutos = local4->tm_min;
@@ -549,6 +569,9 @@ int main(int argc, char** argv)
 			if(flag_SIGNALMUERTE)
 			{
 				close(fd_server);
+
+				flag_BLOQUEADO = false;
+
 				auxcantNiveles = nivel.cantNiveles;
 				int nivelActual = nivel.nivelActual;
 				nivel = new_nivel();

@@ -69,7 +69,8 @@ void manejar_signals(int operacion){
 
 	if(flag_SIGNALMUERTE == false)
 	{
-
+		fflush(stdout);
+		printf("\n\nSEÑAL SEÑAL\n\n");
 		switch(operacion){
 
 		case SIGUSR1: //Le sumamos una vida al entrenador
@@ -82,6 +83,8 @@ void manejar_signals(int operacion){
 			if(entrenador.vidas <= 0)
 			{
 				flag_SIGNALMUERTE = true;
+
+				if(flag_BLOQUEADO) close(fd_server);
 			}
 			break;
 		}
@@ -89,21 +92,6 @@ void manejar_signals(int operacion){
 }
 //******************************************
 
-void sigHandler_endProcess(int signal)
-{
-	switch(signal)
-	{
-	case SIGINT:
-		close(fd_server);
-		printf("Atrapando %i ", signal);
-		exit(1);
-		break;
-	case SIGHUP:
-		close(fd_server);
-		printf("Atrapando %i ", signal);
-		exit(1);
-		break;
-	}
-}
+
 
 #endif /* HEADERS_SOCKET_H_ */

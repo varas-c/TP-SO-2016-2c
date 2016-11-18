@@ -163,7 +163,7 @@ void loggearColaBloqueados()
 			queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
 		}
 	}
-	//log_info(infoLogger, "Jugadores en cola Bloqueados en el mapa %s: %s ",parametros.nombreMapa,simbolos);
+	log_info(infoLogger, "Jugadores en cola Bloqueados en el mapa %s: %s ",parametros.nombreMapa,simbolos);
 	}
 	else
 	{
@@ -174,8 +174,8 @@ void loggearColaBloqueados()
 
 void loggearColas(void)
 {
-	//loggearListaListos();
-	//loggearColaBloqueados();
+	loggearListaListos();
+	loggearColaBloqueados();
 
 }
 
@@ -343,7 +343,10 @@ Jugador* desbloquearJugador(char simboloPokenest)
 /*FUNCION PARA USAR CON FILE SYSTEM LOCAL!!!*/
 /*
 int cantPokemonEnDir(char* ruta)
+=======
+>>>>>>> 79667db0ae92e36ae60c706e62e034f4d57263e2
 
+int cantPokemonEnDir(char* ruta)
 {
 	struct dirent *archivo = NULL;
 	int cantPokes = 0;
@@ -365,11 +368,10 @@ int cantPokemonEnDir(char* ruta)
 		}
 	}
 	closedir(rutaLeer);
-
 	return cantPokes;
-
 }
 */
+
 
 // FUNCION PARA USAR CON FUSE!!!!!!!!
 
@@ -644,8 +646,6 @@ void removerListaDesconectados(int socketBuscado)
 	list_remove_by_condition(listaDesconectados,(void*)_find_socket_);
 
 }
-
-
 
 Paquete srlz_capturaOK(Pokemon* pokemon)
 {
@@ -1318,13 +1318,7 @@ void* thread_planificador()
 		nivel_gui_dibujar(gui_items, mostrar);
 		usleep(mdataMapa.retardo*1000);
 
-	//Si nadie mas se quiere ir, es hora de Jugar!
-
-
-
 //	while(!list_is_empty(global_listaJugadoresSistema))
-
-		//nivel_gui_dibujar(gui_items, mostrar);
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 		if(mdataMapa.modoBatalla == true && !list_is_empty(listaDeadlock) )
@@ -1338,7 +1332,6 @@ void* thread_planificador()
 			borrarJugadorSistema(jugadorDeadlock);
 
 			desconectarJugador(jugadorDeadlock);
-
 
 			loggearColas();
 		}
@@ -1385,9 +1378,6 @@ void* thread_planificador()
 			{
 				//Tomamos el primer int del buffer para ver el código de operacion
 				codOp = dsrlz_codigoOperacion(buffer_recv);
-
-
-
 
 				//Evaluo el codigo de Operacion para ver que verga quiere
 				switch(codOp)
@@ -1540,8 +1530,8 @@ void* thread_planificador()
 		}
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 
-	 //While global
-	}
+	} //While global
+
 }
 
 void* thread_deadlock()
@@ -1591,8 +1581,8 @@ int main(int argc, char** argv)
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
-	//parametros.dirPokedex = "/mnt/juegoFacil2/pokedex";
-	//parametros.nombreMapa = "Palet";
+	//parametros.dirPokedex = "/home/utnso/workspace/tp-2016-2c-Breaking-Bug/Proc-Pokedex-Cliente/ejemplo/pokedex/";
+	//parametros.nombreMapa = "Verde";
 
 	sem_init(&semaforo_HayJugadores, 0, 0);
 
@@ -1736,10 +1726,10 @@ int main(int argc, char** argv)
 						//UN CLIENTE BLOQUEADO SE DESCONECTÓ, AVISAR A MAPA
 						socketDesconectado = malloc(sizeof(int));
 						*socketDesconectado = i;
-						pthread_mutex_lock(&mutex_hiloDeadlock);
+						//pthread_mutex_lock(&mutex_hiloDeadlock);
 						list_add(listaDesconectados,socketDesconectado);
 						FD_CLR(i,&fds_entrenadores);
-						pthread_mutex_unlock(&mutex_hiloDeadlock);
+						//pthread_mutex_unlock(&mutex_hiloDeadlock);
 					}
 				}
 			}
