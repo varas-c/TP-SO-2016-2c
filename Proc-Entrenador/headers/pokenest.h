@@ -44,7 +44,7 @@ void recv_solicitarPokenest(Pokenest* pokenest, int fd_server)
 
 	if(codigo != POKENEST)
 	{
-		perror("CODIGO DE ERROR - RECV POKENEST");
+		printf("Funcion: %s -- Linea %d -- codigoRecibido: %i",__func__,__LINE__,codigo);
 		exit(1);
 	}
 

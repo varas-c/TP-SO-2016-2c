@@ -1,0 +1,4 @@
+Juego Facil 2
+-Los entrenadores se bloquean encadenadamente, como si fuera en forma de escalera. 
+En todos los mapas sucede lo mismo, es una secuencia A-B-C-D
+Se deberian bloquear en forma ascendente, es decir, el entrenador 1 captura, el 2 y los demas se van bloqueando sucesivamente

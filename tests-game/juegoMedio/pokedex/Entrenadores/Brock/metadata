@@ -1,0 +1,8 @@
+nombre=Brock
+simbolo=#
+hojaDeViaje=[Palet,Verde,Plata]
+obj[Palet]=[C,B]
+obj[Verde]=[B,C]
+obj[Plata]=[A,B,C,D]
+vidas=1
+reintentos=0

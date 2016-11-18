@@ -630,81 +630,23 @@ t_list* expropiarPokemones(t_list* listaPokemones)
 	return lista_jugadoresBloqueados;
 }
 
-
-t_list* expropiarPokemones2(t_list* listaPokemones)
+void removerListaDesconectados(int socketBuscado)
 {
 
-	Pokemon* pokemonDesbloqueado = NULL;
-	MetadataPokenest* pokenest;
-	Jugador* jugadorDesbloqueado = NULL;
 
-	t_list* listaAux = list_create();
-
-	int cantPokemones = list_size(listaPokemones);
-	int i;
-
-	int retval;
-
-	for(i=0;i<cantPokemones;i++)
+	bool _find_socket_(int socket)
 	{
-		pokemonDesbloqueado = list_get(listaPokemones,i); //Obtengo el primer Pokemon
-
-		jugadorDesbloqueado = desbloquearJugador(pokemonDesbloqueado->pokenest); //Sacamos un entrenador de la pokenest.
-
-		while(jugadorDesbloqueado != NULL)
-		{
-
-			retval = send_codigoOperacion(jugadorDesbloqueado->socket,BATALLA_GANADOR);
-			retval = send_capturaOK(jugadorDesbloqueado,pokemonDesbloqueado); //Si acá tira error, deberia sacarle lospokemon, agregar jugadoresBloqueados, desconectarlo
-
-			if(retval<=0)
-			{
-				list_destroy(listaDeadlock);
-				listaDeadlock=list_create();
-				expropiarPokemones2(jugadorDesbloqueado->pokemonCapturados);
-				borrarJugadorSistema(jugadorDesbloqueado);
-				desconectarJugador(jugadorDesbloqueado);
-
-			}
-			else
-			{
-				FD_CLR(jugadorDesbloqueado->socket,&fds_entrenadores);
-				jugadorDesbloqueado->estado = 0;
-				jugadorDesbloqueado->peticion = 0;
-				list_add(jugadorDesbloqueado->pokemonCapturados,pokemonDesbloqueado);
-				list_add(listaListos,jugadorDesbloqueado);
-				//log_info(infoLogger, "Jugador %c entra a Listos en el mapa %s.",jugadorBloqueado->jugador->entrenador.simbolo, parametros.nombreMapa);
-				loggearColas();
-				break;
-			}
-
-			jugadorDesbloqueado = desbloquearJugador(pokemonDesbloqueado->pokenest);
-
-		}
-
-		if(jugadorDesbloqueado == NULL)
-		{
-			pokenest = buscar_Pokenest(pokemonDesbloqueado->pokenest);
-			pokenest->cantPokemon++;
-			queue_push(pokenest->colaDePokemon,pokemonDesbloqueado);
-			sumarRecurso(gui_items,pokenest->simbolo);
-		}
-
+		return socket == socketBuscado;
 	}
+
+	list_remove_by_condition(listaDesconectados,(void*)_find_socket_);
+
+
+
+
 }
 
-void desconectarJugador(Jugador* jugador)
-{
-	int socket = jugador->socket;
-	close(socket);
-	BorrarItem(gui_items,jugador->entrenador.simbolo);
-	//list_clean(jugador->pokemonCapturados);
-	list_destroy(jugador->pokemonCapturados);
-	//free(jugador->entrenador);
-	free(jugador);
 
-	FD_CLR(socket,&fds_entrenadores);
-}
 
 Paquete srlz_capturaOK(Pokemon* pokemon)
 {
@@ -1254,6 +1196,86 @@ Jugador* removeJugadorSistema(int socketBuscado)
 	return jugador;
 }
 
+void expropiarPokemones2(t_list* listaPokemones)
+{
+
+	Pokemon* pokemonDesbloqueado = NULL;
+	MetadataPokenest* pokenest;
+	Jugador* jugadorDesbloqueado = NULL;
+
+	t_list* listaAux = list_create();
+
+	int cantPokemones = list_size(listaPokemones);
+	int i;
+
+	int retval;
+
+	for(i=0;i<cantPokemones;i++)
+	{
+		pokemonDesbloqueado = list_get(listaPokemones,i); //Obtengo el primer Pokemon
+
+		jugadorDesbloqueado = desbloquearJugador(pokemonDesbloqueado->pokenest); //Sacamos un entrenador de la pokenest.
+
+		while(jugadorDesbloqueado != NULL)
+		{
+
+			retval = send_codigoOperacion(jugadorDesbloqueado->socket,BATALLA_GANADOR);
+			retval = send_capturaOK(jugadorDesbloqueado,pokemonDesbloqueado); //Si acá tira error, deberia sacarle lospokemon, agregar jugadoresBloqueados, desconectarlo
+
+			if(retval<=0)
+			{
+				list_destroy(listaDeadlock);
+				listaDeadlock=list_create();
+				expropiarPokemones2(jugadorDesbloqueado->pokemonCapturados);
+				removerListaDesconectados(jugadorDesbloqueado->socket);
+				borrarJugadorSistema(jugadorDesbloqueado);
+				desconectarJugador(jugadorDesbloqueado);
+
+
+			}
+			else
+			{
+				removerListaDesconectados(jugadorDesbloqueado->socket);
+				FD_CLR(jugadorDesbloqueado->socket,&fds_entrenadores);
+				jugadorDesbloqueado->estado = 0;
+				jugadorDesbloqueado->peticion = 0;
+				list_add(jugadorDesbloqueado->pokemonCapturados,pokemonDesbloqueado);
+				list_add(listaListos,jugadorDesbloqueado);
+				//log_info(infoLogger, "Jugador %c entra a Listos en el mapa %s.",jugadorBloqueado->jugador->entrenador.simbolo, parametros.nombreMapa);
+				loggearColas();
+				break;
+			}
+
+			jugadorDesbloqueado = desbloquearJugador(pokemonDesbloqueado->pokenest);
+
+		}
+
+		if(jugadorDesbloqueado == NULL)
+		{
+			pokenest = buscar_Pokenest(pokemonDesbloqueado->pokenest);
+			pokenest->cantPokemon++;
+			queue_push(pokenest->colaDePokemon,pokemonDesbloqueado);
+			sumarRecurso(gui_items,pokenest->simbolo);
+		}
+
+	}
+}
+
+void desconectarJugador(Jugador* jugador)
+{
+	int socket = jugador->socket;
+	//close(socket);
+	BorrarItem(gui_items,jugador->entrenador.simbolo);
+	//list_clean(jugador->pokemonCapturados);
+	list_destroy(jugador->pokemonCapturados);
+	//free(jugador->entrenador);
+	free(jugador);
+
+	//FD_CLR(socket,&fds_entrenadores);
+}
+
+
+
 void* thread_planificador()
 {
 	nivel_gui_inicializar();
@@ -1280,6 +1302,9 @@ void* thread_planificador()
 	Jugador* jugadorDeadlock = NULL;
 	Jugador* jugadorDesconectado;
 	int* socketDesconectado;
+
+
+	bool flag_AUX = 0;
 
 	while(1)
 	{
@@ -1458,6 +1483,7 @@ void* thread_planificador()
 			quantum--;
 			}
 			nivel_gui_dibujar(gui_items, mostrar);
+
 		}//FIN WHILE
 
 
@@ -1473,20 +1499,22 @@ void* thread_planificador()
 		}
 		if(flag_DESCONECTADO == TRUE)
 		{
-		pthread_mutex_lock(&mutex_hiloDeadlock);
-		expropiarPokemones2(jugador->pokemonCapturados);
-
-		list_destroy(listaDeadlock);
-		listaDeadlock=list_create();
-		borrarJugadorSistema(jugador);
-		desconectarJugador(jugador);
-		quantum = 0;
-		flag_DESCONECTADO = TRUE;
-		pthread_mutex_unlock(&mutex_hiloDeadlock);
+			pthread_mutex_lock(&mutex_hiloDeadlock);
+			expropiarPokemones2(jugador->pokemonCapturados);
+			removerListaDesconectados(jugador->socket);
+			list_destroy(listaDeadlock);
+			listaDeadlock=list_create();
+			borrarJugadorSistema(jugador);
+			desconectarJugador(jugador);
+			quantum = 0;
+			flag_DESCONECTADO = TRUE;
+			pthread_mutex_unlock(&mutex_hiloDeadlock);
 		}
 
-		pthread_mutex_lock(&mutex_hiloDeadlock);
+		flag_DESCONECTADO = FALSE;
+	}
 
+		pthread_mutex_lock(&mutex_hiloDeadlock);
 		while(!list_is_empty(listaDesconectados))
 		{
 			socketDesconectado = list_remove(listaDesconectados,0);
@@ -1494,20 +1522,20 @@ void* thread_planificador()
 
 			if(jugadorDesconectado != NULL)
 			{
-			borrarJugadorDeColaBloqueados(jugadorDesconectado);
-			list_destroy(listaDeadlock);
-			listaDeadlock=list_create();
-			expropiarPokemones2(jugadorDesconectado->pokemonCapturados);
-			borrarJugadorSistema(jugadorDesconectado);
-		    desconectarJugador(jugadorDesconectado);
-		    free(socketDesconectado);
+				borrarJugadorDeColaBloqueados(jugadorDesconectado);
+				list_destroy(listaDeadlock);
+				listaDeadlock=list_create();
+				expropiarPokemones2(jugadorDesconectado->pokemonCapturados);
+				borrarJugadorSistema(jugadorDesconectado);
+				desconectarJugador(jugadorDesconectado);
+				free(socketDesconectado);
 			}
 		}
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 
-		flag_DESCONECTADO = FALSE;
-	}
+
+
 	} //While global
 	}
 }
@@ -1551,16 +1579,11 @@ int main(int argc, char** argv)
 {
 	listaDesconectados = list_create();
 
-<<<<<<< HEAD
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos parametros por Consola
 
 	//parametros.dirPokedex = "/mnt/juegoFacil2/pokedex";
 	//parametros.nombreMapa = "Palet";
-=======
-	parametros.dirPokedex = "../../mnt/pruebaBase/pokedex";
-	parametros.nombreMapa = "Verde";
->>>>>>> 22bda12d870db0ebd446bc826b634f2221ad81fe
 
 	listaDeadlock = list_create();
 
@@ -1703,6 +1726,7 @@ int main(int argc, char** argv)
 						*socketDesconectado = i;
 						pthread_mutex_lock(&mutex_hiloDeadlock);
 						list_add(listaDesconectados,socketDesconectado);
+						FD_CLR(i,&fds_entrenadores);
 						pthread_mutex_unlock(&mutex_hiloDeadlock);
 					}
 				}

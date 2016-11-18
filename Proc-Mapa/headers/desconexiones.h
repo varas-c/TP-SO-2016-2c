@@ -12,6 +12,7 @@
 #include <errno.h>
 
 
+/*
 void desconectarJugador(Jugador* jugador)
 {
 	BorrarItem(gui_items,jugador->entrenador.simbolo);
@@ -19,6 +20,7 @@ void desconectarJugador(Jugador* jugador)
 	close(jugador->socket);
 	free(jugador);
 }
+*/
 
 int verificarConexion(Jugador* jugador,int retval,int* quantum)
 {

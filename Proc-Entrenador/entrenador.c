@@ -310,16 +310,22 @@ int recv_codigoOperacion(int fd_server)
 {
 	Paquete paquete;
 	paquete.buffer = malloc(sizeof(int));
+	int retval = 0;
+	int codop = -1;
 
-	recv(fd_server,paquete.buffer,sizeof(int),0);
+	sleep(1);
+	retval = recv(fd_server,paquete.buffer,sizeof(int),MSG_DONTWAIT);
 
-	int codop;
+	if(retval > 0)
+	{
 
-	memcpy(&codop,paquete.buffer,sizeof(int));
+		memcpy(&codop,paquete.buffer,sizeof(int));
 
-	free(paquete.buffer);
+		free(paquete.buffer);
+	}
 
 	return codop;
+
 }
 
 void liberarPokemonesCapturados(t_list* pokemones)
@@ -348,7 +354,7 @@ int main(int argc, char** argv)
 	verificarParametros(argc); //Verificamos que la cantidad de Parametros sea correcta
 	parametros = leerParametrosConsola(argv); //Leemos los parametros necesarios
 
-	//parametros.dirPokedex = "/mnt/pokedex";
+	//parametros.dirPokedex = "/mnt/juegoFacil2/pokedex/";
 	//parametros.dirPokedex = "/home/utnso/tp-2016-2c-Breaking-Bug/Archivos de prueba/pokedex";
 
 	//parametros.nombreEntrenador = "Ash";
@@ -466,7 +472,7 @@ int main(int argc, char** argv)
 						bloqueadoInicio.segundos = local3->tm_sec;
 						codOp = -1;
 
-						while(codOp != BATALLA_GANADOR && codOp !=BATALLA_MUERTE)
+						while(codOp != BATALLA_GANADOR && codOp !=BATALLA_MUERTE && flag_SIGNALMUERTE == false)
 						{
 							codOp = recv_codigoOperacion(fd_server);
 							if(codOp == BATALLA_PELEA)
@@ -481,7 +487,9 @@ int main(int argc, char** argv)
 
 								cantDeadlock++;
 							}
+
 						}
+
 						if(codOp == BATALLA_GANADOR)
 						{
 							t4 = time(NULL);

@@ -1,0 +1,8 @@
+nombre=Misty
+simbolo=%
+hojaDeViaje=[Palet,Verde,Plata]
+obj[Palet]=[A,B,C,D]
+obj[Verde]=[A,B,C,D]
+obj[Plata]=[A,B,C,D]
+vidas=1
+reintentos=0
