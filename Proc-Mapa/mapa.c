@@ -194,83 +194,6 @@ void loggearColas(void)
 	loggearColaBloqueados();
 }
 
-/*
-void loggearColas(void){
-	t_queue *auxLista;
-	auxLista = queue_create();
-	Jugador* jugador;
-	char* simbolos=malloc(0);
-	short indice =0;
-	int cantListos=0;
-	int cantBloqueados=0;
-
-	pthread_mutex_lock(&mutex_Listos); //Mutex de listas
-
-	if (!list_is_empty(listaListos))
-	{
-		jugador = (Jugador*)list_get(listaListos,0);
-		while(jugador!=NULL)
-		{
-			cantListos = cantListos + 2;
-			simbolos=realloc(simbolos,cantListos);
-			simbolos[indice++]= jugador->entrenador.simbolo;
-			simbolos[indice++]= '-';
-			list_add(auxLista, jugador);
-			jugador = (Jugador*)list_get(listaListos,0);
-		}
-
-		jugador = (Jugador*)list_get(auxLista,0);
-		simbolos=realloc(simbolos, cantListos+1);
-		simbolos[indice]='\0';
-		while (jugador!=NULL)
-		{
-			list_add(listaListos, jugador);
-			jugador = (Jugador*)list_get(auxLista,0);
-		}
-
-		log_info(infoLogger, "Jugadores en cola Listos: %s", simbolos);
-		free(simbolos);
-		simbolos=malloc(0);
-	}
-	else{
-		log_info(infoLogger, "Cola Listos vacia.");
-	}
-
-	pthread_mutex_unlock(&mutex_Listos);
-
-	pthread_mutex_lock(&mutex_Bloqueados);
-
-	if (!queue_is_empty(colaBloqueados)){
-		jugador = (Jugador*)queue_pop(colaBloqueados);
-		while(jugador!=NULL){
-			simbolos=realloc(simbolos, cantBloqueados+2);
-			simbolos[indice++]= jugador->entrenador.simbolo;
-			simbolos[indice++]= '-';
-			queue_push(auxLista, jugador);
-			jugador = (Jugador*)queue_pop(colaBloqueados);
-		}
-
-		jugador = (Jugador*)queue_pop(auxLista);
-		simbolos=realloc(simbolos, cantBloqueados+1);
-		simbolos[indice]='\0';
-		while (jugador!=NULL)
-		{
-			queue_push(colaBloqueados, jugador);
-			jugador = (Jugador*)queue_pop(auxLista);
-		}
-
-		log_info(infoLogger, "Jugadores en cola Bloqueados: %s", simbolos);
-	}
-	else{
-		log_info(infoLogger, "Cola Bloqueados vacia.");
-	}
-
-	free(simbolos);
-	queue_destroy(auxLista);
-
-	pthread_mutex_unlock(&mutex_Bloqueados);
-}*/
-
 void free_paquete(Paquete *paquete)
 {
 	free(paquete->buffer);
@@ -747,7 +670,7 @@ void sigHandler_reloadMetadata(int signal)
 	if(signal == SIGUSR2)
 	{
 		mdataMapa = leerMetadataMapa(parametros);
-		log_info(infoLogger, "señal recibida, releyendo metadata");
+		log_info(infoLogger, "Señal SIGUSR2 recibida, releyendo metadata");
 		char* aux = malloc(256);
 		sprintf(aux,"Algoritmo: %s - Quantum: %i - Retardo: %i - ModoBatalla: %i - TiempoCheck: %i\n\n", mdataMapa.algoritmo, mdataMapa.quantum,mdataMapa.retardo,mdataMapa.modoBatalla,mdataMapa.tiempoChequeoDeadlock);
 		log_info(infoLogger,aux);
@@ -1250,7 +1173,7 @@ void expropiarPokemones2(t_list* listaPokemones)
 				listaDeadlock=list_create();
 				expropiarPokemones2(jugadorDesbloqueado->pokemonCapturados);
 				removerListaDesconectados(jugadorDesbloqueado->socket);
-				//log_info(infoLogger, "el jugador %s se ha desconectado del mapa %s", jugadorDesbloqueado->entrenador.simbolo,parametros.nombreMapa);
+				log_info(infoLogger, "el jugador %c se ha desconectado del mapa %s", jugadorDesbloqueado->entrenador.simbolo,parametros.nombreMapa);
 				loggearColas();
 
 				borrarJugadorSistema(jugadorDesbloqueado);
@@ -1781,6 +1704,11 @@ int main(int argc, char** argv)
 						*socketDesconectado = i;
 						//pthread_mutex_lock(&mutex_hiloDeadlock);
 						list_add(listaDesconectados,socketDesconectado);
+						int signals_restantes = 0;
+						sem_getvalue(&semaforo_HayJugadores, &signals_restantes);
+						if (signals_restantes<=0)
+							sem_post(&semaforo_HayJugadores);
+						sem_post(&semaforo_HayJugadores);
 						FD_CLR(i,&fds_entrenadores);
 						//pthread_mutex_unlock(&mutex_hiloDeadlock);
 					}
@@ -1835,7 +1763,7 @@ int main(int argc, char** argv)
 	}
 
 
-	printf("SE CIERRA EL PROGRAMAA");
+	printf("SE CIERRA EL PROGRAMA\n");
 
 	return 0;
 }

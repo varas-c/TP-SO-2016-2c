@@ -77,7 +77,7 @@ void socket_select(int fdmax, fd_set *read_fds)
 	{
 		if(errno == EINTR)
 		{
-			 printf("Señal recibida");
+			 printf("Señal EINTR recibida\n");
 		}
 
 		else
