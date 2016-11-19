@@ -13,7 +13,7 @@ int** inicializar_matriz(int cant_filas, int cant_columnas)
 {
 	int i=0,j=0;
 
-	int ** matriz=malloc(cant_filas*sizeof(int));
+	int **matriz=malloc(cant_filas*sizeof(int));
 	for(j=0;j<cant_filas;j++)
 	{
 		matriz[j]=malloc(cant_columnas*sizeof(int));
@@ -434,6 +434,7 @@ void liberar_matriz(int** matriz,int c)
 	{
 		free(matriz[i]);
 	}
+	free(matriz);
 }
 
 //*************************************************************
@@ -511,6 +512,11 @@ t_list* obtener_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadlock
         	log_info(deadlockLogger, "    NO HAY DEADLOCK EN EL MAPA: %s", parametros.nombreMapa);
 */
 
+
+    			liberar_matriz(matriz_peticiones,list_size(entrenadores));
+
+    			liberar_matriz(matriz_recursos_asignados,list_size(entrenadores));
+
     			list_destroy(pokenests_aux);
         		list_clean(entrenadores_aux);
         		free(recursos_disponibles);
@@ -528,6 +534,10 @@ t_list* obtener_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadlock
         	log_info(deadlockLogger, "    NO HAY DEADLOCK EN EL MAPA: %s", parametros.nombreMapa);
 */
 
+
+			liberar_matriz(matriz_peticiones,list_size(entrenadores));
+
+			liberar_matriz(matriz_recursos_asignados,list_size(entrenadores));
 			list_destroy(pokenests_aux);
     		free(recursos_disponibles);
     		list_clean(entrenadores_aux);

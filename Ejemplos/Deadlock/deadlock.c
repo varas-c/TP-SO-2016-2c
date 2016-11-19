@@ -346,7 +346,7 @@ int main(void)
 
        t_list* entrenadores_aux = list_create();
 
-       obtener_deadlock(pokenests,entrenadores,log,entrenadores_aux);
+       entrenadores_aux = obtener_deadlock(pokenests,entrenadores,log);
 
        list_destroy(entrenadores_aux);
 

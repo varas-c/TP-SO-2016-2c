@@ -347,16 +347,17 @@ void manejar_signals(int operacion){
 	if(flag_SIGNALMUERTE == false)
 	{
 		fflush(stdout);
-		printf("\n\nSEÑAL SEÑAL\n\n");
+		printf("\nSEÑAL RECIBIDA\n");
 		switch(operacion){
 
 		case SIGUSR1: //Le sumamos una vida al entrenador
 			entrenador.vidas ++;
+			printf("SumarVida - Quedan %d vidas\n\n", entrenador.vidas);
 			break;
 		case SIGTERM://Le restamos una vida al entrenador
 			entrenador.vidas --;
 
-			printf("Quedan %d vidas\n\n", entrenador.vidas);
+			printf("RestaVida - Quedan %d vidas\n\n", entrenador.vidas);
 			if(entrenador.vidas <= 0)
 			{
 				flag_SIGNALMUERTE = true;
@@ -375,13 +376,13 @@ void sigHandler_endProcess(int signal)
 	case SIGINT:
 		close(fd_server);
 		borrarPokemones(parametros);
-		printf("Atrapando %i ", signal);
+		printf("\n\nCerrando Mapa %i \n\n", signal);
 		exit(1);
 		break;
 	case SIGHUP:
 		close(fd_server);
 		borrarPokemones(parametros);
-		printf("Atrapando %i ", signal);
+		printf("\n\nCerrando Mapa %i \n\n", signal);
 		exit(1);
 		break;
 	}

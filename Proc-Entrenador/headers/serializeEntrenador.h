@@ -210,7 +210,7 @@ void dsrlz_BatallaInforme(Paquete* paquete, int fdServer)
 
 	memcpy(informeBatalla,paquete->buffer,sizeof(char)*tamInforme);
 
-	printf("%s", informeBatalla);
+	printf("\n\n %s \n\n ", informeBatalla);
 
 	free(informeBatalla);
 
