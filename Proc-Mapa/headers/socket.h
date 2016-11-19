@@ -67,7 +67,7 @@ void socket_listen(int listener)
 void socket_select(int fdmax, fd_set *read_fds)
 {
 
-	tv.tv_sec = 0.5;
+	tv.tv_sec = 2;
 	tv.tv_usec = 0;
 
 	while(1)
