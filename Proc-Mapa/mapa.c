@@ -70,6 +70,10 @@ pthread_mutex_t mutex_BatallaPokemon = PTHREAD_MUTEX_INITIALIZER;
 
 sem_t semaforo_HayJugadores;
 
+bool flag_CERRARMAPA = false;
+bool flag_CERRARDEADLOCK = false;
+bool flag_CERRARPROGRAMA = false;
+
 typedef struct
 {
 	t_queue** cola;
@@ -96,13 +100,14 @@ void loggearListaListos()
 {
 		pthread_mutex_lock(&mutex_Listos); //Mutex de listas
 		int tamLista = list_size(listaListos);
-		char* simbolos = malloc(sizeof(char)*tamLista*2+1);
-		strcpy(simbolos," ");
+		char* simbolos;
 		Jugador* jugador;
 		int i;
 
 		if(tamLista > 0)
 		{
+			simbolos = malloc(sizeof(char)*tamLista*2+1);
+			strcpy(simbolos," ");
 			char* aux = malloc(sizeof(char)*2+1); //Pedimos memoria para un string auxiliar que nos sirve para copiar el simbolo
 			aux[1] = '\0';
 
@@ -114,12 +119,14 @@ void loggearListaListos()
 			}
 			log_info(infoLogger, "Listos: en el mapa %s: %s",parametros.nombreMapa, simbolos);
 			free(aux);
+			free(simbolos);
 		}
 		else
 		{
 			log_info(infoLogger, "No hay Listos en el mapa %s.", parametros.nombreMapa);
 		}
 		pthread_mutex_unlock(&mutex_Listos);
+
 }
 
 void loggearColaBloqueados()
@@ -127,7 +134,8 @@ void loggearColaBloqueados()
 	pthread_mutex_lock(&mutex_Bloqueados);
 	int i,k;
 	int cantEntrenadores = 0;
-
+	char* simbolos;
+	char* aux;
 	t_queue* colaAux = queue_create(); //Cola auxiliar
 
 	for(i=0;i<colasBloqueados.cant;i++)
@@ -137,38 +145,46 @@ void loggearColaBloqueados()
 
 	if(cantEntrenadores > 0) //si hay entrenadores, los informamos
 	{
-	char* simbolos = malloc(sizeof(char)*cantEntrenadores*2+1); //reservamos memoria para los simbolos
-	char* aux = malloc(sizeof(char)*2); //auxiliar para convertir el simbolo en un string
-	aux[1] = '\0';
-	strcpy(simbolos," "); //inicializamos el string de simbolos
 
-	int tam = 0;
-	int j=0;
-	Jugador* jugador = NULL;
+		simbolos = malloc(sizeof(char)*cantEntrenadores*2+1); //reservamos memoria para los simbolos
+		aux = malloc(sizeof(char)*2); //auxiliar para convertir el simbolo en un string
+		aux[1] = '\0';
+		strcpy(simbolos," "); //inicializamos el string de simbolos
 
-	for(i=0;i<colasBloqueados.cant;i++) //Recorremos todas las colas
-	{
-		tam = queue_size(colasBloqueados.cola[i]); //me fijo cuantos entrenadores tiene esa cola
+		int tam = 0;
+		int j=0;
+		Jugador* jugador = NULL;
 
-		for(j=0;j<tam;j++)
+		for(i=0;i<colasBloqueados.cant;i++) //Recorremos todas las colas
 		{
-			jugador = queue_pop(colasBloqueados.cola[i]); //saco al jugador
-			aux[0] = jugador->entrenador.simbolo; //copio su simbolo
-			strcat(simbolos,aux);//lo agrego al string auxiliar
-			queue_push(colaAux,jugador);//guardamos al jugador en una cola auxiliar
-		}
+			tam = queue_size(colasBloqueados.cola[i]); //me fijo cuantos entrenadores tiene esa cola
 
-		while(queue_size(colaAux) > 0) //Devolvemos a todos los jugadores de la colaAux a la cola en la que estaban
-		{
-			queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
+			for(j=0;j<tam;j++)
+			{
+				jugador = queue_pop(colasBloqueados.cola[i]); //saco al jugador
+				aux[0] = jugador->entrenador.simbolo; //copio su simbolo
+				strcat(simbolos,aux);//lo agrego al string auxiliar
+				queue_push(colaAux,jugador);//guardamos al jugador en una cola auxiliar
+			}
+
+			while(queue_size(colaAux) > 0) //Devolvemos a todos los jugadores de la colaAux a la cola en la que estaban
+			{
+				queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
+			}
+
 		}
+		log_info(infoLogger, "Bloqueados en el mapa %s: %s \n\n",parametros.nombreMapa,simbolos);
+		free(aux);
+		free(simbolos);
 	}
-	log_info(infoLogger, "Bloqueados en el mapa %s: %s \n\n",parametros.nombreMapa,simbolos);
-	}
+
+
 	else
 	{
 		log_info(infoLogger, "No hay bloqueados en el mapa %s\n\n", parametros.nombreMapa);
 	}
+
+	queue_destroy(colaAux);
 	pthread_mutex_unlock(&mutex_Bloqueados);
 }
 
@@ -288,6 +304,20 @@ void generarColasBloqueados()
 		colasBloqueados.cola[i] = queue_create();
 	}
 }
+
+void borrarColaBloqueados()
+{
+	int i;
+	for(i=0;i<colasBloqueados.cant;i++)
+	{
+		queue_destroy(colasBloqueados.cola[i]);
+	}
+
+	free(colasBloqueados.cola);
+	free(colasBloqueados.referencias);
+
+}
+
 
 int getReferenciaPokenest(char simboloPokenest)
 {
@@ -451,8 +481,8 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 
 	DIR *dpPokenest = NULL;
 	struct dirent *dptrPokenest = NULL;
-
-	t_pkmn_factory* fabrica = create_pkmn_factory();     //SE CREA LA FABRICA PARA HACER POKEMONES
+	t_pkmn_factory* fabrica;
+	fabrica = create_pkmn_factory();     //SE CREA LA FABRICA PARA HACER POKEMONES
 
 	dpPokenest = opendir(rutaPokenest); //Abrimos la rutaPokenest (PRUEBA: /mnt/pokedex/Mapas/Mapa1/Pokenest)
 
@@ -501,16 +531,19 @@ void leerTodasLasPokenest(ParametrosMapa parametros)
 				//pokemon->pokemon = malloc(sizeof(t_pokemon*));
 				pokemon->pokemon = create_pokemon(fabrica, dptrPokenest->d_name, mdataPokemon.nivel);
 				pokemon->pokemon->species = strdup(dptrPokenest->d_name);
+				list_add(listaPokemon,pokemon);
 				queue_push(pokenest->colaDePokemon,pokemon);
 			}
 
 			pthread_mutex_lock(&mutex_hiloDeadlock);
 			list_add(listaPokenest,pokenest);
 			pthread_mutex_unlock(&mutex_hiloDeadlock);
+
+			free(rutaAux);
 		}
 	}
 
-	free(rutaAux);
+	//free(rutaAux);
 	free(rutaPokenest);
 	closedir(dpPokenest);
 	destroy_pkmn_factory(fabrica);
@@ -719,6 +752,13 @@ void sigHandler_reloadMetadata(int signal)
 		sprintf(aux,"Algoritmo: %s - Quantum: %i - Retardo: %i - ModoBatalla: %i - TiempoCheck: %i\n\n", mdataMapa.algoritmo, mdataMapa.quantum,mdataMapa.retardo,mdataMapa.modoBatalla,mdataMapa.tiempoChequeoDeadlock);
 		log_info(infoLogger,aux);
 		free(aux);
+	}
+}
+
+void sigHandler_MapaClose(int signal){
+	if(signal == SIGINT){
+		flag_CERRARMAPA = true;
+		sem_post(&semaforo_HayJugadores);
 	}
 }
 
@@ -1150,6 +1190,9 @@ void borrarJugadorDeColaBloqueados(Jugador* jugadorBuscado)
 			queue_push(colasBloqueados.cola[i],queue_pop(colaAux));
 		}
 	}
+
+	queue_destroy(colaAux);
+
 }
 
 void borrarJugadorListaDeadlock(Jugador* jugador)
@@ -1184,8 +1227,6 @@ void expropiarPokemones2(t_list* listaPokemones)
 	MetadataPokenest* pokenest;
 	Jugador* jugadorDesbloqueado = NULL;
 
-	t_list* listaAux = list_create();
-
 	int cantPokemones = list_size(listaPokemones);
 	int i;
 
@@ -1203,12 +1244,15 @@ void expropiarPokemones2(t_list* listaPokemones)
 
 			if(retval<=0)
 			{
+				log_info(infoLogger, "el jugador %s se ha desconectado del mapa %s", jugadorDesbloqueado->entrenador.simbolo,parametros.nombreMapa);
+				loggearColas();
 				list_destroy(listaDeadlock);
 				listaDeadlock=list_create();
 				expropiarPokemones2(jugadorDesbloqueado->pokemonCapturados);
 				removerListaDesconectados(jugadorDesbloqueado->socket);
-				log_info(infoLogger, "el jugador %s se ha desconectado del mapa %s", jugadorDesbloqueado->entrenador.simbolo,parametros.nombreMapa);
+				//log_info(infoLogger, "el jugador %s se ha desconectado del mapa %s", jugadorDesbloqueado->entrenador.simbolo,parametros.nombreMapa);
 				loggearColas();
+
 				borrarJugadorSistema(jugadorDesbloqueado);
 				desconectarJugador(jugadorDesbloqueado);
 			}
@@ -1236,6 +1280,7 @@ void expropiarPokemones2(t_list* listaPokemones)
 			sumarRecurso(gui_items,pokenest->simbolo);
 		}
 	}
+
 }
 
 void desconectarJugador(Jugador* jugador)
@@ -1257,14 +1302,14 @@ void* thread_planificador()
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
 	int estado_socket;
-	Jugador *jugador;
+	Jugador *jugador,*otroJugador;
 
 	int quantum = mdataMapa.quantum;
 	int codOp = -1;
 
 	char pokenestPedida;
 	MetadataPokenest* pokenestEnviar;
-	char* mostrar = malloc(sizeof(char)*256);
+	char* mostrar = malloc(sizeof(char)*256); //BORRADO
 
 	PosEntrenador pos;
 	MetadataPokenest* pokenest;
@@ -1282,7 +1327,7 @@ void* thread_planificador()
 	int a = 0;
 	bool flag_AUX = 0;
 
-	while(1)
+	while(flag_CERRARMAPA == false)
 	{
 		sem_getvalue(&semaforo_HayJugadores, &a);
 		if (a<=0 && list_is_empty(global_listaJugadoresSistema))
@@ -1342,10 +1387,11 @@ void* thread_planificador()
 				flag_SRDF = FALSE;
 			}
 
-			buffer_recv = malloc(tam_buffer_recv);
+		buffer_recv = malloc(tam_buffer_recv);
 
 		while(quantum > 0)
 		{
+
 			usleep(mdataMapa.retardo*1000);
 			estado_socket = recv(jugador->socket,buffer_recv,tam_buffer_recv,0);
 
@@ -1437,6 +1483,9 @@ void* thread_planificador()
 				} //FIN SWITCH
 			}//FIN ELSE
 
+
+
+
 			calcular_coordenadas(&(jugador->entrenador),pokenestEnviar->posicionX,pokenestEnviar->posicionY);
 
 			int tam = list_size(global_listaJugadoresSistema);
@@ -1458,6 +1507,8 @@ void* thread_planificador()
 			nivel_gui_dibujar(gui_items, mostrar);
 
 		}//FIN WHILE
+
+		free(buffer_recv); // TODO: OJO ACA, LIBERE EL BUFFER DEL RECV PRINCIPAL
 
 
 		if(flag_DESCONECTADO == FALSE)
@@ -1500,13 +1551,14 @@ void* thread_planificador()
 
 			if(jugadorDesconectado != NULL)
 			{
+
+				//log_info(infoLogger,"el jugador %s ha salido del mapa %s", jugadorDesconectado->entrenador.simbolo,parametros.nombreMapa);
 				borrarJugadorDeColaBloqueados(jugadorDesconectado);
+				loggearColas();
 				list_destroy(listaDeadlock);
 				listaDeadlock=list_create();
 				expropiarPokemones2(jugadorDesconectado->pokemonCapturados);
 
-				log_info(infoLogger,"el jugador %s ha salido del mapa %s", jugador->entrenador.simbolo,parametros.nombreMapa);
-				loggearColas();
 
 				borrarJugadorSistema(jugadorDesconectado);
 				desconectarJugador(jugadorDesconectado);
@@ -1515,8 +1567,16 @@ void* thread_planificador()
 		}
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 
-	} //While global
+	}
 
+//TODO Borrar a los entrenadores
+
+
+
+	//Para finalizar correctamente el planiifcador, hago free de variables y nivel_gui_finalizar()
+	nivel_gui_terminar();
+	free(mostrar);
+	//flag_CERRARDEADLOCK = true;
 }
 
 void* thread_deadlock()
@@ -1524,7 +1584,7 @@ void* thread_deadlock()
 	t_list * entrenadores_aux;
 	int flag_signal=0;
 
-	while(1)
+	while(flag_CERRARMAPA == false)
 	{
 		usleep(mdataMapa.tiempoChequeoDeadlock*1000); //EXAGERO PARA PROBAR
 
@@ -1557,6 +1617,7 @@ void* thread_deadlock()
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
+	//flag_CERRARPROGRAMA = true;
 }
 
 int main(int argc, char** argv)
@@ -1574,6 +1635,7 @@ int main(int argc, char** argv)
 	listaDeadlock = list_create();
 
 	signal(SIGUSR2, sigHandler_reloadMetadata);
+	signal(SIGINT, sigHandler_MapaClose);
 
 	char* LogMapa = malloc(40);
 	snprintf(LogMapa,30,"Log%s.log",parametros.nombreMapa);
@@ -1660,7 +1722,8 @@ int main(int argc, char** argv)
 
 	int* socketDesconectado;
 
-	for (;;) {
+	//for (;;) {
+	while(flag_CERRARMAPA == false){
 		read_fds = fds_entrenadores; // cópialo
 
 		//Buscamos los sockets que quieren realizar algo con Select
@@ -1729,16 +1792,48 @@ int main(int argc, char** argv)
 
 	//TODO IMPORTANTE: anticipar la cancelacion del programa y ejecutar esto.
 
+	//ACA ESPERAR A LOS OTROS HILOS
+	pthread_join(&hiloPlanificador,NULL);
+	pthread_join(&hiloDeadlock,NULL);
+
+	free(LogMapa);
+	free(buffer);
+	free(parametros.dirPokedex);
+	free(parametros.nombreMapa);
 	free(mdataPokenest.tipoPokemon);
 	free(mdataMapa.algoritmo);
 	free(mdataMapa.ip);
+	free(LogDeadlock);
 
 	nivel_gui_terminar();
 
 	log_info(infoLogger, "Se cierra Mapa: %s.",  parametros.nombreMapa);
-	log_destroy(traceLogger);
-	log_destroy(infoLogger);
-	log_destroy(deadlockLogger);
+
+	//log_destroy(traceLogger);
+	//log_destroy(infoLogger);
+	//log_destroy(deadlockLogger);
+
+	Pokemon* pokemon;
+	while(!list_is_empty(listaPokemon))
+	{
+		pokemon = list_remove(listaPokemon,0);
+		free(pokemon->nombre);
+		free(pokemon->pokemon->species);
+		free(pokemon->pokemon);
+		free(pokemon);
+	}
+
+	list_destroy(listaPokemon);
+
+	Jugador* jugador;
+
+	while(!list_is_empty(global_listaJugadoresSistema)){
+		jugador = list_remove(global_listaJugadoresSistema,0);
+
+		desconectarJugador(jugador);
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
+	}
+
 
 	printf("SE CIERRA EL PROGRAMAA");
 

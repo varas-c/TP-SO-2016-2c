@@ -515,9 +515,8 @@ t_list* obtener_deadlock(t_list* pokenests,t_list* entrenadores, t_log* deadlock
     			list_destroy(pokenests_aux);
         		list_clean(entrenadores_aux);
         		free(recursos_disponibles);
-
-
         	}
+
 
     	}
 

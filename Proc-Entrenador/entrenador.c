@@ -342,6 +342,32 @@ void liberarPokemonesCapturados(t_list* pokemones)
 
 ParametrosConsola parametros;
 
+void manejar_signals(int operacion){
+
+	if(flag_SIGNALMUERTE == false)
+	{
+		fflush(stdout);
+		printf("\n\nSEÑAL SEÑAL\n\n");
+		switch(operacion){
+
+		case SIGUSR1: //Le sumamos una vida al entrenador
+			entrenador.vidas ++;
+			break;
+		case SIGTERM://Le restamos una vida al entrenador
+			entrenador.vidas --;
+
+			printf("Quedan %d vidas\n\n", entrenador.vidas);
+			if(entrenador.vidas <= 0)
+			{
+				flag_SIGNALMUERTE = true;
+				borrarPokemones(parametros);
+				if(flag_BLOQUEADO) close(fd_server);
+			}
+			break;
+		}
+	}
+}
+
 void sigHandler_endProcess(int signal)
 {
 	switch(signal)
@@ -360,6 +386,7 @@ void sigHandler_endProcess(int signal)
 		break;
 	}
 }
+
 
 int main(int argc, char** argv)
 {
