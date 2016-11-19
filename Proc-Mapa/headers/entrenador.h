@@ -27,6 +27,8 @@ char recv_simboloEntrenador(int socket)
 
 	simbolo = dsrlz_simboloEntrenador(paquete.buffer);
 
+	free(paquete.buffer);
+
 	return simbolo;
 }
 

@@ -86,6 +86,7 @@ MetadataMapa leerMetadataMapa(ParametrosMapa parametros)         //Lee todos los
 
 	config_destroy(config);
 
+	free(ruta);
 	return mdata;
 }
 //****************************************************************************************************************
@@ -151,6 +152,8 @@ MetadataPokenest* leerMetadataPokenest(char* ruta, char* nombreArchivo) //Lee to
 
 	config_destroy(config);
 
+	free(rutaPosta);
+
 	return mdata;
 }
 //****************************************************************************************************************
@@ -174,6 +177,8 @@ MetadataPokemon leerMetadataPokemon(char* ruta, char* nombreArchivo)   //Lee tod
 	}
 
 	mdata.nivel = config_get_int_value(config, "Nivel");
+
+	free(rutaPosta);
 
 	config_destroy(config);
 
