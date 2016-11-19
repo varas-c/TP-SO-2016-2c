@@ -70,6 +70,10 @@ pthread_mutex_t mutex_BatallaPokemon = PTHREAD_MUTEX_INITIALIZER;
 
 sem_t semaforo_HayJugadores;
 
+bool flag_CERRARMAPA = false;
+bool flag_CERRARDEADLOCK = false;
+bool flag_CERRARPROGRAMA = false;
+
 typedef struct
 {
 	t_queue** cola;
@@ -722,6 +726,12 @@ void sigHandler_reloadMetadata(int signal)
 	}
 }
 
+void sigHandler_MapaClose(int signal){
+	if(signal == SIGINT){
+		flag_CERRARMAPA = true;
+	}
+}
+
 Jugador* get_prioritySRDF()
 {
 	Jugador* jugadorBuscado;
@@ -1256,7 +1266,7 @@ void* thread_planificador()
 	void* buffer_recv;
 	int tam_buffer_recv = 100;
 	int estado_socket;
-	Jugador *jugador;
+	Jugador *jugador,*otroJugador;
 
 	int quantum = mdataMapa.quantum;
 	int codOp = -1;
@@ -1281,7 +1291,7 @@ void* thread_planificador()
 	int a = 0;
 	bool flag_AUX = 0;
 
-	while(1)
+	while(flag_CERRARMAPA == false)
 	{
 		sem_getvalue(&semaforo_HayJugadores, &a);
 		if (a<=0 && list_is_empty(listaListos))
@@ -1516,7 +1526,25 @@ void* thread_planificador()
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 	} //While global
-
+//TODO Borrar a los entrenadores
+	/*
+	while(!list_is_empty(listaListos)){
+		otroJugador = list_remove(listaListos,0);
+		pthread_mutex_lock(&mutex_hiloDeadlock);
+		expropiarPokemones2(otroJugador->pokemonCapturados);
+		removerListaDesconectados(otroJugador->socket);
+		list_destroy(listaDeadlock);
+		list_create(listaDeadlock);
+		borrarJugadorSistema(otroJugador);
+		desconectarJugador(otroJugador);
+		pthread_mutex_unlock(&mutex_hiloDeadlock);
+	}
+	*/
+	//Para finalizar correctamente el planiifcador, hago free de variables y nivel_gui_finalizar()
+	nivel_gui_terminar();
+	free(buffer_recv);
+	free(mostrar);
+	//flag_CERRARDEADLOCK = true;
 }
 
 void* thread_deadlock()
@@ -1557,6 +1585,7 @@ void* thread_deadlock()
 
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
 	}
+	//flag_CERRARPROGRAMA = true;
 }
 
 int main(int argc, char** argv)
@@ -1574,6 +1603,7 @@ int main(int argc, char** argv)
 	listaDeadlock = list_create();
 
 	signal(SIGUSR2, sigHandler_reloadMetadata);
+	signal(SIGINT, sigHandler_MapaClose);
 
 	char* LogMapa = malloc(40);
 	snprintf(LogMapa,30,"Log%s.log",parametros.nombreMapa);
@@ -1660,7 +1690,8 @@ int main(int argc, char** argv)
 
 	int* socketDesconectado;
 
-	for (;;) {
+	//for (;;) {
+	while(1){
 		read_fds = fds_entrenadores; // cópialo
 
 		//Buscamos los sockets que quieren realizar algo con Select
