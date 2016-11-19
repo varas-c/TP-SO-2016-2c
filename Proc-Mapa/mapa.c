@@ -67,7 +67,8 @@ pthread_mutex_t mutex_gui_items = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_hiloDeadlock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_BatallaPokemon = PTHREAD_MUTEX_INITIALIZER;
 
-sem_t semaforo_SincroSelect;
+
+sem_t semaforo_HayJugadores;
 
 typedef struct
 {
@@ -400,6 +401,7 @@ int cantPokemonEnDir(char* ruta)
 
 	return cantPokes;
 }*/
+
 
 char* stringPokemonDat(char* nombrePoke, int numPoke)
 {
@@ -774,7 +776,7 @@ void calcular_coordenadas(Entrenador* entrenador, int x, int y)
 		entrenador->destinoy = fabs(y - entrenador->posy);
 	}
 }
-
+/*
 void desbloquearJugadores(t_list* lista)
 {
 	t_list* listaAux = list_create();
@@ -820,7 +822,7 @@ void desbloquearJugadores(t_list* lista)
 	}
 	list_destroy(listaAux);
 }
-
+*/
 void borrarJugadorSistema(Jugador* jugador)
 {
 	int socketBuscado = jugador->socket;
@@ -1274,23 +1276,26 @@ void* thread_planificador()
 	Jugador* jugadorDeadlock = NULL;
 	Jugador* jugadorDesconectado;
 	int* socketDesconectado;
+	int retval = 0;
 
+	int a = 0;
 	bool flag_AUX = 0;
 
 	while(1)
 	{
-	//nivel_gui_dibujar(gui_items,"                                                           ");
-	sprintf(mostrar,"Mapa: %s -- No hay jugadores -pid.%i                          ",parametros.nombreMapa,pid);
-	nivel_gui_dibujar(gui_items, mostrar);
-	usleep(mdataMapa.retardo*1000);
+		sem_getvalue(&semaforo_HayJugadores, &a);
+		if (a<=0 && list_is_empty(listaListos))
+		{
+			sprintf(mostrar,"Mapa: %s -- No hay jugadores -pid.%i                          ",parametros.nombreMapa,pid);
+			nivel_gui_dibujar(gui_items,"                                                           ");
+			nivel_gui_dibujar(gui_items, mostrar);
+		}
+		sem_wait(&semaforo_HayJugadores);
+		nivel_gui_dibujar(gui_items,"                                                           ");
+		nivel_gui_dibujar(gui_items, mostrar);
+		usleep(mdataMapa.retardo*1000);
 
-	//Si nadie mas se quiere ir, es hora de Jugar!
-
-	int retval = 0;
-
-	while(!list_is_empty(global_listaJugadoresSistema))
-	{
-		//nivel_gui_dibujar(gui_items, mostrar);
+//	while(!list_is_empty(global_listaJugadoresSistema))
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 		if(mdataMapa.modoBatalla == true && !list_is_empty(listaDeadlock) )
@@ -1407,6 +1412,7 @@ void* thread_planificador()
 							jugador->peticion = pokenestPedida;
 							jugador->conocePokenest = false;
 							bloquearJugador(jugador,pokenestPedida);
+							sem_post(&semaforo_HayJugadores);
 							FD_SET(jugador->socket,&fds_entrenadores);
 							log_info(infoLogger,"Se ha bloqueado el jugador %c en el mapa:%s",jugador->entrenador.simbolo,parametros.nombreMapa);
 							loggearColas();
@@ -1460,6 +1466,7 @@ void* thread_planificador()
 		{
 			pthread_mutex_lock(&mutex_hiloDeadlock);
 			list_add(listaListos,(void*)jugador);
+			sem_post(&semaforo_HayJugadores);
 			pthread_mutex_unlock(&mutex_hiloDeadlock);
 			log_info(infoLogger,"el jugador %c entró en listos en el mapa %s", jugador->entrenador.simbolo,parametros.nombreMapa);
 			loggearColas();
@@ -1507,17 +1514,23 @@ void* thread_planificador()
 			}
 		}
 		pthread_mutex_unlock(&mutex_hiloDeadlock);
+
 	} //While global
-	}
+
 }
 
 void* thread_deadlock()
 {
 	t_list * entrenadores_aux;
+	int flag_signal=0;
 
 	while(1)
 	{
 		usleep(mdataMapa.tiempoChequeoDeadlock*1000); //EXAGERO PARA PROBAR
+
+		sem_getvalue(&semaforo_HayJugadores, &flag_signal);
+		if (flag_signal<=0)
+			sem_post(&semaforo_HayJugadores);
 
 		pthread_mutex_lock(&mutex_hiloDeadlock);
 
@@ -1555,6 +1568,8 @@ int main(int argc, char** argv)
 
 	//parametros.dirPokedex = "/home/utnso/workspace/tp-2016-2c-Breaking-Bug/Proc-Pokedex-Cliente/ejemplo/pokedex/";
 	//parametros.nombreMapa = "Verde";
+
+	sem_init(&semaforo_HayJugadores, 0, 0);
 
 	listaDeadlock = list_create();
 
@@ -1682,6 +1697,7 @@ int main(int argc, char** argv)
 					pthread_mutex_lock(&mutex_hiloDeadlock);
 					list_add(global_listaJugadoresSistema,aux);
 					list_add(listaListos, aux);
+					sem_post(&semaforo_HayJugadores);
 					pthread_mutex_unlock(&mutex_hiloDeadlock);
 
 					//Loggeamos info
