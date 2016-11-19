@@ -1724,6 +1724,8 @@ int main(int argc, char** argv)
 	pthread_join(&hiloPlanificador,NULL);
 	pthread_join(&hiloDeadlock,NULL);
 
+	log_info(infoLogger, "Se cierra Mapa: %s.",  parametros.nombreMapa);
+
 	free(LogMapa);
 	free(buffer);
 	free(parametros.dirPokedex);
@@ -1734,8 +1736,6 @@ int main(int argc, char** argv)
 	free(LogDeadlock);
 
 	nivel_gui_terminar();
-
-	log_info(infoLogger, "Se cierra Mapa: %s.",  parametros.nombreMapa);
 
 	//log_destroy(traceLogger);
 	//log_destroy(infoLogger);
