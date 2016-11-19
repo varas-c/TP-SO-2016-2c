@@ -1,7 +1,0 @@
-nombre=Gary
-simbolo=#
-hojaDeViaje=[Verde,Azul]
-obj[Verde]=[B,P,G]
-obj[Azul]=[C]
-vidas=2
-reintentos=0
